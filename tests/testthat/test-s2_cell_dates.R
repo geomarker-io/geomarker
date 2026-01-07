@@ -10,6 +10,33 @@ test_that("s2_cell_dates behaves as expected", {
   d |>
     expect_s3_class(c("geomarker::s2_cell_dates", "s2_cell", "S7_object"))
 
+  s2_cell_dates(
+    s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+    dates = list(
+      TRUE,
+      c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+    )
+  ) |>
+    expect_error("all elements in the dates list must be Date vectors")
+
+  s2_cell_dates(
+    s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+    dates = list(
+      as.Date("2026-01-01"),
+      c(as.Date("2022-09-13"), as.Date(NA), as.Date("2023-09-20"))
+    )
+  ) |>
+    expect_error("dates must not contain missing values")
+
+  s2_cell_dates(
+    s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+    dates = list(
+      as.Date("2026-01-01"),
+      c(as.Date("2024-09-13"), as.Date("2023-09-20"))
+    )
+  ) |>
+    expect_error("each Date vector must be in chronological order")
+
   d |>
     tibble::as_tibble() |>
     expect_s3_class(c("tbl_df", "tbl", "data.frame"))

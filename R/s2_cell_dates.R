@@ -12,6 +12,13 @@ S3_s2_cell <- S7::new_S3_class(
   }
 )
 
+is_non_decreasing <- function(x) {
+  if (length(x) <= 1) {
+    return(TRUE)
+  }
+  all(diff(x) >= 0)
+}
+
 # s2dates extends the s2::s2_cell class with a list of date vectors,
 # where each vector of chronologically, non-missing dates corresponds
 # to each (valid) s2 cell
@@ -22,27 +29,18 @@ s2_cell_dates <- S7::new_class(
   validator = function(self) {
     if (!inherits(self, "s2_cell")) {
       "`s2dates` must extend an `s2_cell` vector."
-    }
-    if (!all(s2::s2_cell_is_valid(self))) {
-      "s2 cells are invalid"
-    }
-    if (!is.list(self@dates)) {
+    } else if (!all(s2::s2_cell_is_valid(self))) {
+      "s2 cells must be valid (`s2::s2_cell_is_valid()`)."
+    } else if (!is.list(self@dates)) {
       "`dates` must be a list."
-    }
-    if (!length(self@dates) == length(self)) {
+    } else if (!length(self@dates) == length(self)) {
       "`dates` must have same length as `cells`."
-    }
-    for (i in seq_along(self@dates)) {
-      di <- self@dates[[i]]
-      if (!inherits(di, "Date")) {
-        sprintf("`dates[[%d]]` must be a Date vector.", i)
-      }
-      if (anyNA(di)) {
-        sprintf("`dates[[%d]]` must not contain missing values.", i)
-      }
-      if (!is_non_decreasing(di)) {
-        sprintf("`dates[[%d]]` must be in chronological order.", i)
-      }
+    } else if (!all(sapply(self@dates, inherits, "Date"))) {
+      "all elements in the dates list must be Date vectors."
+    } else if (any(sapply(self@dates, anyNA))) {
+      "dates must not contain missing values"
+    } else if (!all(sapply(self@dates, is_non_decreasing))) {
+      "each Date vector must be in chronological order"
     }
   }
 )

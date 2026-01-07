@@ -11,6 +11,15 @@ test_that("s2_cell_dates behaves as expected", {
     expect_s3_class(c("geomarker::s2_cell_dates", "s2_cell", "S7_object"))
 
   s2_cell_dates(
+    s2::as_s2_cell(c("8841b39a7c46e25", "8841a45555555555")),
+    dates = list(
+      as.Date("2026-01-01"),
+      c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+    )
+  ) |>
+    expect_error("all s2 cells must be level 30")
+
+  s2_cell_dates(
     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
     dates = list(
       TRUE,

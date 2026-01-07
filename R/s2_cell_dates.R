@@ -21,7 +21,8 @@ is_non_decreasing <- function(x) {
 
 # s2dates extends the s2::s2_cell class with a list of date vectors,
 # where each vector of chronologically, non-missing dates corresponds
-# to each (valid) s2 cell
+# to each (valid, level 30) s2 cell
+# add the estimated meter resolution on level 30 cell and describe more as a point
 s2_cell_dates <- S7::new_class(
   "s2_cell_dates",
   parent = S3_s2_cell,
@@ -31,6 +32,8 @@ s2_cell_dates <- S7::new_class(
       "`s2dates` must extend an `s2_cell` vector."
     } else if (!all(s2::s2_cell_is_valid(self))) {
       "s2 cells must be valid (`s2::s2_cell_is_valid()`)."
+    } else if (!all(s2::s2_cell_level(self) == 30)) {
+      "all s2 cells must be level 30"
     } else if (!is.list(self@dates)) {
       "`dates` must be a list."
     } else if (!length(self@dates) == length(self)) {

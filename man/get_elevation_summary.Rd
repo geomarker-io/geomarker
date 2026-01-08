@@ -27,6 +27,7 @@ State University as a digital elevation model in BIL format at an 800 m grid
 }
 \examples{
 get_elevation_summary(s2cd_example())
+get_elevation_summary(s2cd_example(), stats::sd, 1400)
 }
 \references{
 \url{https://prism.oregonstate.edu/normals/}

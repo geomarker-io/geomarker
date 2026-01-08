@@ -1,6 +1,12 @@
 # geomarker
 
 <!-- badges: start -->
+
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CRAN status](https://www.r-pkg.org/badges/version/geomarker)](https://CRAN.R-project.org/package=geomarker)
+[![R-CMD-check](https://github.com/geomarker-io/geomarker/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/geomarker-io/geomarker/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/geomarker-io/geomarker/graph/badge.svg)](https://app.codecov.io/gh/geomarker-io/geomarker)
+
 <!-- badges: end -->
 
 The goal of geomarker is to facilitate geomarker assessment, or the linkage of environmental exposures and community characteristics with people according to their locations and dates.

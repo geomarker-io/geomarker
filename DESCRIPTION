@@ -11,7 +11,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     s2,
-    S7
+    S7,
+    digest
 Suggests: 
+    curl,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

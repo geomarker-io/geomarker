@@ -2,5 +2,8 @@
 
 S3method(as.data.frame,s2_cell_dates)
 export(S3_s2_cell)
-export(geomarker_data_path)
+export(geomarker_data_dir)
+export(geomarker_download_file)
+export(is_within_date_range)
+export(is_within_s2_cells)
 importFrom(s2,as_s2_cell)

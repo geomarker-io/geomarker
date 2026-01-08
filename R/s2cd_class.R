@@ -21,11 +21,28 @@ is_s2cd <- function(x) {
   inherits(x, "geomarker::s2cd")
 }
 
+#' s2_cell_dates (s2cd) object
+#'
 #' An s2cd object (short for **s2_cell_dates**)
 #' extends the s2::s2_cell class with a list of date vectors,
 #' where each vector of chronologically, non-missing dates corresponds
-#' to each (valid, level 30) s2 cell
-#' TODO add the estimated meter resolution on level 30 cell and describe more as a point
+#' to each (valid, level 30) s2 cell.
+#' At level 30, S2 cells have an approximate spatial
+#' resolution of *1 centimeter*; in this context,
+#' they are intended to function as point-like
+#' representations rather than true spatial areas.
+#'
+#' @param .data an s2_cell object that is valid and is at level 30 resolution
+#' @param dates a list of date vectors, each in chronological order and without missing values
+#' @export
+#' @examples
+#' d <- s2cd(
+#'   s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+#'   dates = list(
+#'     as.Date("2026-01-01"),
+#'     c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+#'   )
+#' )
 s2cd <- S7::new_class(
   "s2cd",
   parent = S3_s2_cell,

@@ -2,18 +2,31 @@
 % Please edit documentation in R/s2cd_class.R
 \name{s2cd}
 \alias{s2cd}
-\title{An s2cd object (short for \strong{s2_cell_dates})
-extends the s2::s2_cell class with a list of date vectors,
-where each vector of chronologically, non-missing dates corresponds
-to each (valid, level 30) s2 cell
-TODO add the estimated meter resolution on level 30 cell and describe more as a point}
+\title{s2_cell_dates (s2cd) object}
 \usage{
 s2cd(.data, dates = list())
+}
+\arguments{
+\item{.data}{an s2_cell object that is valid and is at level 30 resolution}
+
+\item{dates}{a list of date vectors, each in chronological order and without missing values}
 }
 \description{
 An s2cd object (short for \strong{s2_cell_dates})
 extends the s2::s2_cell class with a list of date vectors,
 where each vector of chronologically, non-missing dates corresponds
-to each (valid, level 30) s2 cell
-TODO add the estimated meter resolution on level 30 cell and describe more as a point
+to each (valid, level 30) s2 cell.
+At level 30, S2 cells have an approximate spatial
+resolution of \emph{1 centimeter}; in this context,
+they are intended to function as point-like
+representations rather than true spatial areas.
+}
+\examples{
+d <- s2cd(
+  s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+  dates = list(
+    as.Date("2026-01-01"),
+    c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+  )
+)
 }

@@ -8,11 +8,11 @@
 #' @returns character string of path to directory
 #' @export
 #' @examples
-#' geomarker_data_path()
-#' geomarker_data_path("greenness")
+#' geomarker_data_dir()
+#' geomarker_data_dir("greenness")
 #' # use environment variable to change location
 #' withr::local_envvar(R_USER_DATA_DIR = tempdir())
-#' geomarker_data_path()
+#' geomarker_data_dir()
 #' withr::deferred_run()
 geomarker_data_dir <- function(subdir = character(0)) {
   stopifnot(

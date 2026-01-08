@@ -19,10 +19,10 @@ Specify an alternative download location by setting the \code{R_USER_DATA_DIR}
 environment variable.
 }
 \examples{
-geomarker_data_path()
-geomarker_data_path("greenness")
+geomarker_data_dir()
+geomarker_data_dir("greenness")
 # use environment variable to change location
 withr::local_envvar(R_USER_DATA_DIR = tempdir())
-geomarker_data_path()
+geomarker_data_dir()
 withr::deferred_run()
 }

@@ -1,5 +1,3 @@
-# parent S3 class for S7
-#' @export
 S3_s2_cell <- S7::new_S3_class(
   "s2_cell",
   constructor = function(.data) {

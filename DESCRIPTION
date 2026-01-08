@@ -1,5 +1,5 @@
 Package: geomarker
-Title: Geomarker assessment using s2 cells and dates.
+Title: Geomarker assessment using s2 cells and dates
 Version: 0.0.0.9000
 Authors@R: 
     person("Cole", "Brokamp", , "cole@colebrokamp.com", role = c("aut", "cre"),
@@ -15,5 +15,7 @@ Imports:
     digest
 Suggests: 
     curl,
-    testthat (>= 3.0.0)
+    tibble,
+    testthat (>= 3.0.0),
+    withr
 Config/testthat/edition: 3

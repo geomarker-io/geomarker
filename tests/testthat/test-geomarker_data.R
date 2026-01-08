@@ -1,10 +1,10 @@
-test_that("geomarker_data_path works", {
-  geomarker_data_path() |>
+test_that("geomarker_data_dir works", {
+  geomarker_data_dir() |>
     expect_type("character") |>
     expect_length(1) |>
     grepl("geomarker", x = _) |>
     expect_true()
-  geomarker_data_path("foofy") |>
+  geomarker_data_dir("foofy") |>
     expect_type("character") |>
     expect_length(1) |>
     grepl("foofy", x = _) |>

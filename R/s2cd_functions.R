@@ -23,7 +23,7 @@ s2cd_example <- function() {
 #' @export
 s2cd_is_within_date_range <- function(x, date_range) {
   stopifnot(
-    "x must be a s2cd object" = inherits(x, "geomarker::s2cd"),
+    "x must be a s2cd object" = is_s2cd(x),
     "date_range must be a Date vector" = inherits(date_range, "Date"),
     "date_range must be length 2" = length(date_range) == 2,
     "date_range must not have any missing values" = !anyNA(date_range),

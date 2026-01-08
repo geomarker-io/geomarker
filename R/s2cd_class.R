@@ -17,10 +17,6 @@ is_non_decreasing <- function(x) {
   all(diff(x) >= 0)
 }
 
-is_s2cd <- function(x) {
-  inherits(x, "geomarker::s2cd")
-}
-
 #' s2_cell_dates (s2cd) object
 #'
 #' An s2cd object (short for **s2_cell_dates**)
@@ -46,6 +42,7 @@ is_s2cd <- function(x) {
 s2cd <- S7::new_class(
   "s2cd",
   parent = S3_s2_cell,
+  package = NULL,
   properties = list(dates = S7::class_list),
   validator = function(self) {
     if (!inherits(self, "s2_cell")) {
@@ -67,6 +64,28 @@ s2cd <- S7::new_class(
     }
   }
 )
+
+#' @rdname s2cd
+#' @export
+is_s2cd <- function(x) {
+  inherits(x, "s2cd")
+}
+
+
+#' @rdname s2cd
+#' @export
+as_s2cd <- S7::new_generic("as_s2cd", dispatch_args = "x")
+
+S7::method(as_s2cd, S7::new_S3_class("data.frame")) <- function(x, ...) {
+  stopifnot(
+    "data.frame must have column named `s2_cell`" = "s2_cell" %in% names(x),
+    "data.frame must have column named `dates`" = "dates" %in% names(x)
+  )
+  s2cd(.data = x$s2_cell, dates = x$dates)
+}
+
+S7::method(as_s2cd, s2cd) <- function(x, ...) x
+
 
 #' @importFrom s2 as_s2_cell
 NULL
@@ -94,12 +113,12 @@ as.data.frame.s2cd <- function(x, ...) {
   )
 }
 
-#' @export
-if (requireNamespace("tibble", quietly = TRUE)) {
-  as_tibble.s2cd <- function(x, ...) {
-    tibble::tibble(
-      s2_cell = structure(x, class = c("s2_cell", "wk_vctr")),
-      dates = x@dates
-    )
-  }
-}
+# #' @export
+# if (requireNamespace("tibble", quietly = TRUE)) {
+#   as_tibble.s2cd <- function(x, ...) {
+#     tibble::tibble(
+#       s2_cell = structure(x, class = c("s2_cell", "wk_vctr")),
+#       dates = x@dates
+#     )
+#   }
+# }

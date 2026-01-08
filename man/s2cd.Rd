@@ -2,9 +2,15 @@
 % Please edit documentation in R/s2cd_class.R
 \name{s2cd}
 \alias{s2cd}
+\alias{is_s2cd}
+\alias{as_s2cd}
 \title{s2_cell_dates (s2cd) object}
 \usage{
 s2cd(.data, dates = list())
+
+is_s2cd(x)
+
+as_s2cd(x, ...)
 }
 \arguments{
 \item{.data}{an s2_cell object that is valid and is at level 30 resolution}

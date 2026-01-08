@@ -8,7 +8,7 @@ test_that("s2cd behaves as expected", {
   )
 
   d |>
-    expect_s3_class(c("geomarker::s2cd", "s2_cell", "S7_object"))
+    expect_s3_class(c("s2cd", "s2_cell", "S7_object"))
 
   d |>
     is_s2cd() |>
@@ -64,11 +64,15 @@ test_that("s2cd behaves as expected", {
 
   d |>
     tibble::as_tibble() |>
-    expect_s3_class(c("tbl_df", "tbl", "data.frame"))
+    expect_s3_class(c("tbl_df", "tbl", "data.frame")) |>
+    names() |>
+    expect_equal(c("s2_cell", "dates"))
 
   d |>
     as.data.frame() |>
-    expect_s3_class("data.frame")
+    expect_s3_class("data.frame") |>
+    names() |>
+    expect_equal(c("s2_cell", "dates"))
 
   d |>
     as.numeric() |>
@@ -98,4 +102,24 @@ test_that("s2cd behaves as expected", {
   expect_type(d@dates, "list")
   vapply(d@dates, class, character(1)) |>
     expect_identical(rep("Date", length(d)))
+
+  # as_s2cd
+  my_d <-
+    data.frame(
+      s2_cell = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+      dates = I(list(
+        as.Date("2026-01-01"),
+        c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+      ))
+    )
+
+  expect_identical(d, as_s2cd(d))
+
+  as_s2cd(my_d) |>
+    expect_s3_class("s2cd")
+
+  my_d |>
+    tibble::as_tibble() |>
+    as_s2cd() |>
+    expect_s3_class("s2cd")
 })

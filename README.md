@@ -5,7 +5,6 @@
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN status](https://www.r-pkg.org/badges/version/geomarker)](https://CRAN.R-project.org/package=geomarker)
 [![R-CMD-check](https://github.com/geomarker-io/geomarker/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/geomarker-io/geomarker/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/geomarker-io/geomarker/graph/badge.svg)](https://app.codecov.io/gh/geomarker-io/geomarker)
 
 <!-- badges: end -->
 
@@ -21,7 +20,7 @@ devtools::install_github("geomarker-io/geomarker")
 
 ## Using
 
-### `s2_cell_dates`
+### `s2cd` (`s2_cell_dates`)
 
 This class extends `s2::s2_cell` to include a list of Date vectors, one for each s2 cell.
 This data structure is meant to store locations and dates of observations and is used as the input to all geomarker assessment functions.

@@ -30,8 +30,11 @@ is_non_decreasing <- function(x) {
 #'
 #' @param .data an s2_cell object that is valid and is at level 30 resolution
 #' @param dates a list of date vectors, each in chronological order and without missing values
+#' @param ... reserved for future extensions
 #' @export
 #' @examples
+#'
+#' # create directly with s2_cell vector and list of Date vectors
 #' d <- s2cd(
 #'   s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
 #'   dates = list(
@@ -39,6 +42,20 @@ is_non_decreasing <- function(x) {
 #'     c(as.Date("2024-09-13"), as.Date("2024-09-20"))
 #'   )
 #' )
+#'
+#' # check if object is a s2cd object
+#' is_s2cd(d)
+#'
+#' # create using data.frame with s2_cell and dates columns
+#' my_d <-
+#'   data.frame(
+#'     s2_cell = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+#'     dates = I(list(
+#'       as.Date("2026-01-01"),
+#'       c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+#'     ))
+#'  ) |>
+#'   as_s2cd()
 s2cd <- S7::new_class(
   "s2cd",
   parent = S3_s2_cell,
@@ -73,6 +90,9 @@ is_s2cd <- function(x) {
 
 
 #' @rdname s2cd
+#' @param x an object of class s2cd or a data.frame with
+#' a column called "s2_cell" containing an s2_cell vector
+#' and a column called "dates" containing a list of Date vectors
 #' @export
 as_s2cd <- S7::new_generic("as_s2cd", dispatch_args = "x")
 
@@ -105,7 +125,7 @@ S7::method(print, s2cd) <- function(x, ...) {
 #' @export
 as.data.frame.s2cd <- function(x, ...) {
   data.frame(
-    s2_cell = structure(x, class = c("s2_cell", "wk_vctr")),
+    s2_cell = structure(S7::S7_data(x), class = c("s2_cell", "wk_vctr")),
     dates = I(x@dates),
     row.names = NULL,
     check.names = FALSE,

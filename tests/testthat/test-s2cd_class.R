@@ -122,4 +122,6 @@ test_that("s2cd behaves as expected", {
     tibble::as_tibble() |>
     as_s2cd() |>
     expect_s3_class("s2cd")
+
+  expect_identical(my_d, as.data.frame(as_s2cd(my_d)))
 })

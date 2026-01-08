@@ -55,8 +55,6 @@ S7::method(as_s2_cell, s2_cell_dates) <- function(x, ...) {
   s2::new_s2_cell(S7::S7_data(x))
 }
 
-# format method?
-
 S7::method(print, s2_cell_dates) <- function(x, ...) {
   cat(sprintf("<s2_cell_dates[%d]>", length(x)))
   the_s2 <- structure(x, class = c("s2_cell", "wk_vctr"))

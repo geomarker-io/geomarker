@@ -17,17 +17,22 @@ is_non_decreasing <- function(x) {
   all(diff(x) >= 0)
 }
 
-# s2dates extends the s2::s2_cell class with a list of date vectors,
-# where each vector of chronologically, non-missing dates corresponds
-# to each (valid, level 30) s2 cell
-# add the estimated meter resolution on level 30 cell and describe more as a point
-s2_cell_dates <- S7::new_class(
-  "s2_cell_dates",
+is_s2cd <- function(x) {
+  inherits(x, "geomarker::s2cd")
+}
+
+#' An s2cd object (short for **s2_cell_dates**)
+#' extends the s2::s2_cell class with a list of date vectors,
+#' where each vector of chronologically, non-missing dates corresponds
+#' to each (valid, level 30) s2 cell
+#' TODO add the estimated meter resolution on level 30 cell and describe more as a point
+s2cd <- S7::new_class(
+  "s2cd",
   parent = S3_s2_cell,
   properties = list(dates = S7::class_list),
   validator = function(self) {
     if (!inherits(self, "s2_cell")) {
-      "`s2dates` must extend an `s2_cell` vector."
+      "`s2cd` must extend an `s2_cell` vector."
     } else if (!all(s2::s2_cell_is_valid(self))) {
       "s2 cells must be valid (`s2::s2_cell_is_valid()`)."
     } else if (!all(s2::s2_cell_level(self) == 30)) {
@@ -49,11 +54,11 @@ s2_cell_dates <- S7::new_class(
 #' @importFrom s2 as_s2_cell
 NULL
 
-S7::method(as_s2_cell, s2_cell_dates) <- function(x, ...) {
+S7::method(as_s2_cell, s2cd) <- function(x, ...) {
   s2::new_s2_cell(S7::S7_data(x))
 }
 
-S7::method(print, s2_cell_dates) <- function(x, ...) {
+S7::method(print, s2cd) <- function(x, ...) {
   cat(sprintf("<s2_cell_dates[%d]>", length(x)))
   the_s2 <- structure(x, class = c("s2_cell", "wk_vctr"))
   cat("\n<s2>\n")
@@ -62,7 +67,7 @@ S7::method(print, s2_cell_dates) <- function(x, ...) {
 }
 
 #' @export
-as.data.frame.s2_cell_dates <- function(x, ...) {
+as.data.frame.s2cd <- function(x, ...) {
   data.frame(
     s2_cell = structure(x, class = c("s2_cell", "wk_vctr")),
     dates = I(x@dates),
@@ -74,7 +79,7 @@ as.data.frame.s2_cell_dates <- function(x, ...) {
 
 #' @export
 if (requireNamespace("tibble", quietly = TRUE)) {
-  as_tibble.s2_cell_dates <- function(x, ...) {
+  as_tibble.s2cd <- function(x, ...) {
     tibble::tibble(
       s2_cell = structure(x, class = c("s2_cell", "wk_vctr")),
       dates = x@dates

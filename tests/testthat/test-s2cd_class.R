@@ -1,5 +1,5 @@
-test_that("s2_cell_dates behaves as expected", {
-  d <- s2_cell_dates(
+test_that("s2cd behaves as expected", {
+  d <- s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
     dates = list(
       as.Date("2026-01-01"),
@@ -8,9 +8,25 @@ test_that("s2_cell_dates behaves as expected", {
   )
 
   d |>
-    expect_s3_class(c("geomarker::s2_cell_dates", "s2_cell", "S7_object"))
+    expect_s3_class(c("geomarker::s2cd", "s2_cell", "S7_object"))
 
-  s2_cell_dates(
+  d |>
+    is_s2cd() |>
+    expect_true()
+
+  s2cd_example() |>
+    is_s2cd() |>
+    expect_true()
+
+  letters |>
+    is_s2cd() |>
+    expect_false()
+
+  s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")) |>
+    is_s2cd() |>
+    expect_false()
+
+  s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25", "8841a45555555555")),
     dates = list(
       as.Date("2026-01-01"),
@@ -19,7 +35,7 @@ test_that("s2_cell_dates behaves as expected", {
   ) |>
     expect_error("all s2 cells must be level 30")
 
-  s2_cell_dates(
+  s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
     dates = list(
       TRUE,
@@ -28,7 +44,7 @@ test_that("s2_cell_dates behaves as expected", {
   ) |>
     expect_error("all elements in the dates list must be Date vectors")
 
-  s2_cell_dates(
+  s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
     dates = list(
       as.Date("2026-01-01"),
@@ -37,7 +53,7 @@ test_that("s2_cell_dates behaves as expected", {
   ) |>
     expect_error("dates must not contain missing values")
 
-  s2_cell_dates(
+  s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
     dates = list(
       as.Date("2026-01-01"),

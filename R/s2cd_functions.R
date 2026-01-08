@@ -1,13 +1,29 @@
+#' Example s2cd (s2_cell_dates) objects
+#'
+#' Returns a small example `s2cd` object for use in examples
+#' and vignettes.
+#'
+#' @return An object of class `s2cd`.
+#' @export
+#' @examples
+#' s2cd_example()
+s2cd_example <- function() {
+  s2cd(
+    s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+    dates = list(
+      as.Date("2026-01-01"),
+      c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+    )
+  )
+}
+
 #' Are all dates within a date range?
 #' @param x an s2_cell_dates object
 #' @param date_range length two Date vector representing a minimum and maximum allowable date
 #' @export
-is_within_date_range <- function(x, date_range) {
+s2cd_is_within_date_range <- function(x, date_range) {
   stopifnot(
-    "x must be a s2_cell_dates object" = inherits(
-      x,
-      "geomarker::s2_cell_dates"
-    ),
+    "x must be a s2cd object" = inherits(x, "geomarker::s2cd"),
     "date_range must be a Date vector" = inherits(date_range, "Date"),
     "date_range must be length 2" = length(date_range) == 2,
     "date_range must not have any missing values" = !anyNA(date_range),
@@ -32,4 +48,4 @@ is_within_date_range <- function(x, date_range) {
 #'   codec::cincy_city_geo(),
 #'   max_level = 12, max_cells = 100)
 #'
-# is_within_s2_cells <- function(x, s2_cells) {}
+# s2cd_is_within_s2_cells <- function(x, s2_cells) {}

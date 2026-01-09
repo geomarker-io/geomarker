@@ -12,6 +12,9 @@
 #' @examples
 #' geomarker_data_dir()
 #' geomarker_data_dir("greenness")
+#'
+#' geomarker_data_dir_info()
+#'
 #' # use environment variable to change location
 #' withr::local_envvar(R_USER_DATA_DIR = tempdir())
 #' geomarker_data_dir()
@@ -37,7 +40,39 @@ geomarker_data_dir <- function(subdir = character(0)) {
   the_path
 }
 
-# TODO list files in geomarker data folder
+#' @rdname geomarker_data_dir
+#' @export
+geomarker_data_dir_info <- function(subdir = character(0)) {
+  files <- list.files(
+    geomarker_data_dir(subdir),
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  info <- file.info(files)
+
+  n_files <- sum(!is.na(info$size))
+  total_bytes <- sum(info$size, na.rm = TRUE)
+
+  pretty_size <- function(bytes) {
+    if (bytes < 1024^2) {
+      sprintf("%.1f MB", bytes / 1024^2)
+    } else {
+      sprintf("%.2f GB", bytes / 1024^3)
+    }
+  }
+
+  message(
+    sprintf(
+      "The geomarker data directory has %s files totalling %s:",
+      format(n_files, big.mark = ","),
+      pretty_size(total_bytes)
+    ),
+    "\n  ",
+    geomarker_data_dir()
+  )
+
+  invisible(NULL)
+}
 
 # really only designed to be used with static URLs ending in filename
 # TODO will break with query parameters??

@@ -2,9 +2,12 @@
 % Please edit documentation in R/geomarker_data.R
 \name{geomarker_data_dir}
 \alias{geomarker_data_dir}
+\alias{geomarker_data_dir_info}
 \title{Path to geomarker data directory}
 \usage{
 geomarker_data_dir(subdir = character(0))
+
+geomarker_data_dir_info(subdir = character(0))
 }
 \arguments{
 \item{subdir}{character (length <= 1); optional subdirectory within the
@@ -23,6 +26,9 @@ environment variable.
 \examples{
 geomarker_data_dir()
 geomarker_data_dir("greenness")
+
+geomarker_data_dir_info()
+
 # use environment variable to change location
 withr::local_envvar(R_USER_DATA_DIR = tempdir())
 geomarker_data_dir()

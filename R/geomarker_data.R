@@ -1,10 +1,12 @@
-#' Get the path to the geomarker data directory.
+#' Path to geomarker data directory
 #'
-#' By default, the user's data directory for the geomarker data package is used;
-#' see `?tools::R_user_dir`.
+#' By default, the R user's data directory for the geomarker data package is
+#' used to download and install geomarker data files as needed when used
+#' by geomarker assessment functions (see `?tools::R_user_dir`).
 #' Specify an alternative download location by setting the `R_USER_DATA_DIR`
 #' environment variable.
-#' @param subdir character (length one); optional subdirectory within the geomarker data folder
+#' @param subdir character (length <= 1); optional subdirectory within the
+#' geomarker data folder
 #' @returns character string of path to directory
 #' @export
 #' @examples
@@ -18,7 +20,12 @@ geomarker_data_dir <- function(subdir = character(0)) {
   stopifnot(
     "subdir must be a character vector" = inherits(subdir, "character"),
     "subdir must not be longer than one" = length(subdir) <= 1,
-    "subdir must not be missing" = !is.na(subdir)
+    "subdir must not be missing" = !is.na(subdir),
+    "subdir must only use alphanumeric characters" = grepl(
+      "^[a-z0-9]+$",
+      subdir,
+      ignore.case = TRUE
+    )
   )
   the_path <- tools::R_user_dir(package = "geomarker", which = "data")
   if (length(subdir) > 0) {
@@ -30,7 +37,10 @@ geomarker_data_dir <- function(subdir = character(0)) {
   the_path
 }
 
-# really only designed to be used with static URLs ending in filename; will break with query parameters??
+# TODO list files in geomarker data folder
+
+# really only designed to be used with static URLs ending in filename
+# TODO will break with query parameters??
 url_to_filename <- function(urls) {
   url_dir_hash <- vapply(
     dirname(urls),
@@ -47,17 +57,29 @@ url_to_filename <- function(urls) {
 
 #' Download a file to the geomarker data directory
 #'
-#' The file at a URL is downloaded to the geomarker data directory
-#' (see `?geomarker_data_path()`) and named using a short hash of the
+#' `geomarker_download_file()` downloads a file at the URL
+#' to the geomarker data directory
+#' (see `?geomarker_data_dir()`) and named using a short hash of the
 #' non-filename portion of the URL in addition to a filename derived
 #' from the URL. By default, files that are already downloaded will not
 #' be downloaded again.
 #' @param url character (length one); URL of file to download
 #' @param overwrite logical; overwrite file if already downloaded?
-#' @param quiet logical; show download progress messages and print path to downloaded file?
-#' @param subdir character (length one); optional subdirectory within the geomarker data folder
-#' @returns character string of file path to downloaded file (by default, returned invisibly)
+#' @param quiet logical; show download progress messages
+#' and print path to downloaded file?
+#' @param subdir character (length one); optional subdirectory
+#' within the geomarker data folder
+#' @returns character string of file path to downloaded file
+#' (by default, returned invisibly)
 #' @export
+#' @examples
+#' geomarker_download_file(
+#'   paste0(
+#'     "https://www2.census.gov/geo/tiger/",
+#'     "TIGER2024/INTERNATIONALBOUNDARY/",
+#'     "tl_2024_us_internationalboundary.zip"
+#'  )
+#' )
 geomarker_download_file <- function(
   url,
   overwrite = FALSE,

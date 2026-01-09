@@ -2,17 +2,19 @@
 % Please edit documentation in R/s2cd_functions.R
 \name{s2cd_example}
 \alias{s2cd_example}
-\title{Example s2cd (s2_cell_dates) objects}
+\title{Example \code{s2cd} objects}
 \usage{
 s2cd_example()
 }
 \value{
-An object of class \code{s2cd}.
+A \code{s2cd} object
 }
 \description{
-Returns a small example \code{s2cd} object for use in examples
+\code{s2cd_example()} returns example \code{s2cd} objects for use in examples
 and vignettes.
 }
 \examples{
 s2cd_example()
+
+str(s2cd_example())
 }

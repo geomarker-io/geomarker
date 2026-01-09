@@ -1,16 +1,17 @@
 #' Summarize nearby elevation
 #'
-#' The `fun` (e.g. `median()` or `sd()`) of the elevations within
-#' the buffer distance of each s2 cell.
-#' Dates are not used to link to elevation data.
-#' @details Elevation data is downloaded from the PRISM Group at Oregon
-#' State University as a digital elevation model in BIL format at an 800 m grid
-#' @param x a s2_cell_dates object (see `?as_s2_cell_dates`)
+#' Summarizes elevations within
+#' the buffer distance of each s2 cell;
+#' dates are not used to link to elevation data.
+#'
+#' Elevation data is downloaded from the PRISM Group at Oregon
+#' State University as a digital elevation model in BIL format at an 800 m grid.
+#' See <https://prism.oregonstate.edu/normals/> for more details.
+#' @param x a s2_cell_dates object (see `?s2cd`)
 #' @param fun function to summarize extracted values
 #' @param buffer distance from s2 cell (in meters) to summarize data
-#' @return a numeric vector of elevation summaries
+#' @return numeric vector of elevation summaries
 #' @export
-#' @references <https://prism.oregonstate.edu/normals/>
 #' @examples
 #' get_elevation_summary(s2cd_example())
 #' get_elevation_summary(s2cd_example(), stats::sd, 1400)

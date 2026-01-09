@@ -7,28 +7,26 @@
 get_elevation_summary(x, fun = stats::median, buffer = 800)
 }
 \arguments{
-\item{x}{a s2_cell_dates object (see \code{?as_s2_cell_dates})}
+\item{x}{a s2_cell_dates object (see \code{?s2cd})}
 
 \item{fun}{function to summarize extracted values}
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 }
 \value{
-a numeric vector of elevation summaries
+numeric vector of elevation summaries
 }
 \description{
-The \code{fun} (e.g. \code{median()} or \code{sd()}) of the elevations within
-the buffer distance of each s2 cell.
-Dates are not used to link to elevation data.
+Summarizes elevations within
+the buffer distance of each s2 cell;
+dates are not used to link to elevation data.
 }
 \details{
 Elevation data is downloaded from the PRISM Group at Oregon
-State University as a digital elevation model in BIL format at an 800 m grid
+State University as a digital elevation model in BIL format at an 800 m grid.
+See \url{https://prism.oregonstate.edu/normals/} for more details.
 }
 \examples{
 get_elevation_summary(s2cd_example())
 get_elevation_summary(s2cd_example(), stats::sd, 1400)
-}
-\references{
-\url{https://prism.oregonstate.edu/normals/}
 }

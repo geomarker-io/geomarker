@@ -1,4 +1,6 @@
-S3_s2_cell <- S7::new_S3_class(
+.data.frame <- S7::new_S3_class("data.frame")
+
+.s2_cell <- S7::new_S3_class(
   "s2_cell",
   constructor = function(.data) {
     structure(.data, class = c("s2_cell", "wk_vctr"))
@@ -10,27 +12,29 @@ S3_s2_cell <- S7::new_S3_class(
   }
 )
 
-is_non_decreasing <- function(x) {
-  if (length(x) <= 1) {
-    return(TRUE)
-  }
-  all(diff(x) >= 0)
-}
-
-#' s2_cell_dates (s2cd) object
+#' Create a new s2_cell_dates (`s2cd`) object
 #'
-#' An s2cd object (short for **s2_cell_dates**)
-#' extends the s2::s2_cell class with a list of date vectors,
+#' A `s2cd` object (short for **s2_cell_dates**)
+#' extends the `s2::s2_cell` class with a list of date vectors,
 #' where each vector of chronologically, non-missing dates corresponds
-#' to each (valid, level 30) s2 cell.
+#' to each (valid, level 30) s2 cell. Create a new `s2cd` object
+#' with `s2cd()` or coerce another object into a `s2cd` object
+#' with `as_s2cd()`.
+#'
+#' Each position in the s2_cells vector corresponds to
+#' the same-indexed element in dates, allowing multiple
+#' dates to be associated with a single level-30 S2 cell.
+#'
 #' At level 30, S2 cells have an approximate spatial
 #' resolution of *1 centimeter*; in this context,
 #' they are intended to function as point-like
 #' representations rather than true spatial areas.
 #'
+#' @seealso as_s2cd
 #' @param .data an s2_cell object that is valid and is at level 30 resolution
-#' @param dates a list of date vectors, each in chronological order and without missing values
-#' @param ... reserved for future extensions
+#' @param dates a list of date vectors,
+#' each in chronological order and without missing values
+#' @return A `s2cd` object
 #' @export
 #' @examples
 #'
@@ -47,18 +51,17 @@ is_non_decreasing <- function(x) {
 #' is_s2cd(d)
 #'
 #' # create using data.frame with s2_cell and dates columns
-#' my_d <-
-#'   data.frame(
-#'     s2_cell = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
-#'     dates = I(list(
-#'       as.Date("2026-01-01"),
-#'       c(as.Date("2024-09-13"), as.Date("2024-09-20"))
-#'     ))
-#'  ) |>
+#' data.frame(
+#'   s2_cell = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+#'   dates = I(list(
+#'     as.Date("2026-01-01"),
+#'     c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+#'   ))
+#' ) |>
 #'   as_s2cd()
 s2cd <- S7::new_class(
   "s2cd",
-  parent = S3_s2_cell,
+  parent = .s2_cell,
   package = NULL,
   properties = list(dates = S7::class_list),
   validator = function(self) {
@@ -82,21 +85,30 @@ s2cd <- S7::new_class(
   }
 )
 
-#' @rdname s2cd
-#' @export
-is_s2cd <- function(x) {
-  inherits(x, "s2cd")
-}
 
-
-#' @rdname s2cd
-#' @param x an object of class s2cd or a data.frame with
-#' a column called "s2_cell" containing an s2_cell vector
-#' and a column called "dates" containing a list of Date vectors
+#' Convert another object into a s2_cell_dates (`s2cd`) object
+#'
+#' Convert other R objects into s2cd objects
+#' @section Methods implemented for:
+#' - `data.frame`: must have columns called "s2_cell" and "dates"
+#' - `s2cd`: returned as-is
+#' @param x an object to convert
+#' @param ... passed to methods
 #' @export
+#' @examples
+#' data.frame(
+#'      s2_cell = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+#'      dates = I(list(
+#'        as.Date("2026-01-01"),
+#'        c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+#'      ))
+#'    ) |>
+#'   as_s2cd()
+#'
+#' as_s2cd(s2cd_example())
 as_s2cd <- S7::new_generic("as_s2cd", dispatch_args = "x")
 
-S7::method(as_s2cd, S7::new_S3_class("data.frame")) <- function(x, ...) {
+S7::method(as_s2cd, .data.frame) <- function(x, ...) {
   stopifnot(
     "data.frame must have column named `s2_cell`" = "s2_cell" %in% names(x),
     "data.frame must have column named `dates`" = "dates" %in% names(x)
@@ -105,7 +117,6 @@ S7::method(as_s2cd, S7::new_S3_class("data.frame")) <- function(x, ...) {
 }
 
 S7::method(as_s2cd, s2cd) <- function(x, ...) x
-
 
 #' @importFrom s2 as_s2_cell
 NULL
@@ -133,12 +144,16 @@ as.data.frame.s2cd <- function(x, ...) {
   )
 }
 
-# #' @export
-# if (requireNamespace("tibble", quietly = TRUE)) {
-#   as_tibble.s2cd <- function(x, ...) {
-#     tibble::tibble(
-#       s2_cell = structure(x, class = c("s2_cell", "wk_vctr")),
-#       dates = x@dates
-#     )
-#   }
-# }
+#' Test if an object is a `s2cd` object
+#'
+#' Tests if an object is of class `sc2d`
+#' @param x any object to test
+#' @return logical
+#' @export
+#' @examples
+#' is_s2cd(s2cd_example())
+#'
+#' is_s2cd(letters)
+is_s2cd <- function(x) {
+  inherits(x, "s2cd")
+}

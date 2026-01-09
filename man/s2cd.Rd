@@ -2,32 +2,32 @@
 % Please edit documentation in R/s2cd_class.R
 \name{s2cd}
 \alias{s2cd}
-\alias{is_s2cd}
-\alias{as_s2cd}
-\title{s2_cell_dates (s2cd) object}
+\title{Create a new s2_cell_dates (\code{s2cd}) object}
 \usage{
 s2cd(.data, dates = list())
-
-is_s2cd(x)
-
-as_s2cd(x, ...)
 }
 \arguments{
 \item{.data}{an s2_cell object that is valid and is at level 30 resolution}
 
-\item{dates}{a list of date vectors, each in chronological order and without missing values}
-
-\item{x}{an object of class s2cd or a data.frame with
-a column called "s2_cell" containing an s2_cell vector
-and a column called "dates" containing a list of Date vectors}
-
-\item{...}{reserved for future extensions}
+\item{dates}{a list of date vectors,
+each in chronological order and without missing values}
+}
+\value{
+A \code{s2cd} object
 }
 \description{
-An s2cd object (short for \strong{s2_cell_dates})
-extends the s2::s2_cell class with a list of date vectors,
+A \code{s2cd} object (short for \strong{s2_cell_dates})
+extends the \code{s2::s2_cell} class with a list of date vectors,
 where each vector of chronologically, non-missing dates corresponds
-to each (valid, level 30) s2 cell.
+to each (valid, level 30) s2 cell. Create a new \code{s2cd} object
+with \code{s2cd()} or coerce another object into a \code{s2cd} object
+with \code{as_s2cd()}.
+}
+\details{
+Each position in the s2_cells vector corresponds to
+the same-indexed element in dates, allowing multiple
+dates to be associated with a single level-30 S2 cell.
+
 At level 30, S2 cells have an approximate spatial
 resolution of \emph{1 centimeter}; in this context,
 they are intended to function as point-like
@@ -48,13 +48,15 @@ d <- s2cd(
 is_s2cd(d)
 
 # create using data.frame with s2_cell and dates columns
-my_d <-
-  data.frame(
-    s2_cell = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
-    dates = I(list(
-      as.Date("2026-01-01"),
-      c(as.Date("2024-09-13"), as.Date("2024-09-20"))
-    ))
- ) |>
+data.frame(
+  s2_cell = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+  dates = I(list(
+    as.Date("2026-01-01"),
+    c(as.Date("2024-09-13"), as.Date("2024-09-20"))
+  ))
+) |>
   as_s2cd()
+}
+\seealso{
+as_s2cd
 }

@@ -16,17 +16,30 @@ geomarker_download_file(
 
 \item{overwrite}{logical; overwrite file if already downloaded?}
 
-\item{quiet}{logical; show download progress messages and print path to downloaded file?}
+\item{quiet}{logical; show download progress messages
+and print path to downloaded file?}
 
-\item{subdir}{character (length one); optional subdirectory within the geomarker data folder}
+\item{subdir}{character (length one); optional subdirectory
+within the geomarker data folder}
 }
 \value{
-character string of file path to downloaded file (by default, returned invisibly)
+character string of file path to downloaded file
+(by default, returned invisibly)
 }
 \description{
-The file at a URL is downloaded to the geomarker data directory
-(see \code{?geomarker_data_path()}) and named using a short hash of the
+\code{geomarker_download_file()} downloads a file at the URL
+to the geomarker data directory
+(see \code{?geomarker_data_dir()}) and named using a short hash of the
 non-filename portion of the URL in addition to a filename derived
 from the URL. By default, files that are already downloaded will not
 be downloaded again.
+}
+\examples{
+geomarker_download_file(
+  paste0(
+    "https://www2.census.gov/geo/tiger/",
+    "TIGER2024/INTERNATIONALBOUNDARY/",
+    "tl_2024_us_internationalboundary.zip"
+ )
+)
 }

@@ -8,7 +8,7 @@
 
 <!-- badges: end -->
 
-The goal of geomarker is to facilitate geomarker assessment, or the linkage of environmental exposures and community characteristics with people according to their locations and dates.
+The goal of geomarker is to facilitate geomarker assessment, or the linkage of environmental exposures and community characteristics with people according to their locations and dates, in R.
 
 ## Installation
 
@@ -20,9 +20,9 @@ devtools::install_github("geomarker-io/geomarker")
 
 ## Using
 
-### `s2cd` (`s2_cell_dates`)
+### s2_cell_dates (`s2cd`)
 
-This class extends `s2::s2_cell` to include a list of Date vectors, one for each s2 cell.
+The `s2cd` class extends `s2::s2_cell` to include a list of Date vectors, one for each s2 cell.
 This data structure is meant to store locations and dates of observations and is used as the input to all geomarker assessment functions.
 
 ### Geomarker Data

@@ -2,19 +2,21 @@
 % Please edit documentation in R/geomarker_data.R
 \name{geomarker_data_dir}
 \alias{geomarker_data_dir}
-\title{Get the path to the geomarker data directory.}
+\title{Path to geomarker data directory}
 \usage{
 geomarker_data_dir(subdir = character(0))
 }
 \arguments{
-\item{subdir}{character (length one); optional subdirectory within the geomarker data folder}
+\item{subdir}{character (length <= 1); optional subdirectory within the
+geomarker data folder}
 }
 \value{
 character string of path to directory
 }
 \description{
-By default, the user's data directory for the geomarker data package is used;
-see \code{?tools::R_user_dir}.
+By default, the R user's data directory for the geomarker data package is
+used to download and install geomarker data files as needed when used
+by geomarker assessment functions (see \code{?tools::R_user_dir}).
 Specify an alternative download location by setting the \code{R_USER_DATA_DIR}
 environment variable.
 }

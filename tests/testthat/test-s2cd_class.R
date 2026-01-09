@@ -113,6 +113,8 @@ test_that("s2cd behaves as expected", {
       ))
     )
 
+  expect_identical(d[1], s2cd(s2::as_s2_cell(d)[1], d@dates[1]))
+
   expect_identical(d, as_s2cd(d))
 
   as_s2cd(my_d) |>

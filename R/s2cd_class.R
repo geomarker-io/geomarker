@@ -85,6 +85,14 @@ s2cd <- S7::new_class(
   }
 )
 
+#' @export
+#' @method [ s2cd
+`[.s2cd` <- function(x, i, ...) {
+  if (missing(i)) {
+    return(x)
+  }
+  s2cd(S7::S7_data(x)[i], x@dates[i])
+}
 
 #' Convert another object into a s2_cell_dates (`s2cd`) object
 #'

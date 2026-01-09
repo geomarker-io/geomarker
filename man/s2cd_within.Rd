@@ -4,7 +4,7 @@
 \alias{s2cd_within}
 \title{Test if a \code{s2cd} object is within a date range or s2 cell union}
 \usage{
-s2cd_within(x, date_range = NULL, s2_cell_union = NULL)
+s2cd_within(x, date_range = NULL, s2_cell = NULL)
 }
 \arguments{
 \item{x}{an s2_cell_dates object}
@@ -12,7 +12,8 @@ s2cd_within(x, date_range = NULL, s2_cell_union = NULL)
 \item{date_range}{length two Date vector representing a
 minimum and maximum allowable date}
 
-\item{s2_cell_union}{a s2_cell_union object}
+\item{s2_cell}{a s2_cell vector, often a covering represented by
+many cells of different resolutions; see examples}
 }
 \value{
 logical

@@ -29,7 +29,8 @@ s2cd_example <- function() {
 #' @param x an s2_cell_dates object
 #' @param date_range length two Date vector representing a
 #' minimum and maximum allowable date
-#' @param s2_cell_union a s2_cell_union object
+#' @param s2_cell a s2_cell vector, often a covering represented by
+#' many cells of different resolutions; see examples
 #' @return logical
 #' @export
 #' @examples
@@ -37,23 +38,23 @@ s2cd_example <- function() {
 #' # s2::s2_covering_cell_ids_agg(
 #' #   codec::cincy_city_geo(),
 #' #   max_level = 12, max_cells = 100)
-s2cd_within <- function(x, date_range = NULL, s2_cell_union = NULL) {
+s2cd_within <- function(x, date_range = NULL, s2_cell = NULL) {
   if (!is.null(date_range)) {
     covers_dates <- s2cd_within_dates(x = x, date_range = date_range)
   }
-  if (!is.null(s2_cell_union)) {
-    covers_s2 <- s2cd_within_s2_cells(x = x, s2_cell_union = s2_cell_union)
+  if (!is.null(s2_cell)) {
+    covers_s2 <- s2cd_within_s2_cells(x = x, s2_cell = s2_cell)
   }
-  if (is.null(date_range) && is.null(s2_cell_union)) {
+  if (is.null(date_range) && is.null(s2_cell)) {
     return(FALSE)
   }
-  if (!is.null(date_range) && is.null(s2_cell_union)) {
+  if (!is.null(date_range) && is.null(s2_cell)) {
     return(covers_dates)
   }
-  if (is.null(date_range) && !is.null(s2_cell_union)) {
+  if (is.null(date_range) && !is.null(s2_cell)) {
     return(covers_s2)
   }
-  if (!is.null(date_range) && !is.null(s2_cell_union)) {
+  if (!is.null(date_range) && !is.null(s2_cell)) {
     return(covers_dates && covers_s2)
   }
 }
@@ -75,4 +76,14 @@ s2cd_within_dates <- function(x, date_range) {
   TRUE
 }
 
-s2cd_within_s2_cells <- function(x, s2_cell_union) {}
+s2cd_within_s2_cells <- function(x, s2_cell) {
+  stopifnot(
+    "x must be a s2cd object" = is_s2cd(x),
+    "s2_cell must be a s2_cell vector" = inherits(s2_cell, "s2_cell"),
+    "s2_cell must have a non-zero length" = length(s2_cell) > 0,
+    "s2_cell must not having any missing values" = !any(is.na(s2_cell))
+  )
+  s2_bounds <- s2::s2_cell_union(list(s2_cell))
+  does_contain <- s2::s2_cell_union_contains(s2_bounds, s2::as_s2_cell(x))
+  all(does_contain)
+}

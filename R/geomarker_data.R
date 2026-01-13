@@ -134,19 +134,42 @@ geomarker_download_file <- function(
   }
   tmp <- tempfile(pattern = "geomarker_dl_")
   on.exit(unlink(tmp), add = TRUE)
-  if (requireNamespace("curl", quietly = TRUE)) {
-    curl::curl_download(url, destfile = tmp, quiet = quiet, mode = "wb")
-  } else {
-    message("install the curl package for a better downloading experience!")
-    utils::download.file(url, destfile = tmp, mode = "wb", quiet = quiet)
-  }
+  err_context <- paste0(
+    "Download failed.\n",
+    "URL: ",
+    url,
+    "\n",
+    "Expected file path: ",
+    dest,
+    "\n",
+    "If you can download this file manually, place it at the path above and retry."
+  )
+  tryCatch(
+    {
+      if (requireNamespace("curl", quietly = TRUE)) {
+        curl::curl_download(url, destfile = tmp, quiet = quiet, mode = "wb")
+      } else {
+        message("install the curl package for a better downloading experience!")
+        utils::download.file(url, destfile = tmp, mode = "wb", quiet = quiet)
+      }
+    },
+    error = function(err) {
+      stop(
+        err_context,
+        "\nOriginal error: ",
+        conditionMessage(err),
+        call. = FALSE
+      )
+    }
+  )
   ok <- file.rename(tmp, dest)
   if (!ok && !file.copy(tmp, dest, overwrite = TRUE)) {
     stop(
-      "Failed to move downloaded file: ",
+      "Failed to move downloaded file into destination.\n",
+      "Temp file: ",
       tmp,
-      " into destination: ",
-      dest,
+      "\n",
+      err_context,
       call. = FALSE
     )
   }

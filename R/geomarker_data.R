@@ -75,18 +75,86 @@ geomarker_data_dir_info <- function(subdir = character(0)) {
 }
 
 # really only designed to be used with static URLs ending in filename
-# TODO will break with query parameters??
-url_to_filename <- function(urls) {
+# TODO will break with query parameters?? prevent this??
+url_to_filename <- function(url, etag = TRUE) {
+  stopifnot(
+    "etag must be length one" = length(etag) == 1,
+    "etag must be logical" = inherits(etag, "logical"),
+    "url must be length one" = length(url) == 1,
+    "url must be character" = inherits(url, "character")
+  )
   url_dir_hash <- vapply(
-    dirname(urls),
+    dirname(url),
     digest::digest,
     algo = "xxhash32",
     serialize = FALSE,
     FUN.VALUE = character(1)
   )
-  f_name <- basename(urls)
+  url_etag <- url_etag(url)
+  if (etag && !is.na(url_etag)) {
+    url_dir_hash <- url_etag
+  }
+  f_name <- basename(url)
   filepath <- paste(url_dir_hash, f_name, sep = "--")
   filepath
+}
+
+#' Check a URL for an ETag without downloading the file
+#'
+#' Uses a HEAD request to retrieve the ETag header for the URL.
+#' @param url character (length one); URL to query
+#' @returns character string containing the ETag value, or NA if not present
+#' @examples
+#' url_etag(
+#'   "https://www.northwestknowledge.net/metdata/data/tmmx_2025.nc"
+#' )
+#' url_etag("https://example.com")
+#' url_etag("https://example1209430932490324032.com")
+url_etag <- function(url) {
+  stopifnot(
+    "url must be length one" = length(url) == 1,
+    "url must be character" = inherits(url, "character")
+  )
+  check_installed("curl", "to check URL headers.")
+  headers <- tryCatch(
+    {
+      curl::new_handle(nobody = TRUE, header = TRUE) |>
+        curl::curl_fetch_memory(url = url, handle = _) |>
+        _$headers |>
+        curl::parse_headers()
+    },
+    error = function(err) NULL
+  )
+
+  if (is.null(headers)) {
+    message(
+      "not able to retrieve headers for ",
+      url,
+      "\ncheck network connectivity and url availability"
+    )
+    return(NA_character_)
+  }
+
+  which_etag_header <- grep("^ETag:", headers, ignore.case = TRUE)
+  if (length(which_etag_header) == 0) {
+    message("no ETag found in headers")
+    return(NA_character_)
+  }
+  etag <- sub(
+    "^ETag:\\s*",
+    "",
+    headers[[which_etag_header]],
+    ignore.case = TRUE
+  )
+  if (!is.null(etag)) {
+    etag <- gsub("\\\\\"", "\"", etag)
+    etag <- gsub("^\"|\"$", "", etag)
+  }
+
+  if (!is.null(etag)) {
+    return(etag)
+  }
+  NA_character_
 }
 
 
@@ -114,6 +182,9 @@ url_to_filename <- function(urls) {
 #'     "TIGER2024/INTERNATIONALBOUNDARY/",
 #'     "tl_2024_us_internationalboundary.zip"
 #'  )
+#' )
+#' geomarker_download_file(
+#'   "https://www.northwestknowledge.net/metdata/data/tmmx_2025.nc"
 #' )
 geomarker_download_file <- function(
   url,

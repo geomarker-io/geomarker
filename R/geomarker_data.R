@@ -183,9 +183,6 @@ url_etag <- function(url) {
 #'     "tl_2024_us_internationalboundary.zip"
 #'  )
 #' )
-#' geomarker_download_file(
-#'   "https://www.northwestknowledge.net/metdata/data/tmmx_2025.nc"
-#' )
 geomarker_download_file <- function(
   url,
   overwrite = FALSE,

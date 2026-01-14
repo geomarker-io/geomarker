@@ -8,6 +8,7 @@ geomarker_download_file(
   url,
   overwrite = FALSE,
   quiet = FALSE,
+  etag = TRUE,
   subdir = character(0)
 )
 }
@@ -19,6 +20,9 @@ geomarker_download_file(
 \item{quiet}{logical; show download progress messages
 and print path to downloaded file?}
 
+\item{etag}{logical; use ETag header (when available) for naming
+instead of a short url hash?}
+
 \item{subdir}{character (length one); optional subdirectory
 within the geomarker data folder}
 }
@@ -27,12 +31,14 @@ character string of file path to downloaded file
 (by default, returned invisibly)
 }
 \description{
-\code{geomarker_download_file()} downloads a file at the URL
+\code{geomarker_download_file()} downloads a file at a URL
 to the geomarker data directory
-(see \code{?geomarker_data_dir()}) and named using a short hash of the
+(see \code{?geomarker_data_dir()}) named using a short hash of the
 non-filename portion of the URL in addition to a filename derived
-from the URL. By default, files that are already downloaded will not
-be downloaded again.
+from the URL. If the URL has an ETag header, this is used instead
+of the URL short hash.
+By default, files that are already downloaded will not
+be downloaded again (except if their ETag header changes).
 }
 \examples{
 geomarker_download_file(

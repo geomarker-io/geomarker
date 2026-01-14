@@ -23,7 +23,7 @@ test_that("get_gridmet_data validates gridmet_var", {
 })
 
 test_that("get_gridmet_data works", {
-  skip_if_no_internet()
+  skip_if_offline()
   skip_if_not_installed("terra")
 
   x_ok <- s2cd(

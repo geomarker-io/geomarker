@@ -13,7 +13,6 @@ test_that("geomarker_data_dir works", {
 
 test_that("url_to_filename works", {
   c(
-    "http://thredds.northwestknowledge.net:8080/thredds/fileServer/MET/tmmx/tmmx_2025.nc",
     "https://www2.census.gov/geo/tiger/TIGER2024/INTERNATIONALBOUNDARY/tl_2024_us_internationalboundary.zip",
     "https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/Shapefile/2025/12/hms_smoke20251225.zip",
     "https://downloads.psl.noaa.gov/Datasets/NARR/Dailies/monolevel/hpbl.2023.nc",
@@ -21,16 +20,15 @@ test_that("url_to_filename works", {
     "https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data-bundles/Annual_NLCD_FctImp_2022_CU_C1V1.zip",
     "https://gaftp.epa.gov/air/nei/2020/data_summaries/Facility%20Level%20by%20Pollutant.zip"
   ) |>
-    url_to_filename() |>
+    sapply(url_to_filename, USE.NAMES = FALSE) |>
     expect_identical(
       c(
-        "373b0d2a--tmmx_2025.nc",
         "d274c988--tl_2024_us_internationalboundary.zip",
-        "36b8531e--hms_smoke20251225.zip",
-        "afadc45b--hpbl.2023.nc",
-        "4303dd87--hpms_2020_f12_aadt.gpkg",
-        "d84440c1--Annual_NLCD_FctImp_2022_CU_C1V1.zip",
-        "b883536e--Facility%20Level%20by%20Pollutant.zip"
+        "3ca2-646d99da5cbc0--hms_smoke20251225.zip",
+        "5cf681b-60e71a2e19837--hpbl.2023.nc",
+        "0x8DDC4A271EE0EEA--hpms_2020_f12_aadt.gpkg",
+        "395e73bf-637402f89f5ee--Annual_NLCD_FctImp_2022_CU_C1V1.zip",
+        "194d242-5f81da6dcd0df--Facility%20Level%20by%20Pollutant.zip"
       )
     )
 })

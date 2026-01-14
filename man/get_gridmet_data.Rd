@@ -19,8 +19,6 @@ get_gridmet_data(
 \item{overwrite}{logical; overwrite files if already downloaded?}
 
 \item{quiet}{logical; show download progress messages?}
-
-\item{gridmet_year}{character; year of gridMET file}
 }
 \value{
 a list of numeric vectors of gridMET values

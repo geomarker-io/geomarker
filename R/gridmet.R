@@ -11,7 +11,6 @@
 #' preliminary and subject to change.
 #' @param x a s2_cell_dates object (see `?s2cd`)
 #' @param gridmet_var character; name of gridMET variable
-#' @param gridmet_year character; year of gridMET file
 #' @param overwrite logical; overwrite files if already downloaded?
 #' @param quiet logical; show download progress messages?
 #' @return a list of numeric vectors of gridMET values
@@ -42,7 +41,8 @@ get_gridmet_data <- function(
       date_range = c(as.Date("1979-01-01"), as.Date("9999-01-01"))
     )
   )
-  gridmet_var <- rlang::arg_match(gridmet_var)
+  gridmet_var <- match.arg(gridmet_var)
+  check_installed("terra", "to read data from gridMET rasters")
 
   gridmet_years <-
     x@dates |>
@@ -57,25 +57,30 @@ get_gridmet_data <- function(
     gridmet_years
   )
 
-  gridmet_raster <-
-    purrr::map_chr(
-      gridmet_urls,
-      geomarker_download_file,
-      overwrite = overwrite,
-      quiet = quiet
-    ) |>
-    purrr::map(terra::rast) |>
-    purrr::map2(gridmet_years, \(.x, .y) {
+  gridmet_files <- vapply(
+    gridmet_urls,
+    geomarker_download_file,
+    overwrite = overwrite,
+    quiet = quiet,
+    FUN.VALUE = character(1)
+  )
+  gridmet_rasters <- lapply(gridmet_files, terra::rast)
+  gridmet_rasters <- mapply(
+    function(.x, .y) {
       stats::setNames(
         .x,
         seq(
-          as.Date(glue::glue("{.y}-01-01")),
-          as.Date(glue::glue("{.y}-12-31")),
+          as.Date(sprintf("%s-01-01", .y)),
+          as.Date(sprintf("%s-12-31", .y)),
           by = 1
         )[1:terra::nlyr(.x)]
       )
-    }) |>
-    purrr::reduce(c)
+    },
+    gridmet_rasters,
+    gridmet_years,
+    SIMPLIFY = FALSE
+  )
+  gridmet_raster <- Reduce(c, gridmet_rasters)
   x_vect <-
     s2::s2_cell_to_lnglat(s2::as_s2_cell(x)) |>
     as.data.frame() |>
@@ -83,6 +88,11 @@ get_gridmet_data <- function(
     terra::project(gridmet_raster)
   gridmet_cells <- terra::cells(gridmet_raster[[1]], x_vect)[, "cell"]
   xx <- as.data.frame(t(terra::extract(gridmet_raster, gridmet_cells)))
-  purrr::map2(seq_len(ncol(xx)), x@dates, \(.x, .y) xx[as.character(.y), .x]) |>
-    stats::setNames(as.character(x))
+  out <- mapply(
+    function(.x, .y) xx[as.character(.y), .x],
+    seq_len(ncol(xx)),
+    x@dates,
+    SIMPLIFY = FALSE
+  )
+  stats::setNames(out, as.character(x))
 }

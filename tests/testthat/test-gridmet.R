@@ -15,10 +15,9 @@ test_that("get_gridmet_data validates gridmet_var", {
     s2::as_s2_cell("8841b39a7c46e25f"),
     dates = list(as.Date("1980-01-01"))
   )
-
   expect_error(
     get_gridmet_data(x_ok, "not_a_var"),
-    "must be one of"
+    "should be one of"
   )
 })
 

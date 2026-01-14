@@ -37,5 +37,4 @@ preliminary and subject to change.
 }
 \examples{
 get_gridmet_data(s2cd_example(), "tmmx")
-get_gridmet_data(s2cd_example(), "pr", overwrite = TRUE)
 }

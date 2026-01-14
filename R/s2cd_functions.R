@@ -13,7 +13,7 @@ s2cd_example <- function() {
   s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
     dates = list(
-      as.Date("2026-01-01"),
+      as.Date("2024-01-01"),
       c(as.Date("2024-09-13"), as.Date("2024-09-20"))
     )
   )

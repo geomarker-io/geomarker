@@ -17,7 +17,6 @@
 #' @export
 #' @examples
 #' get_gridmet_data(s2cd_example(), "tmmx")
-#' get_gridmet_data(s2cd_example(), "pr", overwrite = TRUE)
 get_gridmet_data <- function(
   x,
   gridmet_var = c(

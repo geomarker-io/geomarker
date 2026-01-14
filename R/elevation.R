@@ -10,12 +10,20 @@
 #' @param x a s2_cell_dates object (see `?s2cd`)
 #' @param fun function to summarize extracted values
 #' @param buffer distance from s2 cell (in meters) to summarize data
+#' @param overwrite logical; overwrite elevation file if already downloaded?
+#' @param quiet logical; show download progress messages?
 #' @return numeric vector of elevation summaries
 #' @export
 #' @examples
 #' get_elevation_summary(s2cd_example())
 #' get_elevation_summary(s2cd_example(), stats::sd, 1400)
-get_elevation_summary <- function(x, fun = stats::median, buffer = 800) {
+get_elevation_summary <- function(
+  x,
+  fun = stats::median,
+  buffer = 800,
+  overwrite = FALSE,
+  quiet = FALSE
+) {
   stopifnot(
     "x must be a s2_cell_dates object" = is_s2cd(x),
     "fun must be a function" = is.function(fun),
@@ -27,7 +35,9 @@ get_elevation_summary <- function(x, fun = stats::median, buffer = 800) {
   check_installed("sf", "to buffer s2 cells.")
   elevation_raster <-
     geomarker_download_file(
-      "https://prism.oregonstate.edu/downloads/data/PRISM_us_dem_800m_bil.zip"
+      "https://prism.oregonstate.edu/downloads/data/PRISM_us_dem_800m_bil.zip",
+      overwrite = overwrite,
+      quiet = quiet
     ) |>
     paste0("/vsizip/", url = _, "/PRISM_us_dem_800m_bil.bil") |>
     terra::rast()

@@ -4,7 +4,13 @@
 \alias{get_elevation_summary}
 \title{Summarize nearby elevation}
 \usage{
-get_elevation_summary(x, fun = stats::median, buffer = 800)
+get_elevation_summary(
+  x,
+  fun = stats::median,
+  buffer = 800,
+  overwrite = FALSE,
+  quiet = FALSE
+)
 }
 \arguments{
 \item{x}{a s2_cell_dates object (see \code{?s2cd})}
@@ -12,6 +18,10 @@ get_elevation_summary(x, fun = stats::median, buffer = 800)
 \item{fun}{function to summarize extracted values}
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
+
+\item{overwrite}{logical; overwrite elevation file if already downloaded?}
+
+\item{quiet}{logical; show download progress messages?}
 }
 \value{
 numeric vector of elevation summaries

@@ -6,13 +6,19 @@
 \usage{
 get_gridmet_data(
   x,
-  gridmet_var = c("tmmx", "tmmn", "pr", "srad", "vs", "th", "rmax", "rmin", "sph")
+  gridmet_var = c("tmmx", "tmmn", "pr", "srad", "vs", "th", "rmax", "rmin", "sph"),
+  overwrite = FALSE,
+  quiet = FALSE
 )
 }
 \arguments{
 \item{x}{a s2_cell_dates object (see \code{?s2cd})}
 
 \item{gridmet_var}{character; name of gridMET variable}
+
+\item{overwrite}{logical; overwrite files if already downloaded?}
+
+\item{quiet}{logical; show download progress messages?}
 
 \item{gridmet_year}{character; year of gridMET file}
 }
@@ -33,5 +39,5 @@ preliminary and subject to change.
 }
 \examples{
 get_gridmet_data(s2cd_example(), "tmmx")
-get_gridmet_data(s2cd_example(), "pr")
+get_gridmet_data(s2cd_example(), "pr", overwrite = TRUE)
 }

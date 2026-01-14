@@ -12,11 +12,13 @@
 #' @param x a s2_cell_dates object (see `?s2cd`)
 #' @param gridmet_var character; name of gridMET variable
 #' @param gridmet_year character; year of gridMET file
+#' @param overwrite logical; overwrite files if already downloaded?
+#' @param quiet logical; show download progress messages?
 #' @return a list of numeric vectors of gridMET values
 #' @export
 #' @examples
 #' get_gridmet_data(s2cd_example(), "tmmx")
-#' get_gridmet_data(s2cd_example(), "pr")
+#' get_gridmet_data(s2cd_example(), "pr", overwrite = TRUE)
 get_gridmet_data <- function(
   x,
   gridmet_var = c(
@@ -29,7 +31,9 @@ get_gridmet_data <- function(
     "rmax",
     "rmin",
     "sph"
-  )
+  ),
+  overwrite = FALSE,
+  quiet = FALSE
 ) {
   stopifnot(
     "x must be a s2_cell_dates object" = is_s2cd(x),
@@ -54,7 +58,12 @@ get_gridmet_data <- function(
   )
 
   gridmet_raster <-
-    purrr::map_chr(gridmet_urls, geomarker_download_file) |>
+    purrr::map_chr(
+      gridmet_urls,
+      geomarker_download_file,
+      overwrite = overwrite,
+      quiet = quiet
+    ) |>
     purrr::map(terra::rast) |>
     purrr::map2(gridmet_years, \(.x, .y) {
       stats::setNames(

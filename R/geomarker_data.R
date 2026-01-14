@@ -202,6 +202,42 @@ geomarker_download_file <- function(
   }
   tmp <- tempfile(pattern = "geomarker_dl_")
   on.exit(unlink(tmp), add = TRUE)
+  if (!quiet) {
+    size_note <- NULL
+    if (requireNamespace("curl", quietly = TRUE)) {
+      size_note <- tryCatch(
+        {
+          handle <- curl::new_handle(nobody = TRUE, header = TRUE)
+          res <- curl::curl_fetch_memory(url, handle = handle)
+          headers <- curl::parse_headers(res$headers)
+          content_length <- headers[["content-length"]]
+          if (is.null(content_length)) {
+            content_length <- headers[["Content-Length"]]
+          }
+          if (is.null(content_length)) {
+            return(NULL)
+          }
+          bytes <- suppressWarnings(as.numeric(content_length))
+          if (is.na(bytes)) {
+            return(NULL)
+          }
+          if (bytes < 1024^2) {
+            sprintf(" (%.1f MB)", bytes / 1024^2)
+          } else {
+            sprintf(" (%.2f GB)", bytes / 1024^3)
+          }
+        },
+        error = function(err) NULL
+      )
+    }
+    message(
+      "Downloading ",
+      url,
+      " -> ",
+      dest,
+      if (!is.null(size_note)) size_note
+    )
+  }
   err_context <- paste0(
     "Download failed.\n",
     "URL: ",

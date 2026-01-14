@@ -3,7 +3,7 @@
 \name{geomarker_data_dir}
 \alias{geomarker_data_dir}
 \alias{geomarker_data_dir_info}
-\title{Path to geomarker data directory}
+\title{Geomarker data directory}
 \usage{
 geomarker_data_dir(subdir = character(0))
 
@@ -14,7 +14,12 @@ geomarker_data_dir_info(subdir = character(0))
 geomarker data folder}
 }
 \value{
-character string of path to directory
+for \code{geomarker_data_dir()},
+the character string of path to directory
+
+for \code{geomarker_data_dir_info()},
+a message about the number and size of files
+in \code{geomarker_data_dir()}
 }
 \description{
 By default, the R user's data directory for the geomarker data package is
@@ -32,5 +37,4 @@ geomarker_data_dir_info()
 # use environment variable to change location
 withr::local_envvar(R_USER_DATA_DIR = tempdir())
 geomarker_data_dir()
-withr::deferred_run()
 }

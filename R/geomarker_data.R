@@ -1,4 +1,4 @@
-#' Path to geomarker data directory
+#' Geomarker data directory
 #'
 #' By default, the R user's data directory for the geomarker data package is
 #' used to download and install geomarker data files as needed when used
@@ -7,7 +7,8 @@
 #' environment variable.
 #' @param subdir character (length <= 1); optional subdirectory within the
 #' geomarker data folder
-#' @returns character string of path to directory
+#' @returns for `geomarker_data_dir()`,
+#' the character string of path to directory
 #' @export
 #' @examples
 #' geomarker_data_dir()
@@ -18,7 +19,6 @@
 #' # use environment variable to change location
 #' withr::local_envvar(R_USER_DATA_DIR = tempdir())
 #' geomarker_data_dir()
-#' withr::deferred_run()
 geomarker_data_dir <- function(subdir = character(0)) {
   stopifnot(
     "subdir must be a character vector" = inherits(subdir, "character"),
@@ -41,6 +41,9 @@ geomarker_data_dir <- function(subdir = character(0)) {
 }
 
 #' @rdname geomarker_data_dir
+#' @return for `geomarker_data_dir_info()`,
+#' a message about the number and size of files
+#' in `geomarker_data_dir()`
 #' @export
 geomarker_data_dir_info <- function(subdir = character(0)) {
   files <- list.files(
@@ -76,16 +79,20 @@ geomarker_data_dir_info <- function(subdir = character(0)) {
 
 #' Download a file to the geomarker data directory
 #'
-#' `geomarker_download_file()` downloads a file at the URL
+#' `geomarker_download_file()` downloads a file at a URL
 #' to the geomarker data directory
-#' (see `?geomarker_data_dir()`) and named using a short hash of the
+#' (see `?geomarker_data_dir()`) named using a short hash of the
 #' non-filename portion of the URL in addition to a filename derived
-#' from the URL. By default, files that are already downloaded will not
-#' be downloaded again.
+#' from the URL. If the URL has an ETag header, this is used instead
+#' of the URL short hash.
+#' By default, files that are already downloaded will not
+#' be downloaded again (except if their ETag header changes).
 #' @param url character (length one); URL of file to download
 #' @param overwrite logical; overwrite file if already downloaded?
 #' @param quiet logical; show download progress messages
 #' and print path to downloaded file?
+#' @param etag logical; use ETag header (when available) for naming
+#' instead of a short url hash?
 #' @param subdir character (length one); optional subdirectory
 #' within the geomarker data folder
 #' @returns character string of file path to downloaded file
@@ -103,13 +110,17 @@ geomarker_download_file <- function(
   url,
   overwrite = FALSE,
   quiet = FALSE,
+  etag = TRUE,
   subdir = character(0)
 ) {
   stopifnot(
     "url must be length one" = length(url) == 1,
     "url must be character" = inherits(url, "character")
   )
-  dest <- file.path(geomarker_data_dir(subdir = subdir), url_to_filename(url))
+  dest <- file.path(
+    geomarker_data_dir(subdir = subdir),
+    url_to_filename(url, etag = etag)
+  )
   if (file.exists(dest) && !overwrite) {
     if (quiet) {
       return(invisible(dest))

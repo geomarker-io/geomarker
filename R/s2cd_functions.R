@@ -19,6 +19,19 @@ s2cd_example <- function() {
   )
 }
 
+
+# TODO make a larger example for s2cd_example that is nationwide? and one that is just cincy, but more?
+# my_s2_cells <-
+#   s2::s2_covering_cell_ids(
+#     s2::s2_cell_polygon(s2::as_s2_cell("8841b4")),
+#     min_level = 18,
+#     max_level = 18
+#   ) |>
+#   unlist() |>
+#   sample(size = 10000) |>
+#   s2::s2_cell_center() |>
+#   s2::as_s2_cell()
+
 #' Test if a `s2cd` object is within a date range or s2 cell union
 #'
 #' Dates within the s2cd object are compared to the date range,

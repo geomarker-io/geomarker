@@ -32,6 +32,8 @@ test_that("url_to_filename hashes without etag", {
 
 test_that("url_etag examples work", {
   skip_if_offline()
+  skip_on_ci()
+  skip_on_cran()
   url_etag(
     "https://www.northwestknowledge.net/metdata/data/tmmx_2025.nc"
   ) |>

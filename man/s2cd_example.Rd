@@ -2,38 +2,18 @@
 % Please edit documentation in R/s2cd_functions.R
 \name{s2cd_example}
 \alias{s2cd_example}
-\alias{s2cd_example_cincy}
-\title{Example \code{s2cd} objects}
+\title{Simple example \code{s2cd} object}
 \usage{
 s2cd_example()
-
-s2cd_example_cincy(
-  n_locations = 100L,
-  n_dates_each = 3L,
-  n_dates_variation = c("fixed", "poisson+1")
-)
-}
-\arguments{
-\item{n_locations}{integer; number of s2 locations to simulate}
-
-\item{n_dates_variation}{"poisson+1" randomly draws the number of
-dates per location from a Poisson distribution with lambda equal
-to \code{n_dates}; "fixed" randomly draws \code{n_dates} for every location}
-
-\item{n_dates}{integer; number of dates to simulate per location}
 }
 \value{
 A \code{s2cd} object
 }
 \description{
-\code{s2cd_example()} returns a very simple example \code{s2cd} object for use in examples
-and vignettes.
+\code{s2cd_example()} returns a very simple example
 }
 \examples{
 s2cd_example()
 
 str(s2cd_example())
-set.seed(923)
-s2cd_example_cincy()
-s2cd_example_cincy(10L, 5L, "poisson+1")
 }

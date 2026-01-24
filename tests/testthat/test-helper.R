@@ -35,7 +35,7 @@ test_that("url_etag examples work", {
   skip_on_ci()
   skip_on_cran()
   url_etag(
-    "https://www.northwestknowledge.net/metdata/data/tmmx_2025.nc"
+    "https://github.com/geomarker-io/appc/releases/download/hpms_2020_f12_aadt-2025-07-16/hpms_2020_f12_aadt.gpkg"
   ) |>
     expect_length(1) |>
     expect_type("character")

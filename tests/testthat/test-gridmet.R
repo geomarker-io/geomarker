@@ -21,19 +21,35 @@ test_that("get_gridmet_data validates gridmet_var", {
   )
 })
 
-test_that("get_gridmet_data works", {
-  skip_if_offline()
-  skip_if_not_installed("terra")
-
-  x_ok <- s2cd(
-    s2::as_s2_cell("8841b39a7c46e25f"),
-    dates = list(c(as.Date("2022-01-01"), as.Date("2022-05-19")))
+test_that("get_gridmet_data works with fixture", {
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package(
+      "geomarker",
+      "gmrkr--8841"
+    ),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
   )
-  out <- get_gridmet_data(x_ok, "tmmx")
-
+  set.seed(19)
+  xx <- s2cd_example_cincy(n_locations = 20L)
+  out <- xx |>
+    get_gridmet_data(etag = FALSE)
   expect_type(out, "list")
-  expect_length(out, 1)
-  expect_named(out, as.character(x_ok))
+  expect_length(out, 20)
+  expect_named(out, as.character(xx))
   expect_type(out[[1]], "double")
-  expect_length(out[[1]], 2)
+  expect_length(out[[1]], 3)
+  expect_length(out[[2]], 3)
+})
+
+test_that("get_gridmet_data works", {
+  skip_on_ci()
+  skip_on_cran()
+  skip_if_offline()
+  out <- get_gridmet_data(s2cd_example(), "tmmx")
+  expect_type(out, "list")
+  expect_length(out, 2)
+  expect_named(out, as.character(s2cd_example()))
+  expect_type(out[[1]], "double")
+  expect_length(out[[1]], 1)
+  expect_length(out[[2]], 2)
 })

@@ -24,7 +24,14 @@
 #' @return list of numeric vectors of traffic summaries
 #' @export
 #' @examples
-#' get_traffic_summary(s2cd_example(), buffer = 1500)
+#'  withr::local_envvar(
+#'    R_USER_DATA_DIR = fs::path_package(
+#'      "geomarker",
+#'      "gmrkr--8841"
+#'    ),
+#'    R_GEOMARKER_NO_DOWNLOAD = "true"
+#'  )
+#' get_traffic_summary(s2cd_example_cincy(), buffer = 1500)
 get_traffic_summary <- function(
   x,
   buffer = 400,

@@ -7,8 +7,7 @@
 get_gridmet_data(
   x,
   gridmet_var = c("tmmx", "tmmn", "pr", "srad", "vs", "th", "rmax", "rmin", "sph"),
-  overwrite = FALSE,
-  quiet = FALSE
+  ...
 )
 }
 \arguments{
@@ -16,9 +15,7 @@ get_gridmet_data(
 
 \item{gridmet_var}{character; name of gridMET variable}
 
-\item{overwrite}{logical; overwrite files if already downloaded?}
-
-\item{quiet}{logical; show download progress messages?}
+\item{...}{passed to geomarker_download_file()}
 }
 \value{
 a list of numeric vectors of gridMET values
@@ -36,5 +33,12 @@ Data for dates within the last 60 days are considered
 preliminary and subject to change.
 }
 \examples{
-get_gridmet_data(s2cd_example(), "tmmx")
+ withr::local_envvar(
+   R_USER_DATA_DIR = fs::path_package(
+     "geomarker",
+     "gmrkr--8841"
+   ),
+   R_GEOMARKER_NO_DOWNLOAD = "true"
+ )
+get_gridmet_data(s2cd_example_cincy(2L), "tmmx")
 }

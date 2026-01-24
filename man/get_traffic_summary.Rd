@@ -39,5 +39,12 @@ are used. Passenger vehicles (FHWA 1-3) are calculated as the
 total minus FHWA class 4-7 (single unit) and 8-13 (combo).
 }
 \examples{
-get_traffic_summary(s2cd_example(), buffer = 1500)
+ withr::local_envvar(
+   R_USER_DATA_DIR = fs::path_package(
+     "geomarker",
+     "gmrkr--8841"
+   ),
+   R_GEOMARKER_NO_DOWNLOAD = "true"
+ )
+get_traffic_summary(s2cd_example_cincy(), buffer = 1500)
 }

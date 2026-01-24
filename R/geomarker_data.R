@@ -85,14 +85,24 @@ geomarker_data_dir_info <- function(subdir = character(0)) {
 #' non-filename portion of the URL in addition to a filename derived
 #' from the URL. If the URL has an ETag header, this is used instead
 #' of the URL short hash.
-#' By default, files that are already downloaded will not
-#' be downloaded again (except if their ETag header changes).
+#' By default, files that are already downloaded from the same url
+#' will not be downloaded again (except if their ETag header
+#' changes, by default).
+#'
+#' ETag headers are used to confirm that the version of the file
+#' downloaded from the url matches what has been downloaded already.
+#' If no ETag header is found, the file is named without it.
+#'
+#' If the environment variable `R_GEOMARKER_NO_DOWNLOAD` is set,
+#' then new files will not be downloaded, using only those
+#' available in `geomarker_data_dir()`. In this case, etag headers
+#' will be ignored even if etag is TRUE. An error is produced
+#' for unavailable files while `R_GEOMARKER_NO_DOWNLOAD` is set.
 #' @param url character (length one); URL of file to download
 #' @param overwrite logical; overwrite file if already downloaded?
 #' @param quiet logical; show download progress messages
 #' and print path to downloaded file?
-#' @param etag logical; use ETag header (when available) for naming
-#' instead of a short url hash?
+#' @param etag logical; include Etag header in the file name?
 #' @param subdir character (length one); optional subdirectory
 #' within the geomarker data folder
 #' @returns character string of file path to downloaded file
@@ -117,6 +127,9 @@ geomarker_download_file <- function(
     "url must be length one" = length(url) == 1,
     "url must be character" = inherits(url, "character")
   )
+  if (nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))) {
+    etag <- FALSE
+  }
   dest <- file.path(
     geomarker_data_dir(subdir = subdir),
     url_to_filename(url, etag = etag)
@@ -127,6 +140,15 @@ geomarker_download_file <- function(
     }
     return(dest)
   }
+  if (nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))) {
+    stop(
+      "The envvar R_GEOMARKER_NO_DOWNLOAD is set, but ",
+      dest,
+      " does not exist",
+      call. = FALSE
+    )
+  }
+
   tmp <- tempfile(pattern = "geomarker_dl_")
   on.exit(unlink(tmp), add = TRUE)
   if (!quiet) {

@@ -15,6 +15,7 @@ Imports:
     digest
 Suggests: 
     curl,
+    fs,
     sf,
     tibble,
     terra,

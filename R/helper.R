@@ -31,18 +31,25 @@ url_to_filename <- function(url, etag = TRUE) {
       call. = FALSE
     )
   }
-  url_dir_hash <- vapply(
-    dirname(url),
-    digest::digest,
-    algo = "xxhash32",
-    serialize = FALSE,
-    FUN.VALUE = character(1)
-  )
-  url_etag <- url_etag(url)
-  if (etag && !is.na(url_etag)) {
-    url_dir_hash <- url_etag
-  }
+  url_dir_hash <-
+    digest::digest(
+      dirname(url),
+      algo = "xxhash32",
+      serialize = FALSE,
+    )
   f_name <- basename(url)
+  if (etag) {
+    url_etag <- url_etag(url)
+    if (!is.na(url_etag)) {
+      f_name <- paste0(
+        tools::file_path_sans_ext(f_name),
+        "--",
+        url_etag,
+        ".",
+        tools::file_ext(f_name)
+      )
+    }
+  }
   filepath <- paste(url_dir_hash, f_name, sep = "--")
   filepath
 }

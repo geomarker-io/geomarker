@@ -20,8 +20,7 @@ geomarker_download_file(
 \item{quiet}{logical; show download progress messages
 and print path to downloaded file?}
 
-\item{etag}{logical; use ETag header (when available) for naming
-instead of a short url hash?}
+\item{etag}{logical; include Etag header in the file name?}
 
 \item{subdir}{character (length one); optional subdirectory
 within the geomarker data folder}
@@ -37,8 +36,20 @@ to the geomarker data directory
 non-filename portion of the URL in addition to a filename derived
 from the URL. If the URL has an ETag header, this is used instead
 of the URL short hash.
-By default, files that are already downloaded will not
-be downloaded again (except if their ETag header changes).
+By default, files that are already downloaded from the same url
+will not be downloaded again (except if their ETag header
+changes, by default).
+}
+\details{
+ETag headers are used to confirm that the version of the file
+downloaded from the url matches what has been downloaded already.
+If no ETag header is found, the file is named without it.
+
+If the environment variable \code{R_GEOMARKER_NO_DOWNLOAD} is set,
+then new files will not be downloaded, using only those
+available in \code{geomarker_data_dir()}. In this case, etag headers
+will be ignored even if etag is TRUE. An error is produced
+for unavailable files while \code{R_GEOMARKER_NO_DOWNLOAD} is set.
 }
 \examples{
 geomarker_download_file(

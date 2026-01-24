@@ -11,12 +11,18 @@
 #' preliminary and subject to change.
 #' @param x a s2_cell_dates object (see `?s2cd`)
 #' @param gridmet_var character; name of gridMET variable
-#' @param overwrite logical; overwrite files if already downloaded?
-#' @param quiet logical; show download progress messages?
+#' @param ... passed to geomarker_download_file()
 #' @return a list of numeric vectors of gridMET values
 #' @export
 #' @examples
-#' get_gridmet_data(s2cd_example(), "tmmx")
+#'  withr::local_envvar(
+#'    R_USER_DATA_DIR = fs::path_package(
+#'      "geomarker",
+#'      "gmrkr--8841"
+#'    ),
+#'    R_GEOMARKER_NO_DOWNLOAD = "true"
+#'  )
+#' get_gridmet_data(s2cd_example_cincy(2L), "tmmx")
 get_gridmet_data <- function(
   x,
   gridmet_var = c(
@@ -30,8 +36,7 @@ get_gridmet_data <- function(
     "rmin",
     "sph"
   ),
-  overwrite = FALSE,
-  quiet = FALSE
+  ...
 ) {
   stopifnot(
     "x must be a s2_cell_dates object" = is_s2cd(x),
@@ -59,9 +64,8 @@ get_gridmet_data <- function(
   gridmet_files <- vapply(
     gridmet_urls,
     geomarker_download_file,
-    overwrite = overwrite,
-    quiet = quiet,
-    FUN.VALUE = character(1)
+    FUN.VALUE = character(1),
+    ...
   )
   gridmet_rasters <- lapply(gridmet_files, terra::rast)
   gridmet_rasters <- mapply(

@@ -23,17 +23,15 @@ test_that("url_to_filename rejects query parameters", {
 })
 
 test_that("url_to_filename hashes without etag", {
-  out <- url_to_filename(
+  url_to_filename(
     "https://example.com/path/file.zip",
     etag = FALSE
-  )
-  expect_match(out, "--file\\.zip$")
+  ) |>
+    expect_identical("c18913fb--file.zip")
 })
 
 test_that("url_etag examples work", {
   skip_if_offline()
-  skip_if_not_installed("curl")
-
   url_etag(
     "https://www.northwestknowledge.net/metdata/data/tmmx_2025.nc"
   ) |>

@@ -4,13 +4,7 @@
 \alias{get_elevation_summary}
 \title{Summarize nearby elevation}
 \usage{
-get_elevation_summary(
-  x,
-  fun = stats::median,
-  buffer = 800,
-  overwrite = FALSE,
-  quiet = FALSE
-)
+get_elevation_summary(x, fun = stats::median, buffer = 800, ...)
 }
 \arguments{
 \item{x}{a s2_cell_dates object (see \code{?s2cd})}
@@ -19,9 +13,7 @@ get_elevation_summary(
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 
-\item{overwrite}{logical; overwrite elevation file if already downloaded?}
-
-\item{quiet}{logical; show download progress messages?}
+\item{...}{passed to \code{geomarker_download_file()}}
 }
 \value{
 numeric vector of elevation summaries
@@ -37,6 +29,13 @@ State University as a digital elevation model in BIL format at an 800 m grid.
 See \url{https://prism.oregonstate.edu/normals/} for more details.
 }
 \examples{
+ withr::local_envvar(
+   R_USER_DATA_DIR = fs::path_package(
+     "geomarker",
+     "gmrkr--8841"
+   ),
+   R_GEOMARKER_NO_DOWNLOAD = "true"
+ )
 get_elevation_summary(s2cd_example())
 get_elevation_summary(s2cd_example(), stats::sd, 1400)
 }

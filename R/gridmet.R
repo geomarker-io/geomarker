@@ -81,13 +81,12 @@ get_gridmet_data <- function(
     },
     gridmet_rasters,
     gridmet_years,
-    SIMPLIFY = FALSE
+    SIMPLIFY = FALSE,
+    USE.NAMES = FALSE
   )
   gridmet_raster <- Reduce(c, gridmet_rasters)
   x_vect <-
-    s2::s2_cell_to_lnglat(s2::as_s2_cell(x)) |>
-    as.data.frame() |>
-    terra::vect(geom = c("x", "y"), crs = "+proj=longlat +datum=WGS84") |>
+    s2_cell_to_vect(x) |>
     terra::project(gridmet_raster)
   gridmet_cells <- terra::cells(gridmet_raster[[1]], x_vect)[, "cell"]
   xx <- as.data.frame(t(terra::extract(gridmet_raster, gridmet_cells)))

@@ -33,7 +33,6 @@ test_that("get_elevation_summary() works", {
   skip_on_ci()
   skip_on_cran()
   skip_if_offline()
-  # TODO change to cincy example
   out <- s2cd_example_cincy(n_locations = 20L) |>
     get_elevation_summary()
   expect_type(out, "double")

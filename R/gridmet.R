@@ -67,7 +67,7 @@ get_gridmet_data <- function(
     FUN.VALUE = character(1),
     ...
   )
-  gridmet_rasters <- lapply(gridmet_files, terra::rast)
+  gridmet_rasters <- suppressWarnings(lapply(gridmet_files, terra::rast))
   gridmet_rasters <- mapply(
     function(.x, .y) {
       stats::setNames(
@@ -89,7 +89,10 @@ get_gridmet_data <- function(
     s2_cell_to_vect(x) |>
     terra::project(gridmet_raster)
   gridmet_cells <- terra::cells(gridmet_raster[[1]], x_vect)[, "cell"]
-  xx <- as.data.frame(t(terra::extract(gridmet_raster, gridmet_cells)))
+  xx <- as.data.frame(t(suppressWarnings(terra::extract(
+    gridmet_raster,
+    gridmet_cells
+  ))))
   out <- mapply(
     function(.x, .y) xx[as.character(.y), .x],
     seq_len(ncol(xx)),

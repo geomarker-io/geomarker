@@ -31,8 +31,7 @@ test_that("get_gridmet_data works with fixture", {
   )
   set.seed(19)
   xx <- s2cd_example_cincy(n_locations = 20L)
-  out <- xx |>
-    get_gridmet_data(etag = FALSE)
+  out <- get_gridmet_data(xx)
   expect_type(out, "list")
   expect_length(out, 20)
   expect_named(out, as.character(xx))

@@ -1,7 +1,10 @@
 tiger_block_groups <- function(state, year, ...) {
   dest <- geomarker_download_file(
-    glue::glue(
-      "ftp://ftp2.census.gov/geo/tiger/TIGER{year}/BG/tl_{year}_{state}_bg.zip"
+    sprintf(
+      "ftp://ftp2.census.gov/geo/tiger/TIGER%s/BG/tl_%s_%s_bg.zip",
+      year,
+      year,
+      state
     ),
     ...
   )
@@ -10,7 +13,7 @@ tiger_block_groups <- function(state, year, ...) {
       paste0("/vsizip/", dest),
       as_tibble = TRUE,
       quiet = TRUE,
-      query = glue::glue("SELECT GEOID FROM tl_{year}_{state}_bg")
+      query = sprintf("SELECT GEOID FROM tl_%s_%s_bg", year, state)
     )
   out$s2_geography <- s2::as_s2_geography(out$geometry)
   out <- sf::st_drop_geometry(out)
@@ -19,8 +22,10 @@ tiger_block_groups <- function(state, year, ...) {
 
 tiger_states <- function(year, ...) {
   dest <- geomarker_download_file(
-    glue::glue(
-      "ftp://ftp2.census.gov/geo/tiger/TIGER{year}/STATE/tl_{year}_us_state.zip"
+    sprintf(
+      "ftp://ftp2.census.gov/geo/tiger/TIGER%s/STATE/tl_%s_us_state.zip",
+      year,
+      year
     ),
     ...
   )
@@ -29,7 +34,7 @@ tiger_states <- function(year, ...) {
       paste0("/vsizip/", dest),
       as_tibble = TRUE,
       quiet = TRUE,
-      query = glue::glue("SELECT GEOID FROM tl_{year}_us_state")
+      query = sprintf("SELECT GEOID FROM tl_%s_us_state", year)
     )
   out$s2_geography <- s2::as_s2_geography(out$geometry)
   out <- sf::st_drop_geometry(out)
@@ -56,12 +61,12 @@ tiger_states <- function(year, ...) {
 #' set.seed(123)
 #' s2_join_tiger_bg(s2cd_example_cincy(8L))
 s2_join_tiger_bg <- function(x, year = as.character(2024:2013), ...) {
-  rlang::check_installed("sf", "read TIGER/Line census block group geographies")
-  rlang::check_installed("s2", "s2 geometry calculations")
+  check_installed("sf", "read TIGER/Line census block group geographies")
+  check_installed("s2", "s2 geometry calculations")
   if (!inherits(x, "s2_cell")) {
     stop("x must be a s2_cell vector", call. = FALSE)
   }
-  year <- rlang::arg_match(year)
+  year <- match.arg(year)
   x_s2_geo <-
     unique(stats::na.omit(x)) |>
     s2::s2_cell_center()

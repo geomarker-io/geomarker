@@ -1,4 +1,3 @@
-#' s2_cell_to_vect(s2cd_example_cincy())
 s2_cell_to_vect <- function(x) {
   x <- s2::as_s2_cell(x)
   stopifnot(

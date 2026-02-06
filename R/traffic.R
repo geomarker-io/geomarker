@@ -38,7 +38,7 @@ get_traffic_summary <- function(
   overwrite = FALSE,
   quiet = FALSE
 ) {
-  message("(Down)loading HPMS data...")
+  message("Loading HPMS data...")
   hpms_d <-
     geomarker_download_file(
       "https://github.com/geomarker-io/appc/releases/download/hpms_2020_f12_aadt-2025-07-16/hpms_2020_f12_aadt.gpkg"

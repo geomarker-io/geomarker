@@ -22,7 +22,7 @@ s2cd_example <- function() {
 #'
 #' `s2cd_example_cincy()` randomly generates an example s2cd object by sampling locations
 #' from the center of level 15 cells covering the s2 cell "8841" and
-# sampling dates from 2024.
+#' sampling dates from 2024.
 #' @param n_locations integer; number of s2 locations to simulate
 #' @param n_dates_each integer; number of dates to simulate per location
 #' @param n_dates_variation "poisson+1" randomly draws the number of

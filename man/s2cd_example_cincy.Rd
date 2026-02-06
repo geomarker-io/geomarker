@@ -22,6 +22,7 @@ to \code{n_dates}; "fixed" randomly draws \code{n_dates} for every location}
 \description{
 \code{s2cd_example_cincy()} randomly generates an example s2cd object by sampling locations
 from the center of level 15 cells covering the s2 cell "8841" and
+sampling dates from 2024.
 }
 \examples{
 set.seed(923)

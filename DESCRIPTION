@@ -16,6 +16,7 @@ Imports:
 Suggests: 
     curl,
     fs,
+    dplyr,
     sf,
     tibble,
     terra,

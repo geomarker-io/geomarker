@@ -21,6 +21,20 @@ crop_rast_to_cell <- function(r, cell = the_cell) {
   out
 }
 
+# nlcd: 2023
+nlcd_url <- "https://dataverse.harvard.edu/api/access/datafile/10980930"
+nlcd_url |>
+  geomarker_download_file() |>
+  terra::rast() |>
+  crop_rast_to_cell() |>
+  terra::writeRaster(
+    file.path(
+      fixture_dir,
+      url_to_filename(nlcd_url, etag = FALSE)
+    ),
+    filetype = "cog"
+  )
+
 # gridmet: tmmx 2024
 gridmet_example_url <- "https://www.northwestknowledge.net/metdata/data/tmmx_2024.nc"
 gridmet_example_url |>

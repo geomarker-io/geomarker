@@ -1,14 +1,3 @@
-s2_cell_to_vect <- function(x) {
-  x <- s2::as_s2_cell(x)
-  stopifnot(
-    "x must be (coercible to) a s2_cell object" = inherits(x, "s2_cell")
-  )
-  x |>
-    s2::s2_cell_to_lnglat() |>
-    as.data.frame() |>
-    terra::vect(geom = c("x", "y"), crs = "+proj=longlat +datum=WGS84")
-}
-
 check_installed <- function(pkg, reason = NULL) {
   if (!requireNamespace(pkg, quietly = TRUE)) {
     msg <- sprintf("The package `%s` is required", pkg)

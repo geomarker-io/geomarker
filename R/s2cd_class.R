@@ -170,6 +170,36 @@ is_s2cd <- function(x) {
   inherits(x, "s2cd")
 }
 
+#' Get unique years from s2cd object
+#'
+#' @param x a s2_cell_dates object (see `?s2cd`)
+#' @returns a sorted character vector of years present in x
+#' @export
+#' @examples
+#' s2cd_years(s2cd_example())
+s2cd_years <- function(x) {
+  stopifnot(
+    "x must be a s2_cell_dates object" = is_s2cd(x)
+  )
+  x@dates |>
+    do.call(c, args = _) |>
+    format("%Y") |>
+    unique() |>
+    sort()
+}
+
+
+s2_cell_to_vect <- function(x) {
+  x <- s2::as_s2_cell(x)
+  stopifnot(
+    "x must be (coercible to) a s2_cell object" = inherits(x, "s2_cell")
+  )
+  x |>
+    s2::s2_cell_to_lnglat() |>
+    as.data.frame() |>
+    terra::vect(geom = c("x", "y"), crs = "+proj=longlat +datum=WGS84")
+}
+
 
 #' Simple example `s2cd` object
 #'

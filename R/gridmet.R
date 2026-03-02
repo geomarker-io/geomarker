@@ -48,17 +48,10 @@ get_gridmet_data <- function(
   gridmet_var <- match.arg(gridmet_var)
   check_installed("terra", "to read data from gridMET rasters")
 
-  gridmet_years <-
-    x@dates |>
-    do.call(c, args = _) |>
-    format("%Y") |>
-    unique() |>
-    sort()
-
   gridmet_urls <- sprintf(
     "https://www.northwestknowledge.net/metdata/data/%s_%s.nc",
     gridmet_var,
-    gridmet_years
+    s2cd_years(x)
   )
 
   gridmet_files <- vapply(
@@ -80,7 +73,7 @@ get_gridmet_data <- function(
       )
     },
     gridmet_rasters,
-    gridmet_years,
+    s2cd_years(x),
     SIMPLIFY = FALSE,
     USE.NAMES = FALSE
   )

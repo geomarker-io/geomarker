@@ -1,13 +1,13 @@
+devtools::load_all()
+
 the_cell <- s2::as_s2_cell("8841")
-fixture_dir <- fs::path_package(
-  "geomarker",
-  paste0("gmrkr--", the_cell),
-  "R",
-  "geomarker"
-)
+fixture_dir <- file.path("inst", paste0("gmrkr--", the_cell), "R", "geomarker")
+if (FALSE) {
+  unlink(fixture_dir, recursive = TRUE)
+}
 dir.create(fixture_dir, showWarnings = FALSE, recursive = TRUE)
 
-crop_rast_to_cell <- function(r, cell = the_cell) {
+crop_to_cell <- function(r, cell = the_cell) {
   cover <-
     the_cell |>
     s2::s2_cell_polygon() |>
@@ -21,12 +21,49 @@ crop_rast_to_cell <- function(r, cell = the_cell) {
   out
 }
 
-# nlcd: 2023
+# hms smoke: 2024
+smoke_dates <- seq(as.Date("2024-01-01"), as.Date("2024-12-31"), 1)
+smoke_urls <-
+  sprintf(
+    "https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/Shapefile/%s/%s/hms_smoke%s.zip",
+    format(smoke_dates, "%Y"),
+    format(smoke_dates, "%m"),
+    format(smoke_dates, "%Y%m%d")
+  )
+dir.create(file.path(fixture_dir, "hms"), showWarnings = FALSE)
+lapply(smoke_dates, \(.) {
+  stopifnot(inherits(., "Date"))
+  cat("\rprocessing HMS smoke daily files: ", format(., "%Y-%m-%d"))
+  smoke_url <-
+    sprintf(
+      "https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/Shapefile/%s/%s/hms_smoke%s.zip",
+      format(., "%Y"),
+      format(., "%m"),
+      format(., "%Y%m%d")
+    )
+  dest_path <- file.path(fixture_dir, "hms", url_to_filename(smoke_url, etag = FALSE)) |>
+    tools::file_path_sans_ext() |>
+    paste0(path_sans_ext = _, ".shz")
+  paste0("/vsizip/", geomarker_download_file(smoke_url, subdir = "hms")) |>
+    sf::read_sf(quiet = TRUE) |>
+    terra::vect() |>
+    crop_to_cell() |>
+    sf::st_as_sf() |>
+    sf::st_write(dest_path, driver = "Esri Shapefile", quiet = TRUE)
+  file.rename(dest_path, paste0(tools::file_path_sans_ext(dest_path), ".zip"))
+  return(invisible(NULL))
+}) |>
+  invisible()
+flush.console()
+cat("\n")
+
+
+# nlcd: 2023 (used for 2024 dates automatically)
 nlcd_url <- "https://dataverse.harvard.edu/api/access/datafile/10980930"
 nlcd_url |>
   geomarker_download_file() |>
   terra::rast() |>
-  crop_rast_to_cell() |>
+  crop_to_cell() |>
   terra::writeRaster(
     file.path(
       fixture_dir,
@@ -40,7 +77,7 @@ gridmet_example_url <- "https://www.northwestknowledge.net/metdata/data/tmmx_202
 gridmet_example_url |>
   geomarker_download_file() |>
   terra::rast() |>
-  crop_rast_to_cell() |>
+  crop_to_cell() |>
   terra::writeCDF(
     file.path(fixture_dir, url_to_filename(gridmet_example_url, etag = FALSE)),
     overwrite = TRUE
@@ -53,7 +90,7 @@ dir.create(write_dir)
 geomarker_download_file(elevation_url) |>
   paste0("/vsizip/", url = _, "/PRISM_us_dem_800m_bil.bil") |>
   terra::rast() |>
-  crop_rast_to_cell() |>
+  crop_to_cell() |>
   terra::writeRaster(
     file.path(write_dir, "PRISM_us_dem_800m_bil.bil"),
     overwrite = TRUE,
@@ -70,7 +107,7 @@ traffic_url <- "https://github.com/geomarker-io/appc/releases/download/hpms_2020
 geomarker_download_file(traffic_url) |>
   sf::read_sf(quiet = TRUE) |>
   terra::vect() |>
-  crop_rast_to_cell() |>
+  crop_to_cell() |>
   sf::st_as_sf() |>
   sf::st_write(file.path(
     fixture_dir,
@@ -128,6 +165,7 @@ lapply(
       files = list.files(tgr_bg_write_dir, full.names = TRUE),
       flags = "-j"
     )
-    return("written!")
+    return(NULL)
   }
-)
+) |>
+  invisible()

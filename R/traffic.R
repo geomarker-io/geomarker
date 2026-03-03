@@ -38,6 +38,7 @@ get_traffic_summary <- function(
   overwrite = FALSE,
   quiet = FALSE
 ) {
+  stopifnot("x must be a s2_cell_dates object" = is_s2cd(x))
   message("Loading HPMS data...")
   hpms_d <-
     geomarker_download_file(

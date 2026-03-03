@@ -25,5 +25,12 @@ re-downloading, unless there is an updated version of the daily data
 available. For more details, see \url{https://www.ospo.noaa.gov/products/land/hms.html#about}.
 }
 \examples{
+ withr::local_envvar(
+   R_USER_DATA_DIR = fs::path_package(
+     "geomarker",
+     "gmrkr--8841"
+   ),
+   R_GEOMARKER_NO_DOWNLOAD = "true"
+ )
 get_daily_smoke_data(as.Date(c("2024-02-09", "2024-06-10", "2024-06-11", "2024-06-12")))
 }

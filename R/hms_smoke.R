@@ -9,7 +9,15 @@
 #' @details Daily files for HMS smoke data are used again instead of
 #' re-downloading, unless there is an updated version of the daily data
 #' available. For more details, see <https://www.ospo.noaa.gov/products/land/hms.html#about>.
+#' @export
 #' @examples
+#'  withr::local_envvar(
+#'    R_USER_DATA_DIR = fs::path_package(
+#'      "geomarker",
+#'      "gmrkr--8841"
+#'    ),
+#'    R_GEOMARKER_NO_DOWNLOAD = "true"
+#'  )
 #' get_daily_smoke_data(as.Date(c("2024-02-09", "2024-06-10", "2024-06-11", "2024-06-12")))
 get_daily_smoke_data <- function(x, ...) {
   stopifnot("x must be a Date vector" = inherits(x, "Date"))
@@ -41,10 +49,14 @@ get_daily_smoke_data <- function(x, ...) {
     xx <- sf::st_read(., quiet = TRUE)
     tibble::tibble(
       geometry = sf::st_as_s2(xx$geometry, rebuild = TRUE),
-      density = factor(xx$Density, levels = c("None", "Light", "Medium", "Heavy"), ordered = TRUE)
+      density = factor(
+        xx$Density,
+        levels = c("None", "Light", "Medium", "Heavy"),
+        ordered = TRUE
+      )
     )
   }) |>
-    setNames(x)
+    stats::setNames(x)
   return(out)
 }
 
@@ -55,13 +67,22 @@ get_daily_smoke_data <- function(x, ...) {
 #' and summarized as the maximum intensity ("Light", "Medium", "Heavy").
 #' If no smoke polygons are intersected, "None" is used to summarize the maximum
 #' intensity.
-#' @returns a list of ordered factors (Levels: None > Light > Medium > Heavy)
+#' @param x a s2_cell_dates object (see `?s2cd`)
 #' @param ... passed to `get_daily_smoke_data()
 #' (and on to `geomarker_download_file()`)
+#' @returns a list of ordered factors (Levels: None > Light > Medium > Heavy)
+#' @export
 #' @examples
+#'  withr::local_envvar(
+#'    R_USER_DATA_DIR = fs::path_package(
+#'      "geomarker",
+#'      "gmrkr--8841"
+#'    ),
+#'    R_GEOMARKER_NO_DOWNLOAD = "true"
+#'  )
 #' s2cd(s2::as_s2_cell(c("8841b39a7c46e25f","8841a45555555555")),
-#'   dates = list(as.Date(c("2017-11-06", "2023-05-18")),
-#'                as.Date(c("2017-06-22", "2023-08-15", "2024-12-30")))
+#'   dates = list(as.Date(c("2024-05-18", "2024-11-06")),
+#'                as.Date(c("2024-06-22", "2024-08-15", "2024-12-30")))
 #' ) |>
 #'   get_smoke_summary()
 get_smoke_summary <- function(x, ...) {
@@ -70,7 +91,11 @@ get_smoke_summary <- function(x, ...) {
   lapply(seq_along(x), \(i) {
     lapply(dsd[as.character(x@dates[[i]])], \(.) {
       safe_max_factor(
-        .[s2::s2_intersects(s2::s2_cell_center(x[i]), .$geometry), "density", drop = TRUE]
+        .[
+          s2::s2_intersects(s2::s2_cell_center(x[i]), .$geometry),
+          "density",
+          drop = TRUE
+        ]
       )
     }) |>
       do.call(c, args = _)
@@ -80,7 +105,11 @@ get_smoke_summary <- function(x, ...) {
 
 safe_max_factor <- function(x) {
   if (length(x) == 0L || all(is.na(x))) {
-    return(factor("None", c("None", "Light", "Medium", "Heavy"), ordered = TRUE))
+    return(factor(
+      "None",
+      c("None", "Light", "Medium", "Heavy"),
+      ordered = TRUE
+    ))
   }
   max(x, na.rm = TRUE)
 }

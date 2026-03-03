@@ -7,6 +7,8 @@
 get_smoke_summary(x, ...)
 }
 \arguments{
+\item{x}{a s2_cell_dates object (see \code{?s2cd})}
+
 \item{...}{passed to \verb{get_daily_smoke_data() (and on to }geomarker_download_file()`)}
 }
 \value{
@@ -20,9 +22,16 @@ If no smoke polygons are intersected, "None" is used to summarize the maximum
 intensity.
 }
 \examples{
+ withr::local_envvar(
+   R_USER_DATA_DIR = fs::path_package(
+     "geomarker",
+     "gmrkr--8841"
+   ),
+   R_GEOMARKER_NO_DOWNLOAD = "true"
+ )
 s2cd(s2::as_s2_cell(c("8841b39a7c46e25f","8841a45555555555")),
-  dates = list(as.Date(c("2017-11-06", "2023-05-18")),
-               as.Date(c("2017-06-22", "2023-08-15", "2024-12-30")))
+  dates = list(as.Date(c("2024-05-18", "2024-11-06")),
+               as.Date(c("2024-06-22", "2024-08-15", "2024-12-30")))
 ) |>
   get_smoke_summary()
 }

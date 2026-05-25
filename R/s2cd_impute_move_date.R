@@ -7,9 +7,12 @@
 #' leading and lagging dates, except for the start of the first date range
 #' and the end of the last date range, which are used directly.
 #' @param x a (chronologically sorted) Date vector
-#' @param start_early start the first imputed date range this many days early (coerced to integer)
-#' @param end_late end the last imputed date range this many days late (coerced to integer)
-#' @returns a list of `start` and `end` Date vectors for the imputed ranges for each input date in x
+#' @param start_early start the first imputed date range this many days early
+#' (coerced to integer)
+#' @param end_late end the last imputed date range this many days late
+#' (coerced to integer)
+#' @returns a list of `start` and `end` Date vectors for the imputed ranges
+#' for each input date in x
 #' @details Use this function to impute an effective date range for a set of
 #' addresses or location identifiers that were collected on unrelated days.
 #' For example, residential addresses collected during a specific healthcare

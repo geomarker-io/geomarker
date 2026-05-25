@@ -41,7 +41,11 @@ lapply(smoke_dates, \(.) {
       format(., "%m"),
       format(., "%Y%m%d")
     )
-  dest_path <- file.path(fixture_dir, "hms", url_to_filename(smoke_url, etag = FALSE)) |>
+  dest_path <- file.path(
+    fixture_dir,
+    "hms",
+    url_to_filename(smoke_url, etag = FALSE)
+  ) |>
     tools::file_path_sans_ext() |>
     paste0(path_sans_ext = _, ".shz")
   paste0("/vsizip/", geomarker_download_file(smoke_url, subdir = "hms")) |>

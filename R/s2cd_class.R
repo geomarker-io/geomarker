@@ -1,25 +1,10 @@
-.data.frame <- S7::new_S3_class("data.frame")
-
-.s2_cell <- S7::new_S3_class(
-  "s2_cell",
-  constructor = function(.data) {
-    structure(.data, class = c("s2_cell", "wk_vctr"))
-  },
-  validator = function(x) {
-    if (!inherits(x, "s2_cell")) {
-      "Not an s2_cell."
-    }
-  }
-)
-
 #' Create a new s2_cell_dates (`s2cd`) object
 #'
 #' A `s2cd` object (short for **s2_cell_dates**)
-#' extends the `s2::s2_cell` class with a list of date vectors,
-#' where each vector of chronologically, non-missing dates corresponds
-#' to each (valid, level 30) s2 cell. Create a new `s2cd` object
-#' with `s2cd()` or coerce another object into a `s2cd` object
-#' with `as_s2cd()`.
+#' stores an `s2::s2_cell` vector alongside a list of date vectors,
+#' where each vector of chronologically, non-missing dates corresponds to each
+#' valid, level 30 s2 cell. Create a new `s2cd` object with `s2cd()` or coerce
+#' another object into a `s2cd` object with `as_s2cd()`.
 #'
 #' Each position in the s2_cells vector corresponds to
 #' the same-indexed element in dates, allowing multiple
@@ -59,39 +44,75 @@
 #'   ))
 #' ) |>
 #'   as_s2cd()
-s2cd <- S7::new_class(
-  "s2cd",
-  parent = .s2_cell,
-  package = NULL,
-  properties = list(dates = S7::class_list),
-  validator = function(self) {
-    if (!inherits(self, "s2_cell")) {
-      "`s2cd` must extend an `s2_cell` vector."
-    } else if (!all(s2::s2_cell_is_valid(self))) {
-      "s2 cells must be valid (`s2::s2_cell_is_valid()`)."
-    } else if (!all(s2::s2_cell_level(self) == 30)) {
-      "all s2 cells must be level 30"
-    } else if (!is.list(self@dates)) {
-      "`dates` must be a list."
-    } else if (!length(self@dates) == length(self)) {
-      "`dates` must have same length as `cells`."
-    } else if (!all(sapply(self@dates, inherits, "Date"))) {
-      "all elements in the dates list must be Date vectors."
-    } else if (any(sapply(self@dates, anyNA))) {
-      "dates must not contain missing values"
-    } else if (!all(sapply(self@dates, is_non_decreasing))) {
-      "each Date vector must be in chronological order"
-    }
+s2cd <- function(.data, dates = list()) {
+  .data <- s2::as_s2_cell(.data)
+  validate_s2cd(.data, dates)
+  new_s2cd(.data, dates)
+}
+
+new_s2cd <- function(.data = s2::new_s2_cell(double()), dates = list()) {
+  dates <- as.list(dates)
+  date_field <- do.call(
+    vctrs::list_of,
+    c(dates, list(.ptype = as.Date(character())))
+  )
+  vctrs::new_rcrd(
+    list(
+      s2_cell = .data,
+      dates = date_field
+    ),
+    class = "s2cd"
+  )
+}
+
+validate_s2cd <- function(.data, dates) {
+  if (!inherits(.data, "s2_cell")) {
+    stop("`s2cd` must contain an `s2_cell` vector.", call. = FALSE)
   }
-)
+  if (!all(s2::s2_cell_is_valid(.data))) {
+    stop("s2 cells must be valid (`s2::s2_cell_is_valid()`).", call. = FALSE)
+  }
+  if (!all(s2::s2_cell_level(.data) == 30)) {
+    stop("all s2 cells must be level 30", call. = FALSE)
+  }
+  if (!is.list(dates)) {
+    stop("`dates` must be a list.", call. = FALSE)
+  }
+  if (length(dates) != length(.data)) {
+    stop("`dates` must have same length as `cells`.", call. = FALSE)
+  }
+  if (!all(vapply(dates, inherits, logical(1), "Date"))) {
+    stop("all elements in the dates list must be Date vectors", call. = FALSE)
+  }
+  if (any(vapply(dates, anyNA, logical(1)))) {
+    stop("dates must not contain missing values", call. = FALSE)
+  }
+  if (!all(vapply(dates, is_non_decreasing, logical(1)))) {
+    stop("each Date vector must be in chronological order", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+s2cd_s2_cell <- function(x) {
+  stopifnot("x must be a s2_cell_dates object" = is_s2cd(x))
+  vctrs::field(x, "s2_cell")
+}
+
+#' Get date vectors from a s2_cell_dates (`s2cd`) object
+#'
+#' @param x a s2_cell_dates object (see `?s2cd`)
+#' @returns a list of Date vectors
+#' @export
+#' @examples
+#' s2cd_dates(s2cd_example())
+s2cd_dates <- function(x) {
+  stopifnot("x must be a s2_cell_dates object" = is_s2cd(x))
+  as.list(vctrs::field(x, "dates"))
+}
 
 #' @export
-#' @method [ s2cd
-`[.s2cd` <- function(x, i, ...) {
-  if (missing(i)) {
-    return(x)
-  }
-  s2cd(S7::S7_data(x)[i], x@dates[i])
+format.s2cd <- function(x, ...) {
+  as.character(s2cd_s2_cell(x))
 }
 
 #' Convert another object into a s2_cell_dates (`s2cd`) object
@@ -114,9 +135,12 @@ s2cd <- S7::new_class(
 #'   as_s2cd()
 #'
 #' as_s2cd(s2cd_example())
-as_s2cd <- S7::new_generic("as_s2cd", dispatch_args = "x")
+as_s2cd <- function(x, ...) {
+  UseMethod("as_s2cd")
+}
 
-S7::method(as_s2cd, .data.frame) <- function(x, ...) {
+#' @export
+as_s2cd.data.frame <- function(x, ...) {
   stopifnot(
     "data.frame must have column named `s2_cell`" = "s2_cell" %in% names(x),
     "data.frame must have column named `dates`" = "dates" %in% names(x)
@@ -124,32 +148,46 @@ S7::method(as_s2cd, .data.frame) <- function(x, ...) {
   s2cd(.data = x$s2_cell, dates = x$dates)
 }
 
-S7::method(as_s2cd, s2cd) <- function(x, ...) x
+#' @export
+as_s2cd.s2cd <- function(x, ...) x
+
+#' @export
+as_s2cd.default <- function(x, ...) {
+  stop(
+    "can't convert object of class `",
+    paste(class(x), collapse = "/"),
+    "` to a s2cd object",
+    call. = FALSE
+  )
+}
 
 # TODO add method to create s2cd object given data.frame with s2_cell, start_date, and end_date (and id??? or do we store one s2cd object per person??)
 
 # then, show examples how to use impute_date_ranges to go from address history (or address reported dates) to imputed address history and then use new function to add to convert to s2cd object
 
 #' @importFrom s2 as_s2_cell
+#' @importFrom vctrs vec_cast vec_ptype2 vec_ptype_abbr vec_ptype_full
 NULL
 
-S7::method(as_s2_cell, s2cd) <- function(x, ...) {
-  s2::new_s2_cell(S7::S7_data(x))
+#' @export
+as_s2_cell.s2cd <- function(x, ...) {
+  s2cd_s2_cell(x)
 }
 
-S7::method(print, s2cd) <- function(x, ...) {
+#' @export
+print.s2cd <- function(x, ...) {
   cat(sprintf("<s2_cell_dates[%d]>", length(x)))
-  the_s2 <- structure(x, class = c("s2_cell", "wk_vctr"))
   cat("\n<s2>\n")
-  print(as.character(the_s2))
-  print(x@dates)
+  print(as.character(s2cd_s2_cell(x)))
+  print(s2cd_dates(x))
+  invisible(x)
 }
 
 #' @export
 as.data.frame.s2cd <- function(x, ...) {
   data.frame(
-    s2_cell = structure(S7::S7_data(x), class = c("s2_cell", "wk_vctr")),
-    dates = I(x@dates),
+    s2_cell = s2cd_s2_cell(x),
+    dates = I(s2cd_dates(x)),
     row.names = NULL,
     check.names = FALSE,
     stringsAsFactors = FALSE
@@ -170,6 +208,41 @@ is_s2cd <- function(x) {
   inherits(x, "s2cd")
 }
 
+#' @export
+as.character.s2cd <- function(x, ...) {
+  as.character(s2cd_s2_cell(x))
+}
+
+#' @export
+as.numeric.s2cd <- function(x, ...) {
+  as.numeric(s2cd_s2_cell(x))
+}
+
+#' @export
+as.double.s2cd <- function(x, ...) {
+  as.double(s2cd_s2_cell(x))
+}
+
+#' @export
+vec_ptype_abbr.s2cd <- function(x, ...) {
+  "s2cd"
+}
+
+#' @export
+vec_ptype_full.s2cd <- function(x, ...) {
+  "s2_cell_dates"
+}
+
+#' @export
+vec_ptype2.s2cd.s2cd <- function(x, y, ...) {
+  new_s2cd()
+}
+
+#' @export
+vec_cast.s2cd.s2cd <- function(x, to, ...) {
+  x
+}
+
 #' Get unique years from s2cd object
 #'
 #' @param x a s2_cell_dates object (see `?s2cd`)
@@ -181,7 +254,7 @@ s2cd_years <- function(x) {
   stopifnot(
     "x must be a s2_cell_dates object" = is_s2cd(x)
   )
-  x@dates |>
+  s2cd_dates(x) |>
     do.call(c, args = _) |>
     format("%Y") |>
     unique() |>

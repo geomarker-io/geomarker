@@ -81,7 +81,7 @@ get_nlcd_fct_imp_data <- function(
 
   out <- mapply(
     \(yrs, xts) as.numeric(xts[yrs]),
-    yrs = lapply(x@dates, format, "%Y"),
+    yrs = lapply(s2cd_dates(x), format, "%Y"),
     xts = split(xtract, seq_len(nrow(xtract))),
     SIMPLIFY = FALSE,
     USE.NAMES = TRUE

@@ -87,12 +87,16 @@ get_daily_smoke_data <- function(x, ...) {
 #'   get_smoke_summary()
 get_smoke_summary <- function(x, ...) {
   stopifnot("x must be a s2_cell_dates object" = is_s2cd(x))
-  dsd <- get_daily_smoke_data(as.Date(unique(unlist(x@dates))), ...)
+  x_dates <- s2cd_dates(x)
+  dsd <- get_daily_smoke_data(as.Date(unique(unlist(x_dates))), ...)
   lapply(seq_along(x), \(i) {
-    lapply(dsd[as.character(x@dates[[i]])], \(.) {
+    lapply(dsd[as.character(x_dates[[i]])], \(.) {
       safe_max_factor(
         .[
-          s2::s2_intersects(s2::s2_cell_center(x[i]), .$geometry),
+          s2::s2_intersects(
+            s2::s2_cell_center(s2::as_s2_cell(x[i])),
+            .$geometry
+          ),
           "density",
           drop = TRUE
         ]

@@ -17,11 +17,10 @@ A \code{s2cd} object
 }
 \description{
 A \code{s2cd} object (short for \strong{s2_cell_dates})
-extends the \code{s2::s2_cell} class with a list of date vectors,
-where each vector of chronologically, non-missing dates corresponds
-to each (valid, level 30) s2 cell. Create a new \code{s2cd} object
-with \code{s2cd()} or coerce another object into a \code{s2cd} object
-with \code{as_s2cd()}.
+stores an \code{s2::s2_cell} vector alongside a list of date vectors,
+where each vector of chronologically, non-missing dates corresponds to each
+valid, level 30 s2 cell. Create a new \code{s2cd} object with \code{s2cd()} or coerce
+another object into a \code{s2cd} object with \code{as_s2cd()}.
 }
 \details{
 Each position in the s2_cells vector corresponds to

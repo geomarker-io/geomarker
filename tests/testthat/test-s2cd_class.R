@@ -8,7 +8,7 @@ test_that("s2cd behaves as expected", {
   )
 
   d |>
-    expect_s3_class(c("s2cd", "s2_cell", "S7_object"))
+    expect_s3_class(c("s2cd", "vctrs_rcrd", "vctrs_vctr"))
 
   d |>
     is_s2cd() |>
@@ -95,13 +95,33 @@ test_that("s2cd behaves as expected", {
 
   # ensure underlying data is double
   d |>
-    S7::S7_data() |>
+    s2::as_s2_cell() |>
+    unclass() |>
     expect_type("double")
 
   # get dates list
-  expect_type(d@dates, "list")
-  vapply(d@dates, class, character(1)) |>
+  expect_type(s2cd_dates(d), "list")
+  vapply(s2cd_dates(d), class, character(1)) |>
     expect_identical(rep("Date", length(d)))
+
+  # use as a first-class tibble column
+  tbl <- tibble::tibble(id = seq_along(d), loc = d)
+  expect_s3_class(tbl$loc, "s2cd")
+
+  sliced <- dplyr::slice(tbl, 2)
+  expect_s3_class(sliced$loc, "s2cd")
+  expect_identical(as.data.frame(sliced$loc), as.data.frame(d[2]))
+
+  filtered <- dplyr::filter(tbl, id == 2)
+  expect_s3_class(filtered$loc, "s2cd")
+  expect_identical(as.data.frame(filtered$loc), as.data.frame(d[2]))
+
+  arranged <- dplyr::arrange(tbl, dplyr::desc(id))
+  expect_s3_class(arranged$loc, "s2cd")
+  expect_identical(
+    as.data.frame(arranged$loc),
+    as.data.frame(d[c(2, 1)])
+  )
 
   # as_s2cd
   my_d <-
@@ -113,7 +133,7 @@ test_that("s2cd behaves as expected", {
       ))
     )
 
-  expect_identical(d[1], s2cd(s2::as_s2_cell(d)[1], d@dates[1]))
+  expect_identical(d[1], s2cd(s2::as_s2_cell(d)[1], s2cd_dates(d)[1]))
 
   expect_identical(d, as_s2cd(d))
 

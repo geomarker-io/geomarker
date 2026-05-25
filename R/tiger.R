@@ -43,9 +43,10 @@ tiger_states <- function(year, ...) {
 
 #' Census Block Group Linkage
 #'
-#' Link an s2_cell vector with the closest census block group using
-#' the US Census TIGER/Line shapefiles from a specific year.
-#' @param x s2_cell
+#' Link an object coercible to an s2_cell vector with the closest census block
+#' group using the US Census TIGER/Line shapefiles from a specific year.
+#' @param x object coercible to an s2_cell vector; non-missing cells must be
+#' full-resolution (level 30) cells
 #' @param year vintage of TIGER/Line block group geography files
 #' @param ... passed to `geomarker_download_file()`
 #' @returns character vector of matched census block group identifiers
@@ -63,8 +64,22 @@ tiger_states <- function(year, ...) {
 s2_join_tiger_bg <- function(x, year = as.character(2024:2013), ...) {
   check_installed("sf", "read TIGER/Line census block group geographies")
   check_installed("s2", "s2 geometry calculations")
-  if (!inherits(x, "s2_cell")) {
-    stop("x must be a s2_cell vector", call. = FALSE)
+  x <- tryCatch(
+    s2::as_s2_cell(x),
+    error = function(err) {
+      stop("x must be coercible to a s2_cell vector", call. = FALSE)
+    }
+  )
+  non_missing_x <- stats::na.omit(x)
+  if (length(non_missing_x) > 0L) {
+    if (!all(s2::s2_cell_is_valid(non_missing_x))) {
+      stop("x must contain valid s2 cells", call. = FALSE)
+    }
+    if (!all(s2::s2_cell_level(non_missing_x) == 30)) {
+      stop("all non-missing s2 cells must be full-resolution level 30 cells",
+        call. = FALSE
+      )
+    }
   }
   year <- match.arg(year)
   x_s2_geo <-

@@ -7,7 +7,8 @@
 s2_join_tiger_bg(x, year = as.character(2024:2013), ...)
 }
 \arguments{
-\item{x}{s2_cell}
+\item{x}{object coercible to an s2_cell vector; non-missing cells must be
+full-resolution (level 30) cells}
 
 \item{year}{vintage of TIGER/Line block group geography files}
 
@@ -17,8 +18,8 @@ s2_join_tiger_bg(x, year = as.character(2024:2013), ...)
 character vector of matched census block group identifiers
 }
 \description{
-Link an s2_cell vector with the closest census block group using
-the US Census TIGER/Line shapefiles from a specific year.
+Link an object coercible to an s2_cell vector with the closest census block
+group using the US Census TIGER/Line shapefiles from a specific year.
 }
 \examples{
  withr::local_envvar(

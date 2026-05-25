@@ -89,7 +89,7 @@ get_gridmet_data <- function(
   out <- mapply(
     function(.x, .y) xx[as.character(.y), .x],
     seq_len(ncol(xx)),
-    x@dates,
+    s2cd_dates(x),
     SIMPLIFY = FALSE
   )
   stats::setNames(out, as.character(x))

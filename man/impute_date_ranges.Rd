@@ -9,12 +9,15 @@ impute_date_ranges(x, start_early = 0, end_late = 0)
 \arguments{
 \item{x}{a (chronologically sorted) Date vector}
 
-\item{start_early}{start the first imputed date range this many days early (coerced to integer)}
+\item{start_early}{start the first imputed date range this many days early
+(coerced to integer)}
 
-\item{end_late}{end the last imputed date range this many days late (coerced to integer)}
+\item{end_late}{end the last imputed date range this many days late
+(coerced to integer)}
 }
 \value{
-a list of \code{start} and \code{end} Date vectors for the imputed ranges for each input date in x
+a list of \code{start} and \code{end} Date vectors for the imputed ranges
+for each input date in x
 }
 \description{
 In observational data, the date associated with an address

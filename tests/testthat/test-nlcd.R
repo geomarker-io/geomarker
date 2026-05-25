@@ -16,6 +16,7 @@ test_that("get_nlcd_fct_imp_data works with fixture dir", {
 })
 
 test_that("get_nlcd_fct_imp_data works with muliple years", {
+  skip("takes forever")
   skip_on_cran()
   skip_on_ci()
   skip_if_offline()

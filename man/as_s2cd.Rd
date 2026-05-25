@@ -9,7 +9,8 @@ as_s2cd(x, ...)
 \arguments{
 \item{x}{an object to convert}
 
-\item{...}{passed to methods}
+\item{...}{passed to methods; for the \code{data.frame} method, passed to
+\code{s2cd()}}
 }
 \description{
 Convert other R objects into s2cd objects

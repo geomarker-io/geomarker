@@ -62,6 +62,34 @@ test_that("s2cd behaves as expected", {
   ) |>
     expect_error("each Date vector must be in chronological order")
 
+  expect_error(
+    s2cd(
+      s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+      dates = list(
+        as.Date("2026-01-01"),
+        c(as.Date("2024-09-13"), as.Date("2023-09-20"))
+      ),
+      sort_dates = NA
+    ),
+    "`sort_dates` must be TRUE or FALSE."
+  )
+
+  expect_warning(
+    d_sorted <- s2cd(
+      s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+      dates = list(
+        as.Date("2026-01-01"),
+        c(as.Date("2024-09-13"), as.Date("2023-09-20"))
+      ),
+      sort_dates = TRUE
+    ),
+    "Because `sort_dates = TRUE`"
+  )
+  expect_identical(
+    s2cd_dates(d_sorted)[[2]],
+    as.Date(c("2023-09-20", "2024-09-13"))
+  )
+
   d |>
     tibble::as_tibble() |>
     expect_s3_class(c("tbl_df", "tbl", "data.frame")) |>
@@ -144,6 +172,17 @@ test_that("s2cd behaves as expected", {
     tibble::as_tibble() |>
     as_s2cd() |>
     expect_s3_class("s2cd")
+
+  my_unsorted_d <- my_d
+  my_unsorted_d$dates[[2]] <- rev(my_unsorted_d$dates[[2]])
+  expect_warning(
+    my_unsorted_s2cd <- as_s2cd(my_unsorted_d, sort_dates = TRUE),
+    "Because `sort_dates = TRUE`"
+  )
+  expect_identical(
+    s2cd_dates(my_unsorted_s2cd)[[2]],
+    my_d$dates[[2]]
+  )
 
   expect_identical(my_d, as.data.frame(as_s2cd(my_d)))
 })

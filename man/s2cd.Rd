@@ -4,13 +4,16 @@
 \alias{s2cd}
 \title{Create a new s2_cell_dates (\code{s2cd}) object}
 \usage{
-s2cd(.data, dates = list())
+s2cd(.data, dates = list(), sort_dates = FALSE)
 }
 \arguments{
 \item{.data}{an s2_cell object that is valid and is at level 30 resolution}
 
 \item{dates}{a list of date vectors,
 each in chronological order and without missing values}
+
+\item{sort_dates}{logical; sort each date vector chronologically when needed.
+This defaults to \code{FALSE} so accidentally unordered dates continue to error.}
 }
 \value{
 A \code{s2cd} object

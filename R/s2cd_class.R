@@ -19,6 +19,8 @@
 #' @param .data an s2_cell object that is valid and is at level 30 resolution
 #' @param dates a list of date vectors,
 #' each in chronological order and without missing values
+#' @param sort_dates logical; sort each date vector chronologically when needed.
+#' This defaults to `FALSE` so accidentally unordered dates continue to error.
 #' @return A `s2cd` object
 #' @export
 #' @examples
@@ -44,9 +46,21 @@
 #'   ))
 #' ) |>
 #'   as_s2cd()
-s2cd <- function(.data, dates = list()) {
+s2cd <- function(.data, dates = list(), sort_dates = FALSE) {
   .data <- s2::as_s2_cell(.data)
-  validate_s2cd(.data, dates)
+  validate_s2cd(.data, dates, sort_dates = sort_dates)
+  unordered_dates <- !vapply(dates, is_non_decreasing, logical(1))
+  if (any(unordered_dates)) {
+    warning(
+      "Some Date vectors were not in chronological order. ",
+      "Because `sort_dates = TRUE`, `s2cd()` sorted each Date vector ",
+      "chronologically before constructing the object. ",
+      "Silence this warning by sorting each date vector ahead of time with ",
+      "`lapply(dates, sort)`.",
+      call. = FALSE
+    )
+    dates <- lapply(dates, sort)
+  }
   new_s2cd(.data, dates)
 }
 
@@ -65,7 +79,10 @@ new_s2cd <- function(.data = s2::new_s2_cell(double()), dates = list()) {
   )
 }
 
-validate_s2cd <- function(.data, dates) {
+validate_s2cd <- function(.data, dates, sort_dates = FALSE) {
+  if (!is.logical(sort_dates) || length(sort_dates) != 1 || is.na(sort_dates)) {
+    stop("`sort_dates` must be TRUE or FALSE.", call. = FALSE)
+  }
   if (!inherits(.data, "s2_cell")) {
     stop("`s2cd` must contain an `s2_cell` vector.", call. = FALSE)
   }
@@ -87,8 +104,12 @@ validate_s2cd <- function(.data, dates) {
   if (any(vapply(dates, anyNA, logical(1)))) {
     stop("dates must not contain missing values", call. = FALSE)
   }
-  if (!all(vapply(dates, is_non_decreasing, logical(1)))) {
-    stop("each Date vector must be in chronological order", call. = FALSE)
+  if (!sort_dates && !all(vapply(dates, is_non_decreasing, logical(1)))) {
+    stop(
+      "each Date vector must be in chronological order. ",
+      "Set `sort_dates = TRUE` to sort automatically.",
+      call. = FALSE
+    )
   }
   invisible(NULL)
 }
@@ -122,7 +143,8 @@ format.s2cd <- function(x, ...) {
 #' - `data.frame`: must have columns called "s2_cell" and "dates"
 #' - `s2cd`: returned as-is
 #' @param x an object to convert
-#' @param ... passed to methods
+#' @param ... passed to methods; for the `data.frame` method, passed to
+#'   `s2cd()`
 #' @export
 #' @examples
 #' data.frame(
@@ -145,7 +167,7 @@ as_s2cd.data.frame <- function(x, ...) {
     "data.frame must have column named `s2_cell`" = "s2_cell" %in% names(x),
     "data.frame must have column named `dates`" = "dates" %in% names(x)
   )
-  s2cd(.data = x$s2_cell, dates = x$dates)
+  s2cd(.data = x$s2_cell, dates = x$dates, ...)
 }
 
 #' @export

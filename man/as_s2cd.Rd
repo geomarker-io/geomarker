@@ -2,7 +2,7 @@
 % Please edit documentation in R/as_s2cd.R
 \name{as_s2cd}
 \alias{as_s2cd}
-\title{Convert another object into a s2_cell_dates (\code{s2cd}) object}
+\title{Convert other objects into a s2_cell_dates (\code{s2cd}) vector}
 \usage{
 as_s2cd(x, ...)
 }
@@ -13,12 +13,12 @@ as_s2cd(x, ...)
 \code{s2cd()}}
 }
 \description{
-Convert other R objects into s2cd objects
+Convert other R objects into s2cd vectors
 }
 \section{Methods implemented for}{
 
 \itemize{
-\item \code{data.frame}: must have columns called "s2_cell" and "dates"
+\item \code{data.frame}: must have column "s2_cell" and list-column "dates"
 \item \code{s2cd}: returned as-is
 }
 }

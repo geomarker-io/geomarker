@@ -2,12 +2,12 @@
 % Please edit documentation in R/s2cd_example.R
 \name{s2cd_example}
 \alias{s2cd_example}
-\title{Simple example \code{s2cd} object}
+\title{Simple example \code{s2cd} vector}
 \usage{
 s2cd_example()
 }
 \value{
-A \code{s2cd} object
+A \code{s2cd} vector
 }
 \description{
 \code{s2cd_example()} returns a very simple example

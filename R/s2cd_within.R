@@ -1,11 +1,11 @@
-#' Test if a `s2cd` object is within a date range or s2 cell union
+#' Test if a `s2cd` vector is within a date range or s2 cell union
 #'
-#' Dates within the s2cd object are compared to the date range,
+#' Dates within the s2cd vector are compared to the date range,
 #' inclusively. An s2_cell vector or s2_cell_union object
 #' is used to test for intersection with the s2 cells.
 #' If both a date range and s2 cell union are provided,
 #' `s2cd_within()` will return TRUE only if both are within.
-#' @param x an s2_cell_dates object
+#' @param x an s2_cell_dates vector
 #' @param date_range length two Date vector representing a
 #' minimum and maximum allowable date
 #' @param s2_cell a s2_cell vector, often a covering represented by
@@ -40,7 +40,7 @@ s2cd_within <- function(x, date_range = NULL, s2_cell = NULL) {
 
 s2cd_within_dates <- function(x, date_range) {
   stopifnot(
-    "x must be a s2cd object" = is_s2cd(x),
+    "x must be a s2cd vector" = is_s2cd(x),
     "date_range must be a Date vector" = inherits(date_range, "Date"),
     "date_range must be length 2" = length(date_range) == 2,
     "date_range must not have any missing values" = !anyNA(date_range),
@@ -58,7 +58,7 @@ s2cd_within_dates <- function(x, date_range) {
 
 s2cd_within_s2_cells <- function(x, s2_cell) {
   stopifnot(
-    "x must be a s2cd object" = is_s2cd(x),
+    "x must be a s2cd vector" = is_s2cd(x),
     "s2_cell must be a s2_cell vector" = inherits(s2_cell, "s2_cell"),
     "s2_cell must have a non-zero length" = length(s2_cell) > 0,
     "s2_cell must not having any missing values" = !any(is.na(s2_cell))

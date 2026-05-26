@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R: 
     person("Cole", "Brokamp", , "cole@colebrokamp.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-0289-3151"))
-Description: The s2_cell_dates class stores an s2::s2_cell vector with a list of date vectors, one for each s2 cell. Geomarker assessment functions use this format to complete spatiotemporal linkage of extant environmental and sociodemographic data.
+Description: The s2_cell_dates vector class stores an s2::s2_cell vector with a list of date vectors, one for each s2 cell. Geomarker assessment functions use this format to complete spatiotemporal linkage of extant environmental and sociodemographic data.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

@@ -2,18 +2,18 @@
 % Please edit documentation in R/s2cd_accessors.R
 \name{s2cd_years}
 \alias{s2cd_years}
-\title{Get unique years from s2cd object}
+\title{Get unique years from s2cd vector}
 \usage{
 s2cd_years(x)
 }
 \arguments{
-\item{x}{a s2_cell_dates object (see \code{?s2cd})}
+\item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 }
 \value{
 a sorted character vector of years present in x
 }
 \description{
-Get unique years from s2cd object
+Get unique years from s2cd vector
 }
 \examples{
 s2cd_years(s2cd_example())

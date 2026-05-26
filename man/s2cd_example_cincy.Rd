@@ -2,7 +2,7 @@
 % Please edit documentation in R/s2cd_example.R
 \name{s2cd_example_cincy}
 \alias{s2cd_example_cincy}
-\title{More complex example \code{s2cd} object}
+\title{More complex example \code{s2cd} vector}
 \usage{
 s2cd_example_cincy(
   n_locations = 100L,
@@ -20,9 +20,9 @@ dates per location from a Poisson distribution with lambda equal
 to \code{n_dates}; "fixed" randomly draws \code{n_dates} for every location}
 }
 \description{
-\code{s2cd_example_cincy()} randomly generates an example s2cd object by sampling locations
-from the center of level 15 cells covering the s2 cell "8841" and
-sampling dates from 2024.
+\code{s2cd_example_cincy()} randomly generates an example s2cd vector by
+sampling locations from the center of level 15 cells covering the s2
+cell "8841" and sampling dates from 2024.
 }
 \examples{
 set.seed(923)

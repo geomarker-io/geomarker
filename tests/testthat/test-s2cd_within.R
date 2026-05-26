@@ -1,4 +1,4 @@
-test_that("can check s2cd object for a date interval", {
+test_that("can check s2cd vector for a date interval", {
   d <- s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
     dates = list(
@@ -33,7 +33,7 @@ test_that("can check s2cd object for a date interval", {
     expect_error("date_range must be chronologically sorted")
 })
 
-test_that("can check s2cd object for s2 cell union", {
+test_that("can check s2cd vector for s2 cell union", {
   d <- s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
     dates = list(

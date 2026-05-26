@@ -7,7 +7,7 @@
 get_elevation_summary(x, fun = stats::median, buffer = 800, ...)
 }
 \arguments{
-\item{x}{a s2_cell_dates object (see \code{?s2cd})}
+\item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 
 \item{fun}{function to summarize extracted values}
 

@@ -11,7 +11,7 @@ get_gridmet_data(
 )
 }
 \arguments{
-\item{x}{a s2_cell_dates object (see \code{?s2cd})}
+\item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 
 \item{gridmet_var}{character; name of gridMET variable}
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/s2cd_class.R
 \name{is_s2cd}
 \alias{is_s2cd}
-\title{Test if an object is a \code{s2cd} object}
+\title{Test whether input is a \code{s2cd} vector}
 \usage{
 is_s2cd(x)
 }
@@ -13,7 +13,7 @@ is_s2cd(x)
 logical
 }
 \description{
-Tests if an object is of class \code{sc2d}
+Tests if x inherits from class \code{s2cd}
 }
 \examples{
 is_s2cd(s2cd_example())

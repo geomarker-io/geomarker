@@ -1,8 +1,8 @@
-#' Convert another object into a s2_cell_dates (`s2cd`) object
+#' Convert other objects into a s2_cell_dates (`s2cd`) vector
 #'
-#' Convert other R objects into s2cd objects
+#' Convert other R objects into s2cd vectors
 #' @section Methods implemented for:
-#' - `data.frame`: must have columns called "s2_cell" and "dates"
+#' - `data.frame`: must have column "s2_cell" and list-column "dates"
 #' - `s2cd`: returned as-is
 #' @param x an object to convert
 #' @param ... passed to methods; for the `data.frame` method, passed to
@@ -40,11 +40,11 @@ as_s2cd.default <- function(x, ...) {
   stop(
     "can't convert object of class `",
     paste(class(x), collapse = "/"),
-    "` to a s2cd object",
+    "` to a s2cd vector",
     call. = FALSE
   )
 }
 
-# TODO add method to create s2cd object given data.frame with s2_cell, start_date, and end_date (and id??? or do we store one s2cd object per person??)
+# TODO add method to create s2cd vector given data.frame with s2_cell, start_date, and end_date (and id??? or do we store one s2cd vector per person??)
 
-# then, show examples how to use impute_date_ranges to go from address history (or address reported dates) to imputed address history and then use new function to add to convert to s2cd object
+# then, show examples how to use impute_date_ranges to go from address history (or address reported dates) to imputed address history and then use new function to add to convert to s2cd vector

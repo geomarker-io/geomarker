@@ -13,7 +13,7 @@
 #' for more details on the hosted data and see
 #' <https://www.mrlc.gov/data/project/annual-nlcd> for more details
 #' on the NLCD.
-#' @param x a s2_cell_dates object (see `?s2cd`)
+#' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param fun function to summarize extracted data
 #' @param buffer distance from s2 cell (in meters) to summarize data
 #' @param ... passed to `geomarker_download_file()`
@@ -28,7 +28,7 @@ get_nlcd_fct_imp_data <- function(
   ...
 ) {
   stopifnot(
-    "x must be a s2_cell_dates object" = is_s2cd(x),
+    "x must be a s2_cell_dates vector" = is_s2cd(x),
     "dates must be between 2017 and 2024" = s2cd_within(
       x,
       date_range = c(as.Date("2017-01-01"), as.Date("2024-12-31"))

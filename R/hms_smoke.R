@@ -67,7 +67,7 @@ get_daily_smoke_data <- function(x, ...) {
 #' and summarized as the maximum intensity ("Light", "Medium", "Heavy").
 #' If no smoke polygons are intersected, "None" is used to summarize the maximum
 #' intensity.
-#' @param x a s2_cell_dates object (see `?s2cd`)
+#' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param ... passed to `get_daily_smoke_data()
 #' (and on to `geomarker_download_file()`)
 #' @returns a list of ordered factors (Levels: None > Light > Medium > Heavy)
@@ -86,7 +86,7 @@ get_daily_smoke_data <- function(x, ...) {
 #' ) |>
 #'   get_smoke_summary()
 get_smoke_summary <- function(x, ...) {
-  stopifnot("x must be a s2_cell_dates object" = is_s2cd(x))
+  stopifnot("x must be a s2_cell_dates vector" = is_s2cd(x))
   x_dates <- s2cd_dates(x)
   dsd <- get_daily_smoke_data(as.Date(unique(unlist(x_dates))), ...)
   lapply(seq_along(x), \(i) {

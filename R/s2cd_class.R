@@ -1,10 +1,10 @@
-#' Create a new s2_cell_dates (`s2cd`) object
+#' Create a new s2_cell_dates (`s2cd`) vector
 #'
-#' A `s2cd` object (short for **s2_cell_dates**)
+#' A `s2cd` vector (short for **s2_cell_dates**)
 #' stores an `s2::s2_cell` vector alongside a list of date vectors,
 #' where each vector of chronologically, non-missing dates corresponds to each
-#' valid, level 30 s2 cell. Create a new `s2cd` object with `s2cd()` or coerce
-#' another object into a `s2cd` object with `as_s2cd()`.
+#' valid, level 30 s2 cell. Create a new `s2cd` vector with `s2cd()` or coerce
+#' another object into a `s2cd` vector with `as_s2cd()`.
 #'
 #' Each position in the s2_cells vector corresponds to
 #' the same-indexed element in dates, allowing multiple
@@ -16,12 +16,12 @@
 #' representations rather than true spatial areas.
 #'
 #' @seealso as_s2cd
-#' @param .data an s2_cell object that is valid and is at level 30 resolution
+#' @param .data an s2_cell vector that is valid and is at level 30 resolution
 #' @param dates a list of date vectors,
 #' each in chronological order and without missing values
 #' @param sort_dates logical; sort each date vector chronologically when needed.
 #' This defaults to `FALSE` so accidentally unordered dates continue to error.
-#' @return A `s2cd` object
+#' @return A `s2cd` vector
 #' @export
 #' @examples
 #'
@@ -34,7 +34,7 @@
 #'   )
 #' )
 #'
-#' # check if object is a s2cd object
+#' # check if d is a s2cd vector
 #' is_s2cd(d)
 #'
 #' # create using data.frame with s2_cell and dates columns
@@ -54,7 +54,7 @@ s2cd <- function(.data, dates = list(), sort_dates = FALSE) {
     warning(
       "Some Date vectors were not in chronological order. ",
       "Because `sort_dates = TRUE`, `s2cd()` sorted each Date vector ",
-      "chronologically before constructing the object. ",
+      "chronologically before constructing the vector. ",
       "Silence this warning by sorting each date vector ahead of time with ",
       "`lapply(dates, sort)`.",
       call. = FALSE
@@ -137,9 +137,9 @@ print.s2cd <- function(x, ...) {
   invisible(x)
 }
 
-#' Test if an object is a `s2cd` object
+#' Test whether input is a `s2cd` vector
 #'
-#' Tests if an object is of class `sc2d`
+#' Tests if x inherits from class `s2cd`
 #' @param x any object to test
 #' @return logical
 #' @export

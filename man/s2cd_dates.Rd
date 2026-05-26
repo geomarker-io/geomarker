@@ -2,18 +2,18 @@
 % Please edit documentation in R/s2cd_accessors.R
 \name{s2cd_dates}
 \alias{s2cd_dates}
-\title{Get date vectors from a s2_cell_dates (\code{s2cd}) object}
+\title{Get date vectors from a s2_cell_dates (\code{s2cd}) vector}
 \usage{
 s2cd_dates(x)
 }
 \arguments{
-\item{x}{a s2_cell_dates object (see \code{?s2cd})}
+\item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 }
 \value{
 a list of Date vectors
 }
 \description{
-Get date vectors from a s2_cell_dates (\code{s2cd}) object
+Get date vectors from a s2_cell_dates (\code{s2cd}) vector
 }
 \examples{
 s2cd_dates(s2cd_example())

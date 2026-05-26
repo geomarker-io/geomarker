@@ -2,12 +2,12 @@
 % Please edit documentation in R/s2cd_within.R
 \name{s2cd_within}
 \alias{s2cd_within}
-\title{Test if a \code{s2cd} object is within a date range or s2 cell union}
+\title{Test if a \code{s2cd} vector is within a date range or s2 cell union}
 \usage{
 s2cd_within(x, date_range = NULL, s2_cell = NULL)
 }
 \arguments{
-\item{x}{an s2_cell_dates object}
+\item{x}{an s2_cell_dates vector}
 
 \item{date_range}{length two Date vector representing a
 minimum and maximum allowable date}
@@ -19,7 +19,7 @@ many cells of different resolutions; see examples}
 logical
 }
 \description{
-Dates within the s2cd object are compared to the date range,
+Dates within the s2cd vector are compared to the date range,
 inclusively. An s2_cell vector or s2_cell_union object
 is used to test for intersection with the s2 cells.
 If both a date range and s2 cell union are provided,

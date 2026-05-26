@@ -7,7 +7,7 @@
 get_traffic_summary(x, buffer = 400, overwrite = FALSE, quiet = FALSE)
 }
 \arguments{
-\item{x}{a s2_cell_dates object (see \code{?s2cd})}
+\item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 

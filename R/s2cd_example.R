@@ -1,8 +1,8 @@
-#' Simple example `s2cd` object
+#' Simple example `s2cd` vector
 #'
 #' `s2cd_example()` returns a very simple example
 #'
-#' @return A `s2cd` object
+#' @return A `s2cd` vector
 #' @export
 #' @examples
 #' s2cd_example()
@@ -18,11 +18,11 @@ s2cd_example <- function() {
   )
 }
 
-#' More complex example `s2cd` object
+#' More complex example `s2cd` vector
 #'
-#' `s2cd_example_cincy()` randomly generates an example s2cd object by sampling locations
-#' from the center of level 15 cells covering the s2 cell "8841" and
-#' sampling dates from 2024.
+#' `s2cd_example_cincy()` randomly generates an example s2cd vector by
+#' sampling locations from the center of level 15 cells covering the s2
+#' cell "8841" and sampling dates from 2024.
 #' @param n_locations integer; number of s2 locations to simulate
 #' @param n_dates_each integer; number of dates to simulate per location
 #' @param n_dates_variation "poisson+1" randomly draws the number of

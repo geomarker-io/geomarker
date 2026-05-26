@@ -7,7 +7,7 @@
 #' Elevation data is downloaded from the PRISM Group at Oregon
 #' State University as a digital elevation model in BIL format at an 800 m grid.
 #' See <https://prism.oregonstate.edu/normals/> for more details.
-#' @param x a s2_cell_dates object (see `?s2cd`)
+#' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param fun function to summarize extracted values
 #' @param buffer distance from s2 cell (in meters) to summarize data
 #' @param ... passed to `geomarker_download_file()`
@@ -30,7 +30,7 @@ get_elevation_summary <- function(
   ...
 ) {
   stopifnot(
-    "x must be a s2_cell_dates object" = is_s2cd(x),
+    "x must be a s2_cell_dates vector" = is_s2cd(x),
     "fun must be a function" = is.function(fun),
     "buffer must be numeric" = is.numeric(buffer),
     "buffer must be length one" = length(buffer) == 1,

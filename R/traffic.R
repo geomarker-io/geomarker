@@ -16,7 +16,7 @@
 #' ("principal arterial - other freeways and expressways").
 #' are used. Passenger vehicles (FHWA 1-3) are calculated as the
 #' total minus FHWA class 4-7 (single unit) and 8-13 (combo).
-#' @param x a s2_cell_dates object (see `?s2cd`)
+#' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param buffer distance from s2 cell (in meters) to summarize data
 #' @param overwrite logical;
 #' overwrite traffic geodatabase if already downloaded?
@@ -38,7 +38,7 @@ get_traffic_summary <- function(
   overwrite = FALSE,
   quiet = FALSE
 ) {
-  stopifnot("x must be a s2_cell_dates object" = is_s2cd(x))
+  stopifnot("x must be a s2_cell_dates vector" = is_s2cd(x))
   message("Loading HPMS data...")
   hpms_d <-
     geomarker_download_file(

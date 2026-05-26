@@ -2,12 +2,12 @@
 % Please edit documentation in R/s2cd_class.R
 \name{s2cd}
 \alias{s2cd}
-\title{Create a new s2_cell_dates (\code{s2cd}) object}
+\title{Create a new s2_cell_dates (\code{s2cd}) vector}
 \usage{
 s2cd(.data, dates = list(), sort_dates = FALSE)
 }
 \arguments{
-\item{.data}{an s2_cell object that is valid and is at level 30 resolution}
+\item{.data}{an s2_cell vector that is valid and is at level 30 resolution}
 
 \item{dates}{a list of date vectors,
 each in chronological order and without missing values}
@@ -16,14 +16,14 @@ each in chronological order and without missing values}
 This defaults to \code{FALSE} so accidentally unordered dates continue to error.}
 }
 \value{
-A \code{s2cd} object
+A \code{s2cd} vector
 }
 \description{
-A \code{s2cd} object (short for \strong{s2_cell_dates})
+A \code{s2cd} vector (short for \strong{s2_cell_dates})
 stores an \code{s2::s2_cell} vector alongside a list of date vectors,
 where each vector of chronologically, non-missing dates corresponds to each
-valid, level 30 s2 cell. Create a new \code{s2cd} object with \code{s2cd()} or coerce
-another object into a \code{s2cd} object with \code{as_s2cd()}.
+valid, level 30 s2 cell. Create a new \code{s2cd} vector with \code{s2cd()} or coerce
+another object into a \code{s2cd} vector with \code{as_s2cd()}.
 }
 \details{
 Each position in the s2_cells vector corresponds to
@@ -46,7 +46,7 @@ d <- s2cd(
   )
 )
 
-# check if object is a s2cd object
+# check if d is a s2cd vector
 is_s2cd(d)
 
 # create using data.frame with s2_cell and dates columns

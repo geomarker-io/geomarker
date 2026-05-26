@@ -9,7 +9,7 @@
 #' and is available for the contiguous US from 1979-yesterday.
 #' Data for dates within the last 60 days are considered
 #' preliminary and subject to change.
-#' @param x a s2_cell_dates object (see `?s2cd`)
+#' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param gridmet_var character; name of gridMET variable
 #' @param ... passed to geomarker_download_file()
 #' @return a list of numeric vectors of gridMET values
@@ -39,7 +39,7 @@ get_gridmet_data <- function(
   ...
 ) {
   stopifnot(
-    "x must be a s2_cell_dates object" = is_s2cd(x),
+    "x must be a s2_cell_dates vector" = is_s2cd(x),
     "all dates in x must be after 1979-01-01" = s2cd_within(
       x,
       date_range = c(as.Date("1979-01-01"), as.Date("9999-01-01"))

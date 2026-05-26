@@ -1,5 +1,5 @@
 test_that("imputing date ranges works", {
-  impute_date_ranges(c("2024-01-01", "2024-03-17", "2024-09-21")) |>
+  impute_date_ranges(as.Date(c("2024-01-01", "2024-03-17", "2024-09-21"))) |>
     expect_equal(
       list(
         start = as.Date(c("2024-01-01", "2024-02-08", "2024-06-19")),
@@ -8,9 +8,9 @@ test_that("imputing date ranges works", {
     )
 
   impute_date_ranges(
-    c("2024-01-01", "2024-03-17", "2024-09-21"),
-    start_early = 30,
-    end_late = 60
+    as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")),
+    start_early = 30L,
+    end_late = 60L
   ) |>
     expect_equal(
       list(
@@ -19,43 +19,55 @@ test_that("imputing date ranges works", {
       )
     )
 
-  impute_date_ranges("2024-06-02") |>
+  impute_date_ranges(as.Date("2024-06-02")) |>
     expect_equal(list(
       start = as.Date("2024-06-02"),
       end = as.Date("2024-06-02")
     ))
 
-  impute_date_ranges("2024-06-02", start_early = 14, end_late = 22) |>
+  impute_date_ranges(
+    as.Date("2024-06-02"),
+    start_early = 14L,
+    end_late = 22L
+  ) |>
     expect_equal(list(
       start = as.Date("2024-06-02") - 14,
       end = as.Date("2024-06-02") + 22
     ))
 })
 
+test_that("impute_date_ranges requires typed inputs", {
+  expect_error(
+    impute_date_ranges("2024-01-01"),
+    "`x` must be a Date vector"
+  )
+  expect_error(
+    impute_date_ranges(as.Date(NA)),
+    "`x` must not contain missing values"
+  )
+  expect_error(
+    impute_date_ranges(as.Date(character())),
+    "`x` must contain at least one date"
+  )
+  expect_error(
+    impute_date_ranges(as.Date("2024-01-01"), start_early = 1),
+    "`start_early` must be a length-one integer"
+  )
+  expect_error(
+    impute_date_ranges(as.Date("2024-01-01"), end_late = c(1L, 2L)),
+    "`end_late` must be a length-one integer"
+  )
+})
+
 test_that("impute date ranges works with grouped df", {
   d <-
-    tibble::tribble(
-      ~id,
-      ~encounter,
-      ~date,
-      "A",
-      1,
-      "2024-01-01",
-      "A",
-      2,
-      "2024-03-17",
-      "A",
-      3,
-      "2024-09-21",
-      "B",
-      1,
-      "2023-11-29",
-      "B",
-      2,
-      "2024-09-22",
-      "B",
-      3,
-      "2024-09-29"
+    tibble::tibble(
+      id = rep(c("A", "B"), each = 3),
+      encounter = rep(1:3, 2),
+      date = as.Date(c(
+        "2024-01-01", "2024-03-17", "2024-09-21",
+        "2023-11-29", "2024-09-22", "2024-09-29"
+      ))
     ) |>
     dplyr::mutate(
       imputed_start_date = impute_date_ranges(date)$start,

@@ -1,62 +1,78 @@
 #' Impute date ranges from a chronological sequence of dates
 #'
 #' In observational data, the date associated with an address
-#' is usually not the same as the date of the actual
-#' move to a different address.
-#' Imputed date ranges are calculated as the midpoints between the
-#' leading and lagging dates, except for the start of the first date range
-#' and the end of the last date range, which are used directly.
-#' @param x a (chronologically sorted) Date vector
+#' is often the date of the observation instead of the date of
+#' a change in address.
+#' For each interior observation, the imputed start date is the midpoint
+#' between that observation date and the previous observation date.
+#' The imputed end date is the next imputed start date.
+#' The first start date and last end date are optionally extended by
+#' `start_early` and `end_late`.
+#' @param x a chronologically sorted Date vector
 #' @param start_early start the first imputed date range this many days early
-#' (coerced to integer)
+#' as a length-one integer
 #' @param end_late end the last imputed date range this many days late
-#' (coerced to integer)
+#' as a length-one integer
 #' @returns a list of `start` and `end` Date vectors for the imputed ranges
-#' for each input date in x
+#' for each input date in x.
 #' @details Use this function to impute an effective date range for a set of
 #' addresses or location identifiers that were collected on unrelated days.
 #' For example, residential addresses collected during a specific healthcare
 #' encounter do not reflect when a patient actually changed addresses.
-#' Imputing address date ranges for linking to other (spatio)temporal
-#' data ensures *non-differential* exposure misclassification error with
-#' respect to the changing exposures associated with each address.
+#' Imputing address date ranges can reduce reliance on observation dates
+#' alone and may help avoid differential assumptions about when address
+#' changes occurred.
 #' @export
 #' @examples
-#' impute_date_ranges(c("2024-01-01", "2024-03-17", "2024-09-21"),
-#'   start_early = 30, end_late = 60
+#' impute_date_ranges(as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")))
+#'
+#' impute_date_ranges(as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")),
+#'   start_early = 30L, end_late = 60L
 #' )
 #'
 #' # use within a data.frame with multiple individuals
-#' tibble::tribble(
-#'   ~id, ~encounter, ~date,
-#'   "A", 1, "2024-01-01",
-#'   "A", 2, "2024-03-17",
-#'   "A", 3, "2024-09-21",
-#'   "B", 1, "2023-11-29",
-#'   "B", 2, "2024-09-22",
-#'   "B", 3, "2024-09-29"
+#' tibble::tibble(
+#'   id = rep(c("A", "B"), each = 3),
+#'   encounter = rep(1:3, 2),
+#'   date = as.Date(c(
+#'     "2024-01-01", "2024-03-17", "2024-09-21",
+#'     "2023-11-29", "2024-09-22", "2024-09-29"
+#'   ))
 #' ) |>
+#'   dplyr::arrange(id, date) |>
 #'   dplyr::mutate(
 #'     imputed_start_date = impute_date_ranges(date)$start,
 #'     imputed_end_date = impute_date_ranges(date)$end,
 #'     .by = "id"
 #'   )
-impute_date_ranges <- function(x, start_early = 0, end_late = 0) {
-  x <- as.Date(x)
-  start_early <- as.integer(start_early)
-  end_late <- as.integer(end_late)
-  if (!identical(x, sort(x))) {
-    stop("date vectors must be ordered chronologically", call. = FALSE)
-  }
+impute_date_ranges <- function(x, start_early = 0L, end_late = 0L) {
+  stopifnot(
+    "`x` must be a Date vector" = inherits(x, "Date"),
+    "`x` must contain at least one date" = length(x) > 0L,
+    "`x` must not contain missing values" = !anyNA(x),
+    "`start_early` must be a length-one integer" = is.integer(start_early) &&
+      length(start_early) == 1L &&
+      !is.na(start_early),
+    "`end_late` must be a length-one integer" = is.integer(end_late) &&
+      length(end_late) == 1L &&
+      !is.na(end_late),
+    "date vectors must be ordered chronologically" = is_non_decreasing(x)
+  )
   if (length(x) == 1) {
     return(list("start" = x - start_early, "end" = x + end_late))
   }
 
-  i_start <- x + ((dplyr::lag(x) - x) / 2)
+  x_ts <- stats::ts(as.numeric(x))
+  lag_diff <- as.difftime(
+    as.numeric(stats::lag(x_ts, -1) - x_ts),
+    units = "days"
+  )
+
+  i_start <- x
+  i_start[-1] <- x[-1] + (lag_diff / 2)
   i_start[1] <- x[1] - start_early
 
-  i_end <- dplyr::lead(i_start)
-  i_end[length(i_end)] <- x[length(x)] + end_late
+  i_end <- c(i_start[-1], x[length(x)] + end_late)
 
   out <- list("start" = i_start, "end" = i_end)
 

@@ -4,7 +4,7 @@
 \alias{impute_date_ranges}
 \title{Impute date ranges from a chronological sequence of dates}
 \usage{
-impute_date_ranges(x, start_early = 0L, end_late = 0L)
+impute_date_ranges(x, start_early = 0L, end_late = 0L, expand = FALSE)
 }
 \arguments{
 \item{x}{a chronologically sorted Date vector}
@@ -14,10 +14,15 @@ as a length-one integer}
 
 \item{end_late}{end the last imputed date range this many days late
 as a length-one integer}
+
+\item{expand}{logical; if \code{TRUE}, return a list of daily Date sequences,
+one for each input date, instead of the default \code{start} and \code{end} vectors.}
 }
 \value{
 a list of \code{start} and \code{end} Date vectors for the imputed ranges
-for each input date in x.
+for each input date in x, or, if \code{expand = TRUE}, a list of Date vectors
+where each element is the daily sequence from the imputed start date to the
+imputed end date.
 }
 \description{
 In observational data, the date associated with an address
@@ -45,6 +50,11 @@ impute_date_ranges(as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")),
   start_early = 30L, end_late = 60L
 )
 
+impute_date_ranges(
+  as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")),
+  expand = TRUE
+)
+
 # use within a data.frame with multiple individuals
 tibble::tibble(
   id = rep(c("A", "B"), each = 3),
@@ -60,4 +70,13 @@ tibble::tibble(
     imputed_end_date = impute_date_ranges(date)$end,
     .by = "id"
   )
+
+# expand to daily dates for use with s2cd()
+s2cd(
+  s2::as_s2_cell(rep("8841b39a7c46e25f", 3)),
+  dates = impute_date_ranges(
+    as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")),
+    expand = TRUE
+  )
+)
 }

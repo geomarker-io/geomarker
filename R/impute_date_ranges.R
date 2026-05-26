@@ -13,8 +13,12 @@
 #' as a length-one integer
 #' @param end_late end the last imputed date range this many days late
 #' as a length-one integer
+#' @param expand logical; if `TRUE`, return a list of daily Date sequences,
+#' one for each input date, instead of the default `start` and `end` vectors.
 #' @returns a list of `start` and `end` Date vectors for the imputed ranges
-#' for each input date in x.
+#' for each input date in x, or, if `expand = TRUE`, a list of Date vectors
+#' where each element is the daily sequence from the imputed start date to the
+#' imputed end date.
 #' @details Use this function to impute an effective date range for a set of
 #' addresses or location identifiers that were collected on unrelated days.
 #' For example, residential addresses collected during a specific healthcare
@@ -28,6 +32,11 @@
 #'
 #' impute_date_ranges(as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")),
 #'   start_early = 30L, end_late = 60L
+#' )
+#'
+#' impute_date_ranges(
+#'   as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")),
+#'   expand = TRUE
 #' )
 #'
 #' # use within a data.frame with multiple individuals
@@ -45,7 +54,21 @@
 #'     imputed_end_date = impute_date_ranges(date)$end,
 #'     .by = "id"
 #'   )
-impute_date_ranges <- function(x, start_early = 0L, end_late = 0L) {
+#'
+#' # expand to daily dates for use with s2cd()
+#' s2cd(
+#'   s2::as_s2_cell(rep("8841b39a7c46e25f", 3)),
+#'   dates = impute_date_ranges(
+#'     as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")),
+#'     expand = TRUE
+#'   )
+#' )
+impute_date_ranges <- function(
+  x,
+  start_early = 0L,
+  end_late = 0L,
+  expand = FALSE
+) {
   stopifnot(
     "`x` must be a Date vector" = inherits(x, "Date"),
     "`x` must contain at least one date" = length(x) > 0L,
@@ -56,25 +79,30 @@ impute_date_ranges <- function(x, start_early = 0L, end_late = 0L) {
     "`end_late` must be a length-one integer" = is.integer(end_late) &&
       length(end_late) == 1L &&
       !is.na(end_late),
+    "`expand` must be TRUE or FALSE" = is.logical(expand) &&
+      length(expand) == 1L &&
+      !is.na(expand),
     "date vectors must be ordered chronologically" = is_non_decreasing(x)
   )
   if (length(x) == 1) {
-    return(list("start" = x - start_early, "end" = x + end_late))
+    out <- list("start" = x - start_early, "end" = x + end_late)
+    if (expand) {
+      out <- Map(seq.Date, out$start, out$end, MoreArgs = list(by = "day"))
+    }
+    return(out)
   }
-
   x_ts <- stats::ts(as.numeric(x))
   lag_diff <- as.difftime(
     as.numeric(stats::lag(x_ts, -1) - x_ts),
     units = "days"
   )
-
   i_start <- x
   i_start[-1] <- x[-1] + (lag_diff / 2)
   i_start[1] <- x[1] - start_early
-
   i_end <- c(i_start[-1], x[length(x)] + end_late)
-
   out <- list("start" = i_start, "end" = i_end)
-
+  if (expand) {
+    out <- Map(seq.Date, out$start, out$end, MoreArgs = list(by = "day"))
+  }
   return(out)
 }

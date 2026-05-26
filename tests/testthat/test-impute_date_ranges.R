@@ -57,6 +57,24 @@ test_that("impute_date_ranges requires typed inputs", {
     impute_date_ranges(as.Date("2024-01-01"), end_late = c(1L, 2L)),
     "`end_late` must be a length-one integer"
   )
+  expect_error(
+    impute_date_ranges(as.Date("2024-01-01"), expand = NA),
+    "`expand` must be TRUE or FALSE"
+  )
+})
+
+test_that("expanded imputed date ranges can be used with s2cd", {
+  dates <- impute_date_ranges(
+    as.Date(c("2024-01-01", "2024-01-05")),
+    expand = TRUE
+  )
+  x <- s2cd(
+    s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+    dates = dates
+  )
+
+  expect_s3_class(x, "s2cd")
+  expect_identical(s2cd_dates(x), dates)
 })
 
 test_that("impute date ranges works with grouped df", {

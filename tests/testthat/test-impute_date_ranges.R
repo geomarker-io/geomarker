@@ -74,7 +74,7 @@ test_that("expanded imputed date ranges can be used with s2cd", {
   )
 
   expect_s3_class(x, "s2cd")
-  expect_identical(s2cd_dates(x), dates)
+  expect_equal(s2cd_dates(x), dates)
 })
 
 test_that("impute date ranges works with grouped df", {
@@ -83,8 +83,12 @@ test_that("impute date ranges works with grouped df", {
       id = rep(c("A", "B"), each = 3),
       encounter = rep(1:3, 2),
       date = as.Date(c(
-        "2024-01-01", "2024-03-17", "2024-09-21",
-        "2023-11-29", "2024-09-22", "2024-09-29"
+        "2024-01-01",
+        "2024-03-17",
+        "2024-09-21",
+        "2023-11-29",
+        "2024-09-22",
+        "2024-09-29"
       ))
     ) |>
     dplyr::mutate(

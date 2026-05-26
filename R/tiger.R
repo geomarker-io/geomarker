@@ -1,11 +1,23 @@
+tiger_block_group_url <- function(state, year) {
+  sprintf(
+    "https://www2.census.gov/geo/tiger/TIGER%s/BG/tl_%s_%s_bg.zip",
+    year,
+    year,
+    state
+  )
+}
+
+tiger_state_url <- function(year) {
+  sprintf(
+    "https://www2.census.gov/geo/tiger/TIGER%s/STATE/tl_%s_us_state.zip",
+    year,
+    year
+  )
+}
+
 tiger_block_groups <- function(state, year, ...) {
   dest <- geomarker_download_file(
-    sprintf(
-      "ftp://ftp2.census.gov/geo/tiger/TIGER%s/BG/tl_%s_%s_bg.zip",
-      year,
-      year,
-      state
-    ),
+    tiger_block_group_url(state, year),
     ...
   )
   out <-
@@ -22,11 +34,7 @@ tiger_block_groups <- function(state, year, ...) {
 
 tiger_states <- function(year, ...) {
   dest <- geomarker_download_file(
-    sprintf(
-      "ftp://ftp2.census.gov/geo/tiger/TIGER%s/STATE/tl_%s_us_state.zip",
-      year,
-      year
-    ),
+    tiger_state_url(year),
     ...
   )
   out <-

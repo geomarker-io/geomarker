@@ -73,7 +73,8 @@ nlcd_url |>
       fixture_dir,
       url_to_filename(nlcd_url, etag = FALSE)
     ),
-    filetype = "cog"
+    filetype = "cog",
+    overwrite = TRUE
   )
 
 # gridmet: tmmx 2024
@@ -84,6 +85,17 @@ gridmet_example_url |>
   crop_to_cell() |>
   terra::writeCDF(
     file.path(fixture_dir, url_to_filename(gridmet_example_url, etag = FALSE)),
+    overwrite = TRUE
+  )
+
+# NARR: air.2m 2024
+narr_example_url <- "https://downloads.psl.noaa.gov/Datasets/NARR/Dailies/monolevel/air.2m.2024.nc"
+narr_example_url |>
+  geomarker_download_file() |>
+  terra::rast() |>
+  crop_to_cell() |>
+  terra::writeCDF(
+    file.path(fixture_dir, url_to_filename(narr_example_url, etag = FALSE)),
     overwrite = TRUE
   )
 
@@ -116,11 +128,14 @@ geomarker_download_file(traffic_url) |>
   sf::st_write(file.path(
     fixture_dir,
     url_to_filename(traffic_url, etag = FALSE)
-  ))
+  ), append = FALSE)
 
 # census bg 2024
-tgr_st_url <- "ftp://ftp2.census.gov/geo/tiger/TIGER2024/STATE/tl_2024_us_state.zip"
-tgr_st <- sf::st_read(paste0("/vsizip/", geomarker_download_file(tgr_st_url)))
+tgr_st_url <- tiger_state_url(2024)
+tgr_st <- sf::st_read(paste0(
+  "/vsizip/",
+  geomarker_download_file(tgr_st_url, etag = FALSE)
+))
 tgr_st_cropped <- sf::st_crop(
   tgr_st,
   sf::st_transform(
@@ -143,13 +158,10 @@ utils::zip(
 lapply(
   tgr_st_cropped$GEOID,
   \(st) {
-    tgr_bg_url <- sprintf(
-      "ftp://ftp2.census.gov/geo/tiger/TIGER2024/BG/tl_2024_%s_bg.zip",
-      st
-    )
+    tgr_bg_url <- tiger_block_group_url(st, 2024)
     tgr_bg <- sf::st_read(paste0(
       "/vsizip/",
-      geomarker_download_file(tgr_bg_url)
+      geomarker_download_file(tgr_bg_url, etag = FALSE)
     ))
     tgr_bg_cropped <- sf::st_crop(
       tgr_bg,

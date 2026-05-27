@@ -64,3 +64,35 @@ get_elevation_summary <- function(
   elevations[as.character(x)] |>
     as.numeric()
 }
+
+install_elevation_geomarker_fixture <- function(cell, dates, output_dir) {
+  check_installed("terra", "to create elevation fixture data.")
+  cell <- geomarker_fixture_cell(cell)
+  geomarker_fixture_dates(dates)
+  output_dir <- geomarker_fixture_output_dir(output_dir)
+  elevation_url <- "https://prism.oregonstate.edu/downloads/data/PRISM_us_dem_800m_bil.zip"
+  write_dir <- tempfile("elevation")
+  dir.create(write_dir)
+  on.exit(unlink(write_dir, recursive = TRUE, force = TRUE), add = TRUE)
+
+  geomarker_download_file(elevation_url) |>
+    paste0("/vsizip/", url = _, "/PRISM_us_dem_800m_bil.bil") |>
+    terra::rast() |>
+    geomarker_fixture_crop_to_cell(cell = cell) |>
+    terra::writeRaster(
+      file.path(write_dir, "PRISM_us_dem_800m_bil.bil"),
+      overwrite = TRUE,
+      filetype = "EHdr"
+    )
+  elevation_dest <- file.path(
+    output_dir,
+    url_to_filename(elevation_url, etag = FALSE)
+  )
+  unlink(elevation_dest)
+  utils::zip(
+    elevation_dest,
+    files = list.files(write_dir, full.names = TRUE),
+    flags = "-j"
+  )
+  invisible(output_dir)
+}

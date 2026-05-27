@@ -89,3 +89,40 @@ get_nlcd_fct_imp_data <- function(
 
   return(out)
 }
+
+install_nlcd_geomarker_fixture <- function(cell, dates, output_dir) {
+  check_installed("terra", "to create NLCD fixture data.")
+  cell <- geomarker_fixture_cell(cell)
+  years <- geomarker_fixture_years(dates)
+  output_dir <- geomarker_fixture_output_dir(output_dir)
+  fid <- c(
+    "2024" = "10980930",
+    "2023" = "10980930",
+    "2022" = "10980932",
+    "2021" = "10980929",
+    "2020" = "10980933",
+    "2019" = "10980934",
+    "2018" = "10980931",
+    "2017" = "10980935"
+  )
+  stopifnot(
+    "dates must be between 2017 and 2024" = all(years %in% names(fid))
+  )
+  nlcd_urls <- paste0(
+    "https://dataverse.harvard.edu/api/access/datafile/",
+    unique(fid[years])
+  )
+
+  lapply(nlcd_urls, \(url) {
+    geomarker_download_file(url) |>
+      terra::rast() |>
+      geomarker_fixture_crop_to_cell(cell = cell) |>
+      terra::writeRaster(
+        file.path(output_dir, url_to_filename(url, etag = FALSE)),
+        filetype = "cog",
+        overwrite = TRUE
+      )
+  }) |>
+    invisible()
+  invisible(output_dir)
+}

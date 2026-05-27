@@ -117,3 +117,45 @@ safe_max_factor <- function(x) {
   }
   max(x, na.rm = TRUE)
 }
+
+install_hms_smoke_geomarker_fixture <- function(cell, dates, output_dir) {
+  check_installed("sf", "to create HMS smoke fixture data.")
+  check_installed("terra", "to create HMS smoke fixture data.")
+  cell <- geomarker_fixture_cell(cell)
+  dates <- geomarker_fixture_dates(dates)
+  output_dir <- geomarker_fixture_output_dir(output_dir)
+  hms_dir <- file.path(output_dir, "hms")
+  dir.create(hms_dir, showWarnings = FALSE, recursive = TRUE)
+
+  lapply(dates, \(date) {
+    stopifnot(inherits(date, "Date"))
+    cat("\rprocessing HMS smoke daily files: ", format(date, "%Y-%m-%d"))
+    smoke_url <-
+      sprintf(
+        "https://satepsanone.nesdis.noaa.gov/pub/FIRE/web/HMS/Smoke_Polygons/Shapefile/%s/%s/hms_smoke%s.zip",
+        format(date, "%Y"),
+        format(date, "%m"),
+        format(date, "%Y%m%d")
+      )
+    dest_path <- file.path(
+      hms_dir,
+      url_to_filename(smoke_url, etag = FALSE)
+    ) |>
+      tools::file_path_sans_ext() |>
+      paste0(path_sans_ext = _, ".shz")
+    final_path <- paste0(tools::file_path_sans_ext(dest_path), ".zip")
+    unlink(c(dest_path, final_path), recursive = TRUE, force = TRUE)
+    paste0("/vsizip/", geomarker_download_file(smoke_url, subdir = "hms")) |>
+      sf::read_sf(quiet = TRUE) |>
+      terra::vect() |>
+      geomarker_fixture_crop_to_cell(cell = cell) |>
+      sf::st_as_sf() |>
+      sf::st_write(dest_path, driver = "Esri Shapefile", quiet = TRUE)
+    file.rename(dest_path, final_path)
+    invisible(NULL)
+  }) |>
+    invisible()
+  utils::flush.console()
+  cat("\n")
+  invisible(output_dir)
+}

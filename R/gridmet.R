@@ -94,3 +94,32 @@ get_gridmet_data <- function(
   )
   stats::setNames(out, as.character(x))
 }
+
+install_gridmet_geomarker_fixture <- function(
+  cell,
+  dates,
+  output_dir,
+  gridmet_var = "tmmx"
+) {
+  check_installed("terra", "to create gridMET fixture data.")
+  cell <- geomarker_fixture_cell(cell)
+  years <- geomarker_fixture_years(dates)
+  output_dir <- geomarker_fixture_output_dir(output_dir)
+  gridmet_urls <- sprintf(
+    "https://www.northwestknowledge.net/metdata/data/%s_%s.nc",
+    gridmet_var,
+    years
+  )
+
+  lapply(gridmet_urls, \(url) {
+    geomarker_download_file(url) |>
+      terra::rast() |>
+      geomarker_fixture_crop_to_cell(cell = cell) |>
+      terra::writeCDF(
+        file.path(output_dir, url_to_filename(url, etag = FALSE)),
+        overwrite = TRUE
+      )
+  }) |>
+    invisible()
+  invisible(output_dir)
+}

@@ -68,3 +68,14 @@ test_that("url_to_filename works", {
       )
     )
 })
+
+test_that("geomarker fixture cells must be level 6", {
+  expect_equal(
+    s2::s2_cell_level(geomarker_fixture_cell("8841")),
+    6L
+  )
+  expect_error(
+    geomarker_fixture_cell("8841b39a7c46e25f"),
+    "fixture cell must be level 6"
+  )
+})

@@ -108,3 +108,23 @@ get_traffic_summary <- function(
   )
   as.data.frame(do.call(rbind, aadtm))
 }
+
+install_traffic_geomarker_fixture <- function(cell, dates, output_dir) {
+  check_installed("sf", "to create traffic fixture data.")
+  check_installed("terra", "to create traffic fixture data.")
+  cell <- geomarker_fixture_cell(cell)
+  geomarker_fixture_dates(dates)
+  output_dir <- geomarker_fixture_output_dir(output_dir)
+  traffic_url <- "https://github.com/geomarker-io/appc/releases/download/hpms_2020_f12_aadt-2025-07-16/hpms_2020_f12_aadt.gpkg"
+  geomarker_download_file(traffic_url) |>
+    sf::read_sf(quiet = TRUE) |>
+    terra::vect() |>
+    geomarker_fixture_crop_to_cell(cell = cell) |>
+    sf::st_as_sf() |>
+    sf::st_write(
+      file.path(output_dir, url_to_filename(traffic_url, etag = FALSE)),
+      append = FALSE,
+      quiet = TRUE
+    )
+  invisible(output_dir)
+}

@@ -119,3 +119,70 @@ s2_join_tiger_bg <- function(x, year = as.character(2024:2013), ...) {
 
   return(stats::setNames(bg_lookup[as.character(x)], NULL))
 }
+
+install_tiger_geomarker_fixture <- function(cell, dates, output_dir) {
+  check_installed("sf", "to create TIGER fixture data.")
+  cell <- geomarker_fixture_cell(cell)
+  years <- geomarker_fixture_years(dates)
+  output_dir <- geomarker_fixture_output_dir(output_dir)
+  cell_geometry <- sf::st_as_sfc(s2::s2_cell_polygon(cell))
+
+  lapply(years, \(year) {
+    tgr_st_url <- tiger_state_url(year)
+    tgr_st <- sf::st_read(paste0(
+      "/vsizip/",
+      geomarker_download_file(tgr_st_url, etag = FALSE)
+    ), quiet = TRUE)
+    tgr_st_cropped <- sf::st_crop(
+      tgr_st,
+      sf::st_transform(cell_geometry, sf::st_crs(tgr_st))
+    )
+    tgr_st_write_dir <- tempfile("tiger_state")
+    dir.create(tgr_st_write_dir)
+    on.exit(unlink(tgr_st_write_dir, recursive = TRUE, force = TRUE), add = TRUE)
+    sf::st_write(
+      tgr_st_cropped,
+      file.path(tgr_st_write_dir, sprintf("tl_%s_us_state.shp", year)),
+      quiet = TRUE
+    )
+    state_dest <- file.path(output_dir, url_to_filename(tgr_st_url, etag = FALSE))
+    unlink(state_dest)
+    utils::zip(
+      state_dest,
+      files = list.files(tgr_st_write_dir, full.names = TRUE),
+      flags = "-j"
+    )
+
+    lapply(tgr_st_cropped$GEOID, \(st) {
+      tgr_bg_url <- tiger_block_group_url(st, year)
+      tgr_bg <- sf::st_read(paste0(
+        "/vsizip/",
+        geomarker_download_file(tgr_bg_url, etag = FALSE)
+      ), quiet = TRUE)
+      tgr_bg_cropped <- sf::st_crop(
+        tgr_bg,
+        sf::st_transform(cell_geometry, sf::st_crs(tgr_bg))
+      )
+      tgr_bg_write_dir <- tempfile(st)
+      dir.create(tgr_bg_write_dir)
+      on.exit(unlink(tgr_bg_write_dir, recursive = TRUE, force = TRUE), add = TRUE)
+      sf::st_write(
+        tgr_bg_cropped,
+        file.path(tgr_bg_write_dir, sprintf("tl_%s_%s_bg.shp", year, st)),
+        quiet = TRUE
+      )
+      bg_dest <- file.path(output_dir, url_to_filename(tgr_bg_url, etag = FALSE))
+      unlink(bg_dest)
+      utils::zip(
+        bg_dest,
+        files = list.files(tgr_bg_write_dir, full.names = TRUE),
+        flags = "-j"
+      )
+      NULL
+    }) |>
+      invisible()
+    NULL
+  }) |>
+    invisible()
+  invisible(output_dir)
+}

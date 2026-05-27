@@ -91,3 +91,32 @@ get_narr_data <- function(
   )
   stats::setNames(out, as.character(x))
 }
+
+install_narr_geomarker_fixture <- function(
+  cell,
+  dates,
+  output_dir,
+  narr_var = "air.2m"
+) {
+  check_installed("terra", "to create NARR fixture data.")
+  cell <- geomarker_fixture_cell(cell)
+  years <- geomarker_fixture_years(dates)
+  output_dir <- geomarker_fixture_output_dir(output_dir)
+  narr_urls <- sprintf(
+    "https://downloads.psl.noaa.gov/Datasets/NARR/Dailies/monolevel/%s.%s.nc",
+    narr_var,
+    years
+  )
+
+  lapply(narr_urls, \(url) {
+    geomarker_download_file(url) |>
+      terra::rast() |>
+      geomarker_fixture_crop_to_cell(cell = cell) |>
+      terra::writeCDF(
+        file.path(output_dir, url_to_filename(url, etag = FALSE)),
+        overwrite = TRUE
+      )
+  }) |>
+    invisible()
+  invisible(output_dir)
+}

@@ -96,3 +96,64 @@ url_etag <- function(url) {
   }
   NA_character_
 }
+
+geomarker_fixture_dates <- function(dates) {
+  dates <- as.Date(dates)
+  stopifnot(
+    "dates must be a Date vector" = inherits(dates, "Date"),
+    "dates must not be length zero" = length(dates) > 0
+  )
+  dates
+}
+
+geomarker_fixture_years <- function(dates) {
+  unique(format(geomarker_fixture_dates(dates), "%Y"))
+}
+
+geomarker_fixture_output_dir <- function(output_dir) {
+  stopifnot(
+    "output_dir must be a character vector" = is.character(output_dir),
+    "output_dir must be length one" = length(output_dir) == 1,
+    "output_dir must be non-missing" = !is.na(output_dir)
+  )
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+  output_dir
+}
+
+geomarker_fixture_cell <- function(cell) {
+  cell <- s2::as_s2_cell(cell)
+  stopifnot(
+    "fixture cell must be length one" = length(cell) == 1,
+    "fixture cell must be a valid s2 cell" = s2::s2_cell_is_valid(cell),
+    "fixture cell must be level 6" = s2::s2_cell_level(cell) == 6
+  )
+  cell
+}
+
+geomarker_fixture_crop_to_cell <- function(x, cell) {
+  check_installed("sf", "to crop geomarker fixture data.")
+  check_installed("terra", "to crop geomarker fixture data.")
+  cell <- geomarker_fixture_cell(cell)
+  cover <-
+    cell |>
+    s2::s2_cell_polygon() |>
+    sf::st_as_sfc() |>
+    sf::st_transform(terra::crs(x)) |>
+    terra::vect()
+  out <- terra::crop(x, cover)
+  if (inherits(x, "SpatRaster")) {
+    out <- terra::mask(out, cover)
+  }
+  out
+}
+
+geomarker_fixture_cell_bbox <- function(cell) {
+  check_installed("sf", "to create geomarker fixture data.")
+  cell <- geomarker_fixture_cell(cell)
+  bbox <-
+    cell |>
+    s2::s2_cell_polygon() |>
+    sf::st_as_sfc() |>
+    sf::st_bbox()
+  unname(c(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]]))
+}

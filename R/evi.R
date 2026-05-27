@@ -11,13 +11,13 @@
 #' mirror of NASA LP DAAC MOD13Q1/MYD13Q1 Version 6.1 Cloud Optimized GeoTIFFs.
 #' See <https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061>
 #' for collection details. Source 16-day EVI and pixel reliability rasters are
-#' staged under `geomarker_data_dir(subdir)` only when an annual composite is
+#' staged under `geomarker_data_dir("evi")` only when an annual composite is
 #' missing; if a build fails, complete source downloads are reused on the next
 #' attempt and removed after the annual composite is successfully written.
 #' EVI source rasters are downloaded by MODIS tile; 14 MODIS tiles intersect the
 #' contiguous United States. Planetary Computer assets are accessed with
 #' reusable container SAS tokens to reduce signing API calls.
-#' Annual composite rasters are cached in `geomarker_data_dir(subdir)`. EVI
+#' Annual composite rasters are cached in `geomarker_data_dir("evi")`. EVI
 #' source raster values are scaled by 0.0001 while creating annual composites.
 #' EVI is a greenness index designed to emphasize photosynthetically active
 #' vegetation while reducing atmospheric and soil background effects. In this
@@ -29,7 +29,6 @@
 #' @param buffer distance from s2 cell (in meters) to summarize data
 #' @param overwrite logical; overwrite cached annual EVI rasters?
 #' @param quiet logical; show download progress messages?
-#' @param subdir character; subdirectory within the geomarker data folder
 #' @return a list of numeric vectors of annual EVI values.
 #' @export
 #' @examples
@@ -41,13 +40,12 @@
 #'    R_GEOMARKER_NO_DOWNLOAD = "true"
 #'  )
 #' get_evi_data(s2cd_example_cincy(2L))
-#' get_evi_data(s2cd_example_cincy(2L), buffer = 800)
+#' get_evi_data(s2cd_example_cincy(2L), buffer = 1200, quiet = TRUE)
 get_evi_data <- function(
   x,
   buffer = 400,
   overwrite = FALSE,
-  quiet = FALSE,
-  subdir = "evi"
+  quiet = FALSE
 ) {
   stopifnot(
     "x must be a s2_cell_dates vector" = is_s2cd(x),
@@ -74,7 +72,7 @@ get_evi_data <- function(
   x_points <- evi_s2cd_points(x)
   years <- evi_requested_years(x_dates)
   if (nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))) {
-    annual_files <- evi_cached_annual_composite_files(years, subdir = subdir)
+    annual_files <- evi_cached_annual_composite_files(years)
     evi_values <- evi_extract_annual_values(x, annual_files, buffer = buffer)
     return(evi_summarize_annual_values(
       values = evi_values,
@@ -111,8 +109,7 @@ get_evi_data <- function(
     items = evi_items,
     years = years,
     overwrite = overwrite,
-    quiet = quiet,
-    subdir = subdir
+    quiet = quiet
   )
   evi_values <- evi_extract_annual_values(x, annual_files, buffer = buffer)
   evi_summarize_annual_values(

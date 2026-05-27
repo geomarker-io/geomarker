@@ -12,6 +12,8 @@
 #' See <https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061>
 #' for collection details. Source 16-day EVI and pixel reliability rasters are
 #' downloaded to a temporary directory only when an annual composite is missing.
+#' EVI source rasters are downloaded by MODIS tile; 14 MODIS tiles intersect the
+#' contiguous United States.
 #' Annual composite rasters are cached in `geomarker_data_dir(subdir)`. EVI
 #' source raster values are scaled by 0.0001 while creating annual composites.
 #' EVI is a greenness index designed to emphasize photosynthetically active

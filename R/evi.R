@@ -703,7 +703,10 @@ evi_write_quality_filtered_raster <- function(evi_file, quality_file, dest) {
   terra::scoff(r) <- cbind(1, 0)
   terra::scoff(q) <- cbind(1, 0)
   if (!terra::compareGeom(r, q, stopOnError = FALSE)) {
-    stop("EVI and quality rasters do not share the same geometry.", call. = FALSE)
+    stop(
+      "EVI and quality rasters do not share the same geometry.",
+      call. = FALSE
+    )
   }
 
   tmp <- tempfile(

@@ -33,7 +33,9 @@ Data are downloaded from the
 mirror of NASA LP DAAC MOD13Q1/MYD13Q1 Version 6.1 Cloud Optimized GeoTIFFs.
 See \url{https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061}
 for collection details. Source 16-day EVI and pixel reliability rasters are
-downloaded to a temporary directory only when an annual composite is missing.
+staged under \code{geomarker_data_dir(subdir)} only when an annual composite is
+missing; if a build fails, complete source downloads are reused on the next
+attempt and removed after the annual composite is successfully written.
 EVI source rasters are downloaded by MODIS tile; 14 MODIS tiles intersect the
 contiguous United States.
 Annual composite rasters are cached in \code{geomarker_data_dir(subdir)}. EVI

@@ -11,7 +11,9 @@
 #' mirror of NASA LP DAAC MOD13Q1/MYD13Q1 Version 6.1 Cloud Optimized GeoTIFFs.
 #' See <https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061>
 #' for collection details. Source 16-day EVI and pixel reliability rasters are
-#' downloaded to a temporary directory only when an annual composite is missing.
+#' staged under `geomarker_data_dir(subdir)` only when an annual composite is
+#' missing; if a build fails, complete source downloads are reused on the next
+#' attempt and removed after the annual composite is successfully written.
 #' EVI source rasters are downloaded by MODIS tile; 14 MODIS tiles intersect the
 #' contiguous United States.
 #' Annual composite rasters are cached in `geomarker_data_dir(subdir)`. EVI
@@ -498,9 +500,7 @@ evi_build_annual_composite <- function(
     ))
   }
 
-  tmp_dir <- tempfile(pattern = "geomarker_evi_sources_")
-  dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE, force = TRUE), add = TRUE)
+  source_dir <- evi_source_staging_dir(dest)
 
   source_files <- evi_download_assets(
     hrefs = c(items$href, items$quality_href),
@@ -511,7 +511,7 @@ evi_build_annual_composite <- function(
     ),
     overwrite = FALSE,
     quiet = quiet,
-    dest_dir = tmp_dir
+    dest_dir = source_dir
   )
   n_items <- nrow(items)
   evi_write_annual_composite(
@@ -519,6 +519,22 @@ evi_build_annual_composite <- function(
     quality_files = source_files[n_items + seq_len(n_items)],
     dest = dest
   )
+  evi_cleanup_source_staging_dir(source_dir)
+}
+
+evi_source_staging_dir <- function(dest) {
+  file.path(
+    dirname(dest),
+    "sources",
+    tools::file_path_sans_ext(basename(dest))
+  )
+}
+
+evi_cleanup_source_staging_dir <- function(source_dir) {
+  if (dir.exists(source_dir)) {
+    unlink(source_dir, recursive = TRUE, force = TRUE)
+  }
+  invisible(source_dir)
 }
 
 evi_write_annual_composite <- function(evi_files, quality_files, dest) {

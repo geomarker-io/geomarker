@@ -146,6 +146,74 @@ test_that("EVI annual composite files use cached derived rasters", {
   expect_equal(out$file, dest)
 })
 
+test_that("EVI annual composite keeps staged sources after source errors", {
+  withr::local_envvar(c(
+    R_USER_DATA_DIR = tempfile(),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  ))
+  href <- "https://example.com/evi/evi_2024_h11v05.tif"
+  quality_href <- "https://example.com/evi/quality_2024_h11v05.tif"
+  dest <- file.path(
+    geomarker_data_dir("evi"),
+    evi_annual_composite_filename("2024", "h11v05")
+  )
+  source_dir <- evi_source_staging_dir(dest)
+  staged_evi <- file.path(source_dir, url_to_filename(href, etag = FALSE))
+  dir.create(source_dir, recursive = TRUE)
+  file.create(staged_evi)
+  items <- data.frame(
+    year = "2024",
+    tile = "h11v05",
+    href = href,
+    quality_href = quality_href
+  )
+
+  expect_error(
+    evi_build_annual_composite(items, dest, 1, 1, quiet = TRUE),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_true(file.exists(staged_evi))
+  expect_true(dir.exists(source_dir))
+})
+
+test_that("EVI annual composite reuses and cleans staged sources", {
+  skip_if_not_installed("terra")
+  withr::local_envvar(c(
+    R_USER_DATA_DIR = tempfile(),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  ))
+  href <- "https://example.com/evi/evi_2024_h11v05.tif"
+  quality_href <- "https://example.com/evi/quality_2024_h11v05.tif"
+  dest <- file.path(
+    geomarker_data_dir("evi"),
+    evi_annual_composite_filename("2024", "h11v05")
+  )
+  source_dir <- evi_source_staging_dir(dest)
+  dir.create(source_dir, recursive = TRUE)
+  evi_file <- file.path(source_dir, url_to_filename(href, etag = FALSE))
+  quality_file <- file.path(
+    source_dir,
+    url_to_filename(quality_href, etag = FALSE)
+  )
+  r <- terra::rast(nrows = 2, ncols = 2, xmin = 0, xmax = 2, ymin = 0, ymax = 2)
+  terra::values(r) <- c(1000, 2000, 3000, 4000)
+  q <- r
+  terra::values(q) <- c(0, 1, 0, 1)
+  terra::writeRaster(r, evi_file, overwrite = TRUE)
+  terra::writeRaster(q, quality_file, overwrite = TRUE)
+  items <- data.frame(
+    year = "2024",
+    tile = "h11v05",
+    href = href,
+    quality_href = quality_href
+  )
+
+  evi_build_annual_composite(items, dest, 1, 1, quiet = TRUE)
+
+  expect_true(file.exists(dest))
+  expect_false(dir.exists(source_dir))
+})
+
 test_that("get_evi_data uses cached annual composites without downloads", {
   skip_if_not_installed("terra")
   withr::local_envvar(c(

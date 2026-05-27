@@ -15,7 +15,8 @@
 #' missing; if a build fails, complete source downloads are reused on the next
 #' attempt and removed after the annual composite is successfully written.
 #' EVI source rasters are downloaded by MODIS tile; 14 MODIS tiles intersect the
-#' contiguous United States.
+#' contiguous United States. Planetary Computer assets are accessed with
+#' reusable container SAS tokens to reduce signing API calls.
 #' Annual composite rasters are cached in `geomarker_data_dir(subdir)`. EVI
 #' source raster values are scaled by 0.0001 while creating annual composites.
 #' EVI is a greenness index designed to emphasize photosynthetically active
@@ -329,15 +330,84 @@ evi_clear_line_padding <- function(msg) {
 }
 
 evi_sign_asset <- function(href) {
-  json <- evi_fetch_url(paste0(
-    "https://planetarycomputer.microsoft.com/api/sas/v1/sign?href=",
-    utils::URLencode(href, reserved = TRUE)
-  ))
-  signed_href <- evi_json_match('"href"\\s*:\\s*"([^"]+)"', json)
-  if (is.na(signed_href)) {
-    stop("Could not sign the Planetary Computer EVI asset.", call. = FALSE)
+  if (grepl("[?&]sig=", href)) {
+    return(href)
   }
-  evi_json_unescape(signed_href)
+  storage <- evi_asset_storage(href)
+  if (is.null(storage)) {
+    return(href)
+  }
+  token <- evi_sas_token(storage$account, storage$container)
+  paste0(href, if (grepl("?", href, fixed = TRUE)) "&" else "?", token)
+}
+
+evi_sas_token_cache <- new.env(parent = emptyenv())
+
+evi_asset_storage <- function(href) {
+  matches <- regexec("^https?://([^/?#]+)/([^/?#]+)", href, perl = TRUE)
+  parsed <- regmatches(href, matches)[[1]]
+  if (length(parsed) < 3) {
+    return(NULL)
+  }
+  host <- tolower(parsed[[2]])
+  suffix <- ".blob.core.windows.net"
+  if (!endsWith(host, suffix)) {
+    return(NULL)
+  }
+  list(
+    account = sub("[.]blob[.]core[.]windows[.]net$", "", host),
+    container = utils::URLdecode(parsed[[3]])
+  )
+}
+
+evi_sas_token <- function(account, container) {
+  key <- paste(account, container, sep = "/")
+  cached <- evi_sas_token_cache[[key]]
+  if (!evi_sas_token_expired(cached)) {
+    return(cached$token)
+  }
+
+  json <- evi_fetch_url(evi_sas_token_url(account, container))
+  parsed <- evi_parse_sas_token_json(json)
+  evi_sas_token_cache[[key]] <- parsed
+  parsed$token
+}
+
+evi_sas_token_url <- function(account, container) {
+  paste(
+    "https://planetarycomputer.microsoft.com/api/sas/v1/token",
+    utils::URLencode(account, reserved = TRUE),
+    utils::URLencode(container, reserved = TRUE),
+    sep = "/"
+  )
+}
+
+evi_sas_token_expired <- function(x, min_seconds = 300) {
+  !is.list(x) ||
+    is.null(x$token) ||
+    is.null(x$expiry) ||
+    is.na(x$expiry) ||
+    as.numeric(difftime(x$expiry, Sys.time(), units = "secs")) <= min_seconds
+}
+
+evi_parse_sas_token_json <- function(json) {
+  token <- evi_json_match('"token"\\s*:\\s*"([^"]+)"', json)
+  expiry_text <- evi_json_match('"msft:expiry"\\s*:\\s*"([^"]+)"', json)
+  expiry <- as.POSIXct(
+    expiry_text,
+    format = "%Y-%m-%dT%H:%M:%SZ",
+    tz = "UTC"
+  )
+  if (is.na(token) || is.na(expiry)) {
+    stop(
+      "Could not parse the Planetary Computer EVI SAS token response.",
+      call. = FALSE
+    )
+  }
+  list(
+    token = evi_json_unescape(token),
+    expiry = expiry
+  )
 }
 
 evi_annual_composite_files <- function(
@@ -517,7 +587,13 @@ evi_build_annual_composite <- function(
   evi_write_annual_composite(
     evi_files = source_files[seq_len(n_items)],
     quality_files = source_files[n_items + seq_len(n_items)],
-    dest = dest
+    dest = dest,
+    label = sprintf(
+      "EVI source files for %s %s",
+      items$year[[1]],
+      items$tile[[1]]
+    ),
+    quiet = quiet
   )
   evi_cleanup_source_staging_dir(source_dir)
 }
@@ -537,22 +613,120 @@ evi_cleanup_source_staging_dir <- function(source_dir) {
   invisible(source_dir)
 }
 
-evi_write_annual_composite <- function(evi_files, quality_files, dest) {
+evi_write_annual_composite <- function(
+  evi_files,
+  quality_files,
+  dest,
+  label = "EVI source files",
+  quiet = TRUE
+) {
   stopifnot(
     "evi_files and quality_files must have the same length" = length(
       evi_files
     ) ==
       length(quality_files)
   )
-  layers <- Map(evi_quality_filtered_raster, evi_files, quality_files)
+  filtered_files <- evi_quality_filtered_files(evi_files)
+  evi_write_quality_filtered_rasters(
+    evi_files = evi_files,
+    quality_files = quality_files,
+    filtered_files = filtered_files,
+    label = label,
+    quiet = quiet
+  )
+  layers <- lapply(filtered_files, terra::rast)
   evi_write_annual_layers(layers, dest)
 }
 
-evi_write_annual_layers <- function(layers, dest) {
-  annual <- Reduce(c, layers) |>
-    terra::app(fun = "median", na.rm = TRUE)
-  names(annual) <- "evi"
+evi_quality_filtered_files <- function(evi_files) {
+  file.path(
+    dirname(evi_files[[1]]),
+    "filtered",
+    paste0("filtered-", basename(evi_files))
+  )
+}
 
+evi_write_quality_filtered_rasters <- function(
+  evi_files,
+  quality_files,
+  filtered_files,
+  label = "EVI source files",
+  quiet = TRUE
+) {
+  needs_filter <- !file.exists(filtered_files)
+  n_filter <- sum(needs_filter)
+  if (!quiet) {
+    message(sprintf(
+      "%s: %s found, %s filtered, %s to filter.",
+      label,
+      length(filtered_files),
+      length(filtered_files) - n_filter,
+      n_filter
+    ))
+  }
+  if (n_filter == 0) {
+    return(invisible(filtered_files))
+  }
+
+  filter_index <- 0L
+  if (!quiet) {
+    on.exit(cat("\n", file = stderr()), add = TRUE)
+  }
+  for (i in which(needs_filter)) {
+    filter_index <- filter_index + 1L
+    if (!quiet) {
+      evi_write_filter_progress(label, filter_index, n_filter)
+    }
+    evi_write_quality_filtered_raster(
+      evi_file = evi_files[[i]],
+      quality_file = quality_files[[i]],
+      dest = filtered_files[[i]]
+    )
+  }
+  invisible(filtered_files)
+}
+
+evi_write_filter_progress <- function(label, filter_index, filter_total) {
+  msg <- sprintf("Filtering %s %s of %s", label, filter_index, filter_total)
+  cat("\r", msg, evi_clear_line_padding(msg), sep = "", file = stderr())
+  utils::flush.console()
+  invisible(msg)
+}
+
+evi_write_quality_filtered_raster <- function(evi_file, quality_file, dest) {
+  if (!file.exists(dirname(dest))) {
+    dir.create(dirname(dest), recursive = TRUE)
+  }
+  r <- terra::rast(evi_file)
+  q <- terra::rast(quality_file)
+  # COG tags store a display scale; reset it before applying the EVI scale.
+  terra::scoff(r) <- cbind(1, 0)
+  terra::scoff(q) <- cbind(1, 0)
+  if (!terra::compareGeom(r, q, stopOnError = FALSE)) {
+    stop("EVI and quality rasters do not share the same geometry.", call. = FALSE)
+  }
+
+  tmp <- tempfile(
+    pattern = paste0(".", tools::file_path_sans_ext(basename(dest)), "-"),
+    fileext = ".tif",
+    tmpdir = dirname(dest)
+  )
+  on.exit(unlink(tmp), add = TRUE)
+  filtered <- terra::ifel(
+    q <= 1,
+    r * 0.0001,
+    NA,
+    filename = tmp,
+    overwrite = TRUE,
+    wopt = evi_raster_write_options(names = "evi")
+  )
+  rm(filtered, r, q)
+  gc(verbose = FALSE)
+  evi_move_raster_file(tmp, dest)
+  invisible(dest)
+}
+
+evi_write_annual_layers <- function(layers, dest) {
   if (!file.exists(dirname(dest))) {
     dir.create(dirname(dest), recursive = TRUE)
   }
@@ -562,26 +736,50 @@ evi_write_annual_layers <- function(layers, dest) {
     tmpdir = dirname(dest)
   )
   on.exit(unlink(tmp), add = TRUE)
-  terra::writeRaster(
-    annual,
-    tmp,
+  annual <- terra::app(
+    Reduce(c, layers),
+    fun = "median",
+    na.rm = TRUE,
+    filename = tmp,
     overwrite = TRUE,
+    wopt = evi_raster_write_options(names = "evi")
+  )
+  # Return a small file-backed raster object and drop the in-memory expression.
+  names(annual) <- "evi"
+  rm(annual)
+  gc(verbose = FALSE)
+  evi_move_raster_file(tmp, dest)
+  invisible(dest)
+}
+
+evi_raster_write_options <- function(names = NULL) {
+  out <- list(
     datatype = "FLT4S",
     NAflag = -9999,
-    gdal = c("COMPRESS=LZW")
+    gdal = c("COMPRESS=LZW"),
+    memfrac = 0.1,
+    memmax = 1,
+    todisk = TRUE
   )
+  if (!is.null(names)) {
+    out$names <- names
+  }
+  out
+}
+
+evi_move_raster_file <- function(tmp, dest) {
   if (file.exists(dest)) {
     unlink(dest)
   }
   ok <- file.rename(tmp, dest)
   if (!ok && !file.copy(tmp, dest, overwrite = TRUE)) {
     stop(
-      "Failed to move annual EVI composite into destination: ",
+      "Failed to move EVI raster into destination: ",
       dest,
       call. = FALSE
     )
   }
-  invisible(dest)
+  invisible(TRUE)
 }
 
 evi_quality_filtered_fixture_raster <- function(href, quality_href, cell) {
@@ -614,15 +812,6 @@ evi_extents_overlap <- function(x, y) {
     terra::xmax(x) >= terra::xmin(y) &&
     terra::ymin(x) <= terra::ymax(y) &&
     terra::ymax(x) >= terra::ymin(y)
-}
-
-evi_quality_filtered_raster <- function(evi_file, quality_file) {
-  r <- terra::rast(evi_file)
-  q <- terra::rast(quality_file)
-  # COG tags store a display scale; reset it before applying the EVI scale.
-  terra::scoff(r) <- cbind(1, 0)
-  terra::scoff(q) <- cbind(1, 0)
-  terra::ifel(q <= 1, r * 0.0001, NA)
 }
 
 evi_extract_annual_values <- function(x, annual_files, buffer) {
@@ -898,11 +1087,141 @@ install_evi_geomarker_fixture <- function(
 
 evi_fetch_url <- function(url) {
   if (requireNamespace("curl", quietly = TRUE)) {
-    handle <- curl::new_handle(followlocation = TRUE)
-    res <- curl::curl_fetch_memory(url, handle = handle)
-    return(rawToChar(res$content))
+    return(evi_fetch_url_curl(url))
   }
-  paste(readLines(url, warn = FALSE), collapse = "\n")
+  evi_fetch_url_base(url)
+}
+
+evi_fetch_url_curl <- function(
+  url,
+  attempts = 5L,
+  retry_status = c(429L, 500L, 502L, 503L, 504L)
+) {
+  for (attempt in seq_len(attempts)) {
+    handle <- curl::new_handle(followlocation = TRUE)
+    res <- tryCatch(
+      curl::curl_fetch_memory(url, handle = handle),
+      error = identity
+    )
+    if (inherits(res, "error")) {
+      if (attempt < attempts) {
+        Sys.sleep(evi_retry_delay(character(0), attempt))
+        next
+      }
+      stop(
+        "Planetary Computer request failed.\n",
+        "URL: ",
+        url,
+        "\nOriginal error: ",
+        conditionMessage(res),
+        call. = FALSE
+      )
+    }
+
+    status <- res$status_code
+    headers <- rawToChar(res$headers)
+    body <- rawToChar(res$content)
+    if (status >= 200 && status < 300) {
+      return(body)
+    }
+    if (status %in% retry_status && attempt < attempts) {
+      Sys.sleep(evi_retry_delay(headers, attempt))
+      next
+    }
+    stop(evi_http_error_message(url, status, headers, body), call. = FALSE)
+  }
+}
+
+evi_fetch_url_base <- function(url, attempts = 5L) {
+  for (attempt in seq_len(attempts)) {
+    out <- tryCatch(
+      paste(readLines(url, warn = FALSE), collapse = "\n"),
+      error = identity
+    )
+    if (!inherits(out, "error")) {
+      return(out)
+    }
+    if (attempt < attempts) {
+      Sys.sleep(evi_retry_delay(character(0), attempt))
+      next
+    }
+    stop(
+      "Planetary Computer request failed.\n",
+      "URL: ",
+      url,
+      "\nOriginal error: ",
+      conditionMessage(out),
+      call. = FALSE
+    )
+  }
+}
+
+evi_retry_delay <- function(headers, attempt, max_seconds = 60) {
+  retry_after <- evi_retry_after(headers)
+  if (!is.na(retry_after)) {
+    return(min(retry_after, max_seconds))
+  }
+  min(2^(attempt - 1), max_seconds)
+}
+
+evi_retry_after <- function(headers) {
+  if (!length(headers) || is.na(headers)) {
+    return(NA_real_)
+  }
+  lines <- strsplit(headers, "\r?\n", perl = TRUE)[[1]]
+  retry_after <- grep(
+    "^retry-after\\s*:",
+    lines,
+    ignore.case = TRUE,
+    value = TRUE
+  )
+  if (length(retry_after) == 0) {
+    return(NA_real_)
+  }
+  value <- trimws(sub("^[^:]+:", "", retry_after[[1]]))
+  numeric_value <- suppressWarnings(as.numeric(value))
+  if (!is.na(numeric_value)) {
+    return(numeric_value)
+  }
+  date_value <- as.POSIXct(
+    value,
+    format = "%a, %d %b %Y %H:%M:%S %Z",
+    tz = "GMT"
+  )
+  if (is.na(date_value)) {
+    return(NA_real_)
+  }
+  max(0, as.numeric(difftime(date_value, Sys.time(), units = "secs")))
+}
+
+evi_http_error_message <- function(url, status, headers, body) {
+  retry_after <- evi_retry_after(headers)
+  detail <- if (status == 429L) {
+    "Planetary Computer request was rate limited."
+  } else {
+    "Planetary Computer request failed."
+  }
+  body <- trimws(body)
+  if (nchar(body) > 1000) {
+    body <- paste0(substr(body, 1, 1000), "...")
+  }
+  paste0(
+    detail,
+    "\nURL: ",
+    url,
+    "\nHTTP status: ",
+    status,
+    if (!is.na(retry_after)) {
+      paste0("\nRetry-After: ", retry_after, " seconds")
+    } else {
+      ""
+    },
+    if (nzchar(body)) {
+      paste0("\nResponse body: ", body)
+    } else {
+      ""
+    }
+  )
 }
 
 evi_parse_stac_items <- function(json) {

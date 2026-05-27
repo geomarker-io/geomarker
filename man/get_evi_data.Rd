@@ -37,7 +37,8 @@ staged under \code{geomarker_data_dir(subdir)} only when an annual composite is
 missing; if a build fails, complete source downloads are reused on the next
 attempt and removed after the annual composite is successfully written.
 EVI source rasters are downloaded by MODIS tile; 14 MODIS tiles intersect the
-contiguous United States.
+contiguous United States. Planetary Computer assets are accessed with
+reusable container SAS tokens to reduce signing API calls.
 Annual composite rasters are cached in \code{geomarker_data_dir(subdir)}. EVI
 source raster values are scaled by 0.0001 while creating annual composites.
 EVI is a greenness index designed to emphasize photosynthetically active

@@ -114,6 +114,59 @@ test_that("EVI download progress updates use compact one-line text", {
   expect_false(grepl("remaining|:", msg))
 })
 
+test_that("EVI signs Azure assets with cached container SAS tokens", {
+  key <- "fakeaccount/fake-container"
+  evi_sas_token_cache[[key]] <- list(
+    token = "st=2024-01-01T00%3A00%3A00Z&sig=fake",
+    expiry = Sys.time() + 3600
+  )
+  withr::defer(rm(list = key, envir = evi_sas_token_cache), teardown_env())
+  href <- paste0(
+    "https://fakeaccount.blob.core.windows.net/fake-container/",
+    "MOD13Q1/file_250m_16_days_EVI.tif"
+  )
+
+  expect_equal(
+    evi_asset_storage(href),
+    list(account = "fakeaccount", container = "fake-container")
+  )
+  expect_equal(
+    evi_sign_asset(href),
+    paste0(href, "?st=2024-01-01T00%3A00%3A00Z&sig=fake")
+  )
+  expect_equal(
+    evi_sign_asset(paste0(href, "?x=1")),
+    paste0(href, "?x=1&st=2024-01-01T00%3A00%3A00Z&sig=fake")
+  )
+  expect_equal(
+    evi_sign_asset("https://example.com/evi.tif"),
+    "https://example.com/evi.tif"
+  )
+})
+
+test_that("EVI parses Planetary Computer SAS token responses", {
+  parsed <- evi_parse_sas_token_json(paste0(
+    '{"msft:expiry":"2099-05-27T12:42:17Z",',
+    '"token":"st=2024-01-01T00%3A00%3A00Z\\u0026sig=fake"}'
+  ))
+
+  expect_equal(parsed$token, "st=2024-01-01T00%3A00%3A00Z&sig=fake")
+  expect_s3_class(parsed$expiry, "POSIXct")
+  expect_false(evi_sas_token_expired(parsed))
+})
+
+test_that("EVI retry helpers use Retry-After headers", {
+  headers <- "HTTP/2 429\r\nretry-after: 12\r\n"
+
+  expect_equal(evi_retry_after(headers), 12)
+  expect_equal(evi_retry_delay(headers, attempt = 1), 12)
+  expect_equal(evi_retry_delay(character(0), attempt = 3), 4)
+  expect_match(
+    evi_http_error_message("https://example.com", 429L, headers, "slow down"),
+    "rate limited"
+  )
+})
+
 test_that("EVI annual composite files use cached derived rasters", {
   withr::local_envvar(c(
     R_USER_DATA_DIR = tempdir(),
@@ -182,25 +235,40 @@ test_that("EVI annual composite reuses and cleans staged sources", {
     R_USER_DATA_DIR = tempfile(),
     R_GEOMARKER_NO_DOWNLOAD = "true"
   ))
-  href <- "https://example.com/evi/evi_2024_h11v05.tif"
-  quality_href <- "https://example.com/evi/quality_2024_h11v05.tif"
+  href <- paste0(
+    "https://example.com/evi/evi_2024_h11v05_",
+    c("a", "b"),
+    ".tif"
+  )
+  quality_href <- paste0(
+    "https://example.com/evi/quality_2024_h11v05_",
+    c("a", "b"),
+    ".tif"
+  )
   dest <- file.path(
     geomarker_data_dir("evi"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   source_dir <- evi_source_staging_dir(dest)
   dir.create(source_dir, recursive = TRUE)
-  evi_file <- file.path(source_dir, url_to_filename(href, etag = FALSE))
+  evi_file <- file.path(
+    source_dir,
+    vapply(href, url_to_filename, character(1), etag = FALSE)
+  )
   quality_file <- file.path(
     source_dir,
-    url_to_filename(quality_href, etag = FALSE)
+    vapply(quality_href, url_to_filename, character(1), etag = FALSE)
   )
   r <- terra::rast(nrows = 2, ncols = 2, xmin = 0, xmax = 2, ymin = 0, ymax = 2)
   terra::values(r) <- c(1000, 2000, 3000, 4000)
   q <- r
-  terra::values(q) <- c(0, 1, 0, 1)
-  terra::writeRaster(r, evi_file, overwrite = TRUE)
-  terra::writeRaster(q, quality_file, overwrite = TRUE)
+  terra::values(q) <- c(0, 2, 0, 1)
+  terra::writeRaster(r, evi_file[[1]], overwrite = TRUE)
+  terra::writeRaster(q, quality_file[[1]], overwrite = TRUE)
+  terra::values(r) <- c(3000, 4000, 5000, 6000)
+  terra::values(q) <- c(0, 1, 2, 1)
+  terra::writeRaster(r, evi_file[[2]], overwrite = TRUE)
+  terra::writeRaster(q, quality_file[[2]], overwrite = TRUE)
   items <- data.frame(
     year = "2024",
     tile = "h11v05",
@@ -212,6 +280,11 @@ test_that("EVI annual composite reuses and cleans staged sources", {
 
   expect_true(file.exists(dest))
   expect_false(dir.exists(source_dir))
+  expect_equal(
+    as.vector(terra::values(terra::rast(dest))),
+    c(0.2, 0.4, 0.3, 0.5),
+    tolerance = 1e-6
+  )
 })
 
 test_that("get_evi_data uses cached annual composites without downloads", {

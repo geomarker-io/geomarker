@@ -42,8 +42,12 @@ jobs:
       - name: Download and validate traffic data
         shell: bash
         run: |
-          gh release download "$RELEASE_TAG" --pattern hpms_2024_f12_aadt.gpkg
-          Rscript inst/validate_traffic_data_release.R hpms_2024_f12_aadt.gpkg
+          mkdir -p "$RUNNER_TEMP/traffic-asset"
+          gh release download "$RELEASE_TAG" \
+            --pattern hpms_2024_f12_aadt.gpkg \
+            --dir "$RUNNER_TEMP/traffic-asset"
+          Rscript inst/validate_traffic_data_release.R \
+            "$RUNNER_TEMP/traffic-asset/hpms_2024_f12_aadt.gpkg"
 
       - name: Build and check package
         shell: bash
@@ -59,7 +63,11 @@ jobs:
           R CMD INSTALL geomarker_*.tar.gz
           Rscript -e '
             library(geomarker)
-            asset <- normalizePath("hpms_2024_f12_aadt.gpkg")
+            asset <- normalizePath(file.path(
+              Sys.getenv("RUNNER_TEMP"),
+              "traffic-asset",
+              "hpms_2024_f12_aadt.gpkg"
+            ))
             cached <- file.path(
               geomarker_data_dir(),
               "40376751--hpms_2024_f12_aadt.gpkg"
@@ -77,8 +85,7 @@ jobs:
             }
           '
 
-      - name: Upload package and publish release
+      - name: Publish release
         shell: bash
         run: |
-          gh release upload "$RELEASE_TAG" geomarker_*.tar.gz --clobber
           gh release edit "$RELEASE_TAG" --draft=false --latest

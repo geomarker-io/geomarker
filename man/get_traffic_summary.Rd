@@ -11,13 +11,14 @@ get_traffic_summary(x, buffer = 400, overwrite = FALSE, quiet = FALSE)
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 
-\item{overwrite}{logical;
-overwrite traffic geodatabase if already downloaded?}
+\item{overwrite}{logical; overwrite cached traffic data?}
 
-\item{quiet}{logical; show download progress messages?}
+\item{quiet}{logical; suppress download and processing messages?}
 }
 \value{
-list of numeric vectors of traffic summaries
+data frame with one row per input location and numeric traffic
+summaries \code{aadtm_trucks_buses}, \code{aadtm_tractor_trailer}, and
+\code{aadtm_passenger}
 }
 \description{
 Summarizes average annual daily traffic meters (\code{aadtm}) traveled
@@ -26,25 +27,30 @@ s2 cell as totals per vehicle class (\code{trucks_buses}, \code{tractor_trailer}
 and \code{passenger}); dates are not used to link to traffic data.
 }
 \details{
-Traffic data from the 2020 Highway Performance Monitoring System (HPMS)
-is downloaded from the Bureau of Transportation Statistics
-as a geodatabase of all roads geometries
-with traffic estimates by vehicle type
-and roadway class.
-See \url{https://geodata.bts.gov/datasets/c199f2799b724ffbacf4cafe3ee03e55/about}
-for more details.
-Only roads with F_SYSTEM classification of 1 ("interstate") or 2
-("principal arterial - other freeways and expressways").
-are used. Passenger vehicles (FHWA 1-3) are calculated as the
-total minus FHWA class 4-7 (single unit) and 8-13 (combo).
+Traffic data are derived from the final 2024 Highway Performance Monitoring
+System (HPMS) File Geodatabase published by the Bureau of Transportation
+Statistics. Only roads with F_SYSTEM classification of 1 ("interstate") or
+2 ("principal arterial - other freeways and expressways") are used.
+Passenger vehicles (FHWA 1-3) are calculated as the total minus FHWA class
+4-7 (single unit) and 8-13 (combination). FHWA documents substantial missing
+portions of the 2024 data for North Dakota and New Jersey.
+In addition, 55 retained roadway sections report single-unit plus
+combination AADT greater than total AADT; the documented passenger-vehicle
+subtraction is preserved for those source records rather than silently
+modifying them.
 }
 \examples{
- withr::local_envvar(
-   R_USER_DATA_DIR = fs::path_package(
-     "geomarker",
-     "gmrkr--8841"
-   ),
-   R_GEOMARKER_NO_DOWNLOAD = "true"
- )
+withr::local_envvar(
+  R_USER_DATA_DIR = fs::path_package(
+    "geomarker",
+    "gmrkr--8841"
+  ),
+  R_GEOMARKER_NO_DOWNLOAD = "true"
+)
 get_traffic_summary(s2cd_example_cincy(), buffer = 1500)
+}
+\references{
+\url{https://www.arcgis.com/home/item.html?id=5e6a977c2d7c4ec1bdc82e684d3384f2}
+
+\url{https://github.com/FHWA/HPMS/blob/2024-HPMS/README_2024_HPMS_All.md}
 }

@@ -1,3 +1,5 @@
 ^LICENSE\.md$
 ^\.github$
+^\.git$
+^.*\.DS_Store$
 docs

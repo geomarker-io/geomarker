@@ -71,10 +71,11 @@ url_etag <- function(url) {
     "url must be character" = inherits(url, "character")
   )
   check_installed("curl", "to check URL headers.")
-  headers <- curl::new_handle(nobody = TRUE, header = TRUE) |>
-    curl::curl_fetch_memory(url = url, handle = _) |>
-    _$headers |>
-    curl::parse_headers()
+  response <- curl::curl_fetch_memory(
+    url = url,
+    handle = curl::new_handle(nobody = TRUE, header = TRUE)
+  )
+  headers <- curl::parse_headers(response$headers)
 
   which_etag_header <- grep("^ETag:", headers, ignore.case = TRUE)
   if (length(which_etag_header) == 0) {

@@ -1,0 +1,84 @@
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Draft release tag to validate and publish
+        required: true
+        type: string
+
+name: release
+
+permissions:
+  contents: write
+
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_TAG: ${{ inputs.tag }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - name: Verify package and draft release versions
+        shell: bash
+        run: |
+          package_version="$(Rscript -e 'cat(read.dcf("DESCRIPTION")[1, "Version"])')"
+          test "$RELEASE_TAG" = "v$package_version"
+          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = "true"
+
+      - name: Download and validate traffic data
+        shell: bash
+        run: |
+          gh release download "$RELEASE_TAG" --pattern hpms_2024_f12_aadt.gpkg
+          Rscript inst/validate_traffic_data_release.R hpms_2024_f12_aadt.gpkg
+
+      - name: Build and check package
+        shell: bash
+        run: |
+          R CMD build . --no-manual
+          R CMD check geomarker_*.tar.gz --no-manual --as-cran
+
+      - name: Run fresh-cache smoke test and regional benchmarks
+        shell: bash
+        env:
+          R_USER_DATA_DIR: ${{ runner.temp }}/geomarker-fresh-cache
+        run: |
+          R CMD INSTALL geomarker_*.tar.gz
+          Rscript -e '
+            library(geomarker)
+            asset <- normalizePath("hpms_2024_f12_aadt.gpkg")
+            cached <- file.path(
+              geomarker_data_dir(),
+              "40376751--hpms_2024_f12_aadt.gpkg"
+            )
+            stopifnot(file.copy(asset, cached))
+            geomarker:::traffic_validate_download(cached)
+            for (n in c(100L, 1000L, 10000L)) {
+              set.seed(20240803)
+              x <- s2cd_example_cincy(n_locations = n)
+              timing <- system.time(
+                result <- get_traffic_summary(x, quiet = TRUE)
+              )
+              stopifnot(nrow(result) == n)
+              message(n, " locations: ", timing[["elapsed"]], " seconds")
+            }
+          '
+
+      - name: Upload package and publish release
+        shell: bash
+        run: |
+          gh release upload "$RELEASE_TAG" geomarker_*.tar.gz --clobber
+          gh release edit "$RELEASE_TAG" --draft=false --latest

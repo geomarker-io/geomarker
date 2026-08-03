@@ -26,6 +26,38 @@ test_that("s2cd behaves as expected", {
     is_s2cd() |>
     expect_false()
 
+  expect_error(
+    geomarker:::validate_s2cd(
+      .data = c("8841b39a7c46e25f", "8841a45555555555"),
+      dates = list(as.Date("2026-01-01"), as.Date("2026-01-02"))
+    ),
+    "`s2cd` must contain an `s2_cell` vector."
+  )
+
+  expect_error(
+    geomarker:::validate_s2cd(
+      .data = s2::as_s2_cell("not-a-cell"),
+      dates = list(as.Date("2026-01-01"))
+    ),
+    "s2 cells must be valid"
+  )
+
+  expect_error(
+    geomarker:::validate_s2cd(
+      .data = s2::as_s2_cell("8841b39a7c46e25f"),
+      dates = as.Date("2026-01-01")
+    ),
+    "`dates` must be a list."
+  )
+
+  expect_error(
+    geomarker:::validate_s2cd(
+      .data = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+      dates = list(as.Date("2026-01-01"))
+    ),
+    "`dates` must have same length as `cells`."
+  )
+
   s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25", "8841a45555555555")),
     dates = list(
@@ -109,6 +141,13 @@ test_that("s2cd behaves as expected", {
   d |>
     as.character() |>
     expect_type("character")
+
+  expect_identical(
+    as.character(d),
+    c("8841b39a7c46e25f", "8841a45555555555")
+  )
+  expect_identical(format(d), as.character(d))
+  expect_identical(as.character(d[2]), "8841a45555555555")
 
   # use external method to extract s2
   d |>

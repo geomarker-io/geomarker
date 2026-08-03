@@ -36,7 +36,7 @@ test_that("geomarker_download_file finds ETag-cached files offline", {
   file.create(cached_file)
 
   expect_identical(
-    geomarker_download_file(url),
-    cached_file
+    normalizePath(geomarker_download_file(url)),
+    normalizePath(cached_file)
   )
 })

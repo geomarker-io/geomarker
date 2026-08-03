@@ -149,6 +149,19 @@ test_that("s2cd behaves as expected", {
   expect_identical(format(d), as.character(d))
   expect_identical(as.character(d[2]), "8841a45555555555")
 
+  printed_d <- capture.output(print(d))
+  expect_match(printed_d[[1]], "<s2_cell_dates\\[2\\]>")
+  printed_values <- paste(printed_d[-1], collapse = " ")
+  expect_match(printed_values, "8841b39a7c46e25f\\[1\\]")
+  expect_match(printed_values, "8841a45555555555\\[2\\]")
+
+  pillar_d <- pillar::pillar_shaft(d)
+  expect_s3_class(pillar_d, "pillar_shaft")
+  expect_identical(
+    trimws(as.character(format(pillar_d, width = 20))),
+    c("8841b39a7c46e25f[1]", "8841a45555555555[2]")
+  )
+
   # use external method to extract s2
   d |>
     as_s2_cell() |>

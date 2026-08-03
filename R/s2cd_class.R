@@ -37,6 +37,10 @@
 #' # check if d is a s2cd vector
 #' is_s2cd(d)
 #'
+#' # use a s2cd vector as a tibble column
+#' # the display includes each cell's number of dates
+#' tibble::tibble(id = seq_along(d), location = d)
+#'
 #' # create using data.frame with s2_cell and dates columns
 #' data.frame(
 #'   s2_cell = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
@@ -130,11 +134,29 @@ as_s2_cell.s2cd <- function(x, ...) {
 
 #' @export
 print.s2cd <- function(x, ...) {
-  cat(sprintf("<s2_cell_dates[%d]>", length(x)))
-  cat("\n<s2>\n")
-  print(as.character(s2cd_s2_cell(x)))
-  print(s2cd_dates(x))
+  cat(sprintf("<s2_cell_dates[%d]>\n", length(x)))
+  print(
+    paste0(
+      as.character(s2cd_s2_cell(x)),
+      "[",
+      lengths(s2cd_dates(x)),
+      "]"
+    ),
+    quote = FALSE
+  )
   invisible(x)
+}
+
+#' @exportS3Method pillar::pillar_shaft
+pillar_shaft.s2cd <- function(x, ...) {
+  pillar::new_pillar_shaft_simple(
+    paste0(
+      format(x),
+      "[",
+      lengths(s2cd_dates(x)),
+      "]"
+    )
+  )
 }
 
 #' Test whether input is a `s2cd` vector

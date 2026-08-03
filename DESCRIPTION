@@ -18,6 +18,7 @@ Suggests:
     dplyr,
     sf,
     tibble,
+    pillar,
     terra,
     testthat (>= 3.0.0),
     withr

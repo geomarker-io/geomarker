@@ -49,6 +49,10 @@ d <- s2cd(
 # check if d is a s2cd vector
 is_s2cd(d)
 
+# use a s2cd vector as a tibble column
+# the display includes each cell's number of dates
+tibble::tibble(id = seq_along(d), location = d)
+
 # create using data.frame with s2_cell and dates columns
 data.frame(
   s2_cell = s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),

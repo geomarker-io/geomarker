@@ -24,3 +24,19 @@ test_that("geomarker_download_file works", {
   geomarker_download_file(the_url, quiet = TRUE) |>
     expect_invisible()
 })
+
+test_that("geomarker_download_file finds ETag-cached files offline", {
+  url <- "https://example.com/path/file.zip"
+  withr::local_envvar(
+    R_USER_DATA_DIR = tempfile("geomarker-data-"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  cache_dir <- geomarker_data_dir()
+  cached_file <- file.path(cache_dir, "c18913fb--file--an-etag.zip")
+  file.create(cached_file)
+
+  expect_identical(
+    geomarker_download_file(url),
+    cached_file
+  )
+})

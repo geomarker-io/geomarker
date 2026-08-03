@@ -127,20 +127,35 @@ geomarker_download_file <- function(
     "url must be length one" = length(url) == 1,
     "url must be character" = inherits(url, "character")
   )
-  if (nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))) {
+  no_download <- nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))
+  if (no_download) {
     etag <- FALSE
   }
   dest <- file.path(
     geomarker_data_dir(subdir = subdir),
     url_to_filename(url, etag = etag)
   )
+  if (no_download && !file.exists(dest)) {
+    dest_basename <- basename(dest)
+    dest_stem <- tools::file_path_sans_ext(dest_basename)
+    dest_ext <- tools::file_ext(dest_basename)
+    cached <- list.files(dirname(dest), full.names = TRUE)
+    cached_basename <- basename(cached)
+    cached <- cached[
+      startsWith(cached_basename, paste0(dest_stem, "--")) &
+        endsWith(cached_basename, paste0(".", dest_ext))
+    ]
+    if (length(cached) > 0) {
+      dest <- cached[[which.max(file.info(cached)$mtime)]]
+    }
+  }
   if (file.exists(dest) && !overwrite) {
     if (quiet) {
       return(invisible(dest))
     }
     return(dest)
   }
-  if (nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))) {
+  if (no_download) {
     stop(
       "The envvar R_GEOMARKER_NO_DOWNLOAD is set, but ",
       dest,

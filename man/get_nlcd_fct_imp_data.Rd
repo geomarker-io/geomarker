@@ -16,7 +16,8 @@ get_nlcd_fct_imp_data(x, fun = mean, buffer = 800, ...)
 \item{...}{passed to \code{geomarker_download_file()}}
 }
 \value{
-a list of numeric vectors of NLCD fraction imperviousness summaries
+a list of numeric vectors of NLCD fraction imperviousness summaries.
+Dates in unavailable years return \code{NA_real_}.
 }
 \description{
 Summarizes fraction imperviousness (fractional surface area
@@ -26,13 +27,15 @@ the year of each date is used to link to the corresponding
 annual snapshot.
 }
 \details{
-Annual NLCD data (v1) is downloaded from a copy of v1 of the Annual National
-Landcover Database (Annual NLCD) hosted on Harvard Dataverse in GeoTiff format
-at a 30 m grid.
-See \url{https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KXETFC&version=1.0}
-for more details on the hosted data and see
-\url{https://www.mrlc.gov/data/project/annual-nlcd} for more details
-on the NLCD.
+Fractional Impervious Surface rasters from Annual NLCD Collection 1.2 are
+retrieved as full conterminous U.S. GeoTIFFs from the MRLC direct-download
+bundles at a 30 m grid.
+The currently available conterminous U.S. data span 1985 through 2025; dates
+outside the available years return \code{NA_real_} values.
+See \url{https://www.usgs.gov/centers/eros/science/annual-nlcd-data-access} for
+data-access details and
+\url{https://www.usgs.gov/centers/eros/science/usgs-eros-archive-land-cover-annual-nlcd-collection-1-fractional-impervious}
+for product details.
 }
 \examples{
 get_nlcd_fct_imp_data(s2cd_example_cincy(2L))

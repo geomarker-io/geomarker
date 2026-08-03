@@ -6,18 +6,21 @@
 #' the year of each date is used to link to the corresponding
 #' annual snapshot.
 #'
-#' Annual NLCD data (v1) is downloaded from a copy of v1 of the Annual National
-#' Landcover Database (Annual NLCD) hosted on Harvard Dataverse in GeoTiff format
-#' at a 30 m grid.
-#' See <https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/KXETFC&version=1.0>
-#' for more details on the hosted data and see
-#' <https://www.mrlc.gov/data/project/annual-nlcd> for more details
-#' on the NLCD.
+#' Fractional Impervious Surface rasters from Annual NLCD Collection 1.2 are
+#' retrieved as full conterminous U.S. GeoTIFFs from the MRLC direct-download
+#' bundles at a 30 m grid.
+#' The currently available conterminous U.S. data span 1985 through 2025; dates
+#' outside the available years return `NA_real_` values.
+#' See <https://www.usgs.gov/centers/eros/science/annual-nlcd-data-access> for
+#' data-access details and
+#' <https://www.usgs.gov/centers/eros/science/usgs-eros-archive-land-cover-annual-nlcd-collection-1-fractional-impervious>
+#' for product details.
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param fun function to summarize extracted data
 #' @param buffer distance from s2 cell (in meters) to summarize data
 #' @param ... passed to `geomarker_download_file()`
-#' @return a list of numeric vectors of NLCD fraction imperviousness summaries
+#' @return a list of numeric vectors of NLCD fraction imperviousness summaries.
+#' Dates in unavailable years return `NA_real_`.
 #' @export
 #' @examples
 #' get_nlcd_fct_imp_data(s2cd_example_cincy(2L))
@@ -27,102 +30,96 @@ get_nlcd_fct_imp_data <- function(
   buffer = 800,
   ...
 ) {
-  stopifnot(
-    "x must be a s2_cell_dates vector" = is_s2cd(x),
-    "dates must be between 2017 and 2024" = s2cd_within(
-      x,
-      date_range = c(as.Date("2017-01-01"), as.Date("2024-12-31"))
-    )
+  stopifnot("x must be a s2_cell_dates vector" = is_s2cd(x))
+
+  available_years <- as.character(1985:2025)
+  date_years <- lapply(s2cd_dates(x), format, "%Y")
+  out <- lapply(s2cd_dates(x), \(dates) rep(NA_real_, length(dates)))
+  years <- intersect(
+    unique(unlist(date_years, use.names = FALSE)),
+    available_years
   )
-  if ("2024" %in% s2cd_years(x)) {
-    warning("using 2023 NLCD product for dates in 2024")
+  if (length(years) == 0) {
+    return(out)
   }
 
-  fid <- c(
-    "2024" = "10980930",
-    "2023" = "10980930",
-    "2022" = "10980932",
-    "2021" = "10980929",
-    "2020" = "10980933",
-    "2019" = "10980934",
-    "2018" = "10980931",
-    "2017" = "10980935"
-  )
+  check_installed("terra", "to summarize Annual NLCD data.")
+  x_vect <- s2_cell_to_vect(x)
 
-  nlcd_urls <-
-    paste0(
-      "https://dataverse.harvard.edu/api/access/datafile/",
-      fid[s2cd_years(x)]
+  for (year in years) {
+    location_index <- which(vapply(
+      date_years,
+      \(years) year %in% years,
+      logical(1)
+    ))
+    nlcd_file <- geomarker_download_file(
+      paste0(
+        "https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data-bundles/",
+        "Annual_NLCD_FctImp_",
+        year,
+        "_CU_C1V2.zip"
+      ),
+      ...
     )
+    nlcd_raster <- terra::rast(paste0(
+        "/vsizip/",
+        nlcd_file,
+        "/",
+        "Annual_NLCD_FctImp_",
+        year,
+        "_CU_C1V2.tif"
+      ))
+    x_buffer <-
+      terra::project(x_vect, nlcd_raster) |>
+      terra::buffer(width = buffer)
+    summaries <- terra::extract(
+      nlcd_raster,
+      x_buffer[location_index, ],
+      fun = fun,
+      ID = FALSE
+    )[[1]]
+    for (i in seq_along(location_index)) {
+      index <- location_index[[i]]
+      out[[index]][date_years[[index]] == year] <- summaries[[i]]
+    }
+  }
 
-  # if (cloud) {
-  #   nlcd_raster <-
-  #     lapply(nlcd_urls, terra::rast, vsi = TRUE) |>
-  #     Reduce(c, x = _)
-  # } else {
-  nlcd_files <- vapply(
-    nlcd_urls,
-    geomarker_download_file,
-    FUN.VALUE = character(1),
-    ...
-  )
-  nlcd_raster <-
-    lapply(nlcd_files, terra::rast) |>
-    Reduce(c, x = _)
-  # }
-  names(nlcd_raster) <- s2cd_years(x)
-
-  x_vect <-
-    s2_cell_to_vect(x) |>
-    terra::project(nlcd_raster) |>
-    terra::buffer(width = buffer)
-
-  xtract <- terra::extract(nlcd_raster, x_vect, fun = fun, ID = FALSE)
-
-  out <- mapply(
-    \(yrs, xts) as.numeric(xts[yrs]),
-    yrs = lapply(s2cd_dates(x), format, "%Y"),
-    xts = split(xtract, seq_len(nrow(xtract))),
-    SIMPLIFY = FALSE,
-    USE.NAMES = TRUE
-  )
-
-  return(out)
+  out
 }
 
 install_nlcd_geomarker_fixture <- function(cell, dates, output_dir) {
-  check_installed("terra", "to create NLCD fixture data.")
+  check_installed("terra", "to create Annual NLCD fixture data.")
   cell <- geomarker_fixture_cell(cell)
-  years <- geomarker_fixture_years(dates)
+  years <- intersect(geomarker_fixture_years(dates), as.character(1985:2025))
   output_dir <- geomarker_fixture_output_dir(output_dir)
-  fid <- c(
-    "2024" = "10980930",
-    "2023" = "10980930",
-    "2022" = "10980932",
-    "2021" = "10980929",
-    "2020" = "10980933",
-    "2019" = "10980934",
-    "2018" = "10980931",
-    "2017" = "10980935"
-  )
-  stopifnot(
-    "dates must be between 2017 and 2024" = all(years %in% names(fid))
-  )
-  nlcd_urls <- paste0(
-    "https://dataverse.harvard.edu/api/access/datafile/",
-    unique(fid[years])
-  )
 
-  lapply(nlcd_urls, \(url) {
-    geomarker_download_file(url) |>
+  lapply(years, \(year) {
+    filename <- paste0("Annual_NLCD_FctImp_", year, "_CU_C1V2")
+    url <- paste0(
+      "https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data-bundles/",
+      filename, ".zip"
+    )
+    tif <- file.path(tempdir(), paste0(filename, ".tif"))
+    zip <- tempfile(fileext = ".zip")
+    on.exit(unlink(c(tif, zip)), add = TRUE)
+
+    geomarker_download_file(url, quiet = TRUE) |>
+      paste0("/vsizip/", url = _, "/", filename, ".tif") |>
       terra::rast() |>
       geomarker_fixture_crop_to_cell(cell = cell) |>
       terra::writeRaster(
-        file.path(output_dir, url_to_filename(url, etag = FALSE)),
-        filetype = "cog",
+        tif,
+        filetype = "GTiff",
+        datatype = "INT1U",
         overwrite = TRUE
       )
-  }) |>
-    invisible()
+    utils::zip(zipfile = zip, files = tif, flags = "-j")
+    file.copy(
+      zip,
+      file.path(output_dir, url_to_filename(url, etag = FALSE)),
+      overwrite = TRUE
+    )
+  })
+
   invisible(output_dir)
 }

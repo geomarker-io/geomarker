@@ -21,6 +21,7 @@ Suggests:
     sf,
     tibble,
     pillar,
+    readr,
     terra,
     testthat (>= 3.0.0),
     withr

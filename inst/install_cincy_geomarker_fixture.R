@@ -12,6 +12,7 @@ dir.create(fixture_dir, showWarnings = FALSE, recursive = TRUE)
 
 install_hms_smoke_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
 install_nlcd_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
+install_nei_point_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
 install_gridmet_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
 install_narr_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
 install_elevation_geomarker_fixture(the_cell, fixture_dates, fixture_dir)

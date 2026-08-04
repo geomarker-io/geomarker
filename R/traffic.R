@@ -3,132 +3,67 @@ traffic_data_manifest <- function() {
   if (!nzchar(manifest_path)) {
     manifest_path <- file.path("inst", "traffic-data.dcf")
   }
-  manifest <- as.list(read.dcf(manifest_path)[1, ])
-  required <- c(
-    "HPMS-Year",
-    "HPMS-Source-Item-ID",
-    "Transformation-ID",
-    "Package-Release",
-    "Asset-Name",
-    "Asset-URL",
-    "Asset-Bytes",
-    "Asset-SHA256",
-    "Asset-Rows",
-    "Asset-Negative-Passenger-Rows",
-    "Asset-Layer",
-    "Asset-CRS",
-    "Asset-Schema"
-  )
-  stopifnot(
-    "traffic data manifest is incomplete" = all(required %in% names(manifest)),
-    "traffic data manifest must describe HPMS 2024" = identical(
-      manifest[["HPMS-Year"]],
-      "2024"
-    )
-  )
-  manifest
+  as.list(read.dcf(manifest_path)[1, ])
 }
 
 traffic_data_url <- function() {
-  traffic_data_manifest()[["Asset-URL"]]
-}
-
-traffic_validate_download <- function(
-  path,
-  manifest = traffic_data_manifest()
-) {
-  expected_bytes <- as.numeric(manifest[["Asset-Bytes"]])
-  actual_bytes <- unname(file.info(path)$size)
-  if (is.na(actual_bytes) || actual_bytes != expected_bytes) {
-    stop(
-      "Downloaded traffic data has an unexpected size.\n",
-      "Expected: ",
-      format(expected_bytes, scientific = FALSE),
-      " bytes\n",
-      "Observed: ",
-      format(actual_bytes, scientific = FALSE),
-      " bytes\n",
-      "File: ",
-      path,
-      call. = FALSE
-    )
+  url <- traffic_data_manifest()[["Asset-URL"]]
+  if (is.null(url) || length(url) != 1 || !nzchar(url)) {
+    stop("Traffic metadata does not provide an asset URL.", call. = FALSE)
   }
-  actual_sha256 <- digest::digest(
-    file = path,
-    algo = "sha256",
-    serialize = FALSE
-  )
-  expected_sha256 <- manifest[["Asset-SHA256"]]
-  if (!identical(actual_sha256, expected_sha256)) {
-    stop(
-      "Downloaded traffic data failed SHA-256 validation.\n",
-      "Expected: ",
-      expected_sha256,
-      "\n",
-      "Observed: ",
-      actual_sha256,
-      "\n",
-      "File: ",
-      path,
-      call. = FALSE
-    )
-  }
-  invisible(path)
+  url
 }
 
 traffic_data_file <- function(overwrite = FALSE, quiet = FALSE) {
-  url <- traffic_data_url()
-  dest <- file.path(
-    geomarker_data_dir(),
-    url_to_filename(url, etag = FALSE)
-  )
-  needs_full_validation <- overwrite || !file.exists(dest)
-  path <- geomarker_download_file(
-    url,
+  geomarker_download_file(
+    traffic_data_url(),
     overwrite = overwrite,
     quiet = quiet,
     etag = FALSE
   )
-
-  # Bundled fixtures are intentionally cropped and therefore do not match the
-  # full national asset checksum.
-  offline_fixture <- nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))
-  if (!offline_fixture) {
-    expected_bytes <- as.numeric(traffic_data_manifest()[["Asset-Bytes"]])
-    actual_bytes <- unname(file.info(path)$size)
-    if (is.na(actual_bytes) || actual_bytes != expected_bytes) {
-      unlink(path)
-      stop(
-        "Cached traffic data has an unexpected size and was removed.\n",
-        "Expected: ",
-        format(expected_bytes, scientific = FALSE),
-        " bytes\n",
-        "Observed: ",
-        format(actual_bytes, scientific = FALSE),
-        " bytes\n",
-        "Retry to download a fresh copy.",
-        call. = FALSE
-      )
-    }
-    if (needs_full_validation) {
-      tryCatch(
-        traffic_validate_download(path),
-        error = function(err) {
-          unlink(path)
-          stop(
-            conditionMessage(err),
-            "\nThe invalid file was removed.",
-            call. = FALSE
-          )
-        }
-      )
-    }
-  }
-  path
 }
 
-traffic_region_filter_wkt <- function(parent, buffer) {
-  parent |>
+traffic_data_source <- function(path) {
+  required_fields <- c("AADT", "AADT_SINGLE_UNIT", "AADT_COMBINATION")
+  layers <- sf::st_layers(path, do_count = FALSE)$name
+  preferred_layer <- traffic_data_manifest()[["Asset-Layer"]]
+  if (!is.null(preferred_layer) && preferred_layer %in% layers) {
+    layers <- c(preferred_layer, setdiff(layers, preferred_layer))
+  }
+
+  for (layer in layers) {
+    escaped_layer <- gsub('"', '""', layer, fixed = TRUE)
+    sample <- tryCatch(
+      sf::st_read(
+        path,
+        query = paste0('SELECT * FROM "', escaped_layer, '" LIMIT 1'),
+        quiet = TRUE
+      ),
+      error = function(err) NULL
+    )
+    if (is.null(sample)) {
+      next
+    }
+    field_indices <- match(tolower(required_fields), tolower(names(sample)))
+    if (!anyNA(field_indices)) {
+      return(list(
+        layer = layer,
+        fields = stats::setNames(names(sample)[field_indices], required_fields),
+        crs = sf::st_crs(sample)
+      ))
+    }
+  }
+
+  stop(
+    "Traffic data must contain a spatial layer with the fields ",
+    paste(required_fields, collapse = ", "),
+    ".",
+    call. = FALSE
+  )
+}
+
+traffic_region_filter_wkt <- function(parent, buffer, crs = sf::st_crs(4326)) {
+  region <- parent |>
     s2::s2_cell_polygon() |>
     s2::s2_buffer_cells(
       distance = buffer,
@@ -137,8 +72,32 @@ traffic_region_filter_wkt <- function(parent, buffer) {
     ) |>
     sf::st_as_sfc() |>
     sf::st_bbox() |>
-    sf::st_as_sfc() |>
-    sf::st_as_text()
+    sf::st_as_sfc()
+  if (!is.na(crs)) {
+    region <- sf::st_transform(region, crs)
+  }
+  sf::st_as_text(region)
+}
+
+traffic_read_region <- function(path, source, parent, buffer) {
+  hpms <- sf::read_sf(
+    path,
+    layer = source$layer,
+    wkt_filter = traffic_region_filter_wkt(parent, buffer, source$crs),
+    quiet = TRUE
+  )
+  names(hpms)[match(unname(source$fields), names(hpms))] <- names(source$fields)
+  if (is.na(sf::st_crs(hpms))) {
+    hpms <- sf::st_set_crs(hpms, 4326)
+  } else {
+    hpms <- sf::st_transform(hpms, 4326)
+  }
+  for (field in names(source$fields)) {
+    hpms[[field]] <- suppressWarnings(as.numeric(hpms[[field]]))
+  }
+  hpms[
+    stats::complete.cases(sf::st_drop_geometry(hpms)[names(source$fields)]),
+  ]
 }
 
 traffic_zero_summary <- function() {
@@ -167,6 +126,13 @@ traffic_zero_summary <- function() {
 #' combination AADT greater than total AADT; the documented passenger-vehicle
 #' subtraction is preserved for those source records rather than silently
 #' modifying them.
+#'
+#' The packaged release URL and layer name are defaults, not a strict data
+#' contract. At runtime, geomarker uses the first GeoPackage layer containing
+#' `AADT`, `AADT_SINGLE_UNIT`, and `AADT_COMBINATION` (matched without regard
+#' to case), accepts any CRS, and coerces those fields to numeric. It does not
+#' reject a usable GeoPackage because its release version, checksum, storage
+#' types, or layer name differ from the packaged release metadata.
 #'
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param buffer distance from s2 cell (in meters) to summarize data
@@ -219,7 +185,7 @@ get_traffic_summary <- function(
   }
 
   data_file <- traffic_data_file(overwrite = overwrite, quiet = quiet)
-  manifest <- traffic_data_manifest()
+  source <- traffic_data_source(data_file)
 
   cell_keys <- as.character(cells)
   unique_cells <- cells[!duplicated(cell_keys)]
@@ -253,14 +219,11 @@ get_traffic_summary <- function(
 
   for (region_name in names(regions)) {
     region_indices <- regions[[region_name]]
-    hpms <- sf::read_sf(
+    hpms <- traffic_read_region(
       data_file,
-      layer = manifest[["Asset-Layer"]],
-      wkt_filter = traffic_region_filter_wkt(
-        s2::as_s2_cell(region_name),
-        buffer
-      ),
-      quiet = TRUE
+      source,
+      s2::as_s2_cell(region_name),
+      buffer
     )
     n_candidates <- n_candidates + nrow(hpms)
     if (nrow(hpms) == 0) {
@@ -344,28 +307,18 @@ install_traffic_geomarker_fixture <- function(
     "source_file must exist" = file.exists(source_file)
   )
 
-  cell_filter <- cell |>
-    s2::s2_cell_polygon() |>
-    sf::st_as_sfc() |>
-    sf::st_bbox() |>
-    sf::st_as_sfc() |>
-    sf::st_as_text()
   output_file <- file.path(
     output_dir,
     url_to_filename(traffic_data_url(), etag = FALSE)
   )
-  source_file |>
-    sf::read_sf(
-      layer = traffic_data_manifest()[["Asset-Layer"]],
-      wkt_filter = cell_filter,
-      quiet = TRUE
-    ) |>
+  source <- traffic_data_source(source_file)
+  traffic_read_region(source_file, source, cell, 0) |>
     terra::vect() |>
     geomarker_fixture_crop_to_cell(cell = cell) |>
     sf::st_as_sf() |>
     sf::st_write(
       output_file,
-      layer = traffic_data_manifest()[["Asset-Layer"]],
+      layer = "hpms_2024_f12_aadt",
       delete_dsn = TRUE,
       layer_options = "SPATIAL_INDEX=YES",
       quiet = TRUE

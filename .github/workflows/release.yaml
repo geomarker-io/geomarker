@@ -73,7 +73,6 @@ jobs:
               "40376751--hpms_2024_f12_aadt.gpkg"
             )
             stopifnot(file.copy(asset, cached))
-            geomarker:::traffic_validate_download(cached)
             for (n in c(100L, 1000L, 10000L)) {
               set.seed(20240803)
               x <- s2cd_example_cincy(n_locations = n)

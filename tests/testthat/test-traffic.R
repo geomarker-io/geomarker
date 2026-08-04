@@ -1,11 +1,36 @@
-test_that("traffic data manifest is pinned to geomarker HPMS 2024", {
+test_that("traffic metadata supplies a default asset and preferred layer", {
   manifest <- traffic_data_manifest()
-  expect_identical(manifest[["HPMS-Year"]], "2024")
-  expect_identical(manifest[["Transformation-ID"]], "f12-aadt-v1")
-  expect_identical(manifest[["Package-Release"]], "v0.0.1")
-  expect_identical(manifest[["Asset-Name"]], "hpms_2024_f12_aadt.gpkg")
-  expect_match(manifest[["Asset-URL"]], "geomarker-io/geomarker")
-  expect_false(grepl("appc|2020", manifest[["Asset-URL"]]))
+  expect_match(traffic_data_url(), "[.]gpkg$")
+  expect_true(nzchar(manifest[["Asset-Layer"]]))
+})
+
+test_that("traffic data accepts alternate layer names, field case, and CRS", {
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  fixture <- sf::read_sf(traffic_data_file(quiet = TRUE), quiet = TRUE)
+  names(fixture)[match(
+    c("AADT", "AADT_SINGLE_UNIT", "AADT_COMBINATION"),
+    names(fixture)
+  )] <- c("aadt", "aadt_single_unit", "aadt_combination")
+  fixture <- sf::st_transform(fixture, 3857)
+  alternate <- tempfile(fileext = ".gpkg")
+  withr::defer(unlink(alternate))
+  sf::st_write(fixture, alternate, layer = "roads", quiet = TRUE)
+
+  source <- traffic_data_source(alternate)
+  expect_identical(source$layer, "roads")
+  expect_identical(
+    unname(source$fields),
+    c("aadt", "aadt_single_unit", "aadt_combination")
+  )
+  expect_identical(source$crs$epsg, 3857L)
+
+  region <- traffic_read_region(alternate, source, s2::as_s2_cell("8841"), 0)
+  expect_gt(nrow(region), 0)
+  expect_true(all(names(source$fields) %in% names(region)))
+  expect_identical(sf::st_crs(region)$epsg, 4326L)
 })
 
 test_that("get_traffic_summary validates inputs", {

@@ -1,5 +1,9 @@
 # geomarker 0.0.1.9000
 
+* Traffic release metadata now provides defaults and provenance without
+  enforcing a particular version, checksum, schema, layer name, field case,
+  or CRS at runtime.
+
 # geomarker 0.0.1
 
 * `get_traffic_summary()` now uses the final 2024 Highway Performance

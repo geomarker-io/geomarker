@@ -2,4 +2,6 @@
 ^\.github$
 ^\.git$
 ^.*\.DS_Store$
+^inst/make_traffic_data_release\.R$
+^inst/validate_traffic_data_release\.R$
 docs

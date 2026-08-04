@@ -12,6 +12,8 @@ test_that("geomarker_data_dir works", {
 })
 
 test_that("geomarker_download_file works", {
+  skip_on_ci()
+  skip_on_cran()
   the_url <- "https://www2.census.gov/geo/tiger/TIGER2024/INTERNATIONALBOUNDARY/tl_2024_us_internationalboundary.zip"
   geomarker_download_file(the_url) |>
     expect_visible() |>

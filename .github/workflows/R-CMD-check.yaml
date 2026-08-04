@@ -27,6 +27,7 @@ jobs:
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_GEOMARKER_NO_DOWNLOAD: "true"
       R_KEEP_PKG_SOURCE: yes
 
     steps:

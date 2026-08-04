@@ -109,6 +109,7 @@ geomarker_data_dir_info <- function(subdir = character(0)) {
 #' (by default, returned invisibly)
 #' @export
 #' @examples
+#' \dontrun{
 #' geomarker_download_file(
 #'   paste0(
 #'     "https://www2.census.gov/geo/tiger/",
@@ -116,6 +117,7 @@ geomarker_data_dir_info <- function(subdir = character(0)) {
 #'     "tl_2024_us_internationalboundary.zip"
 #'  )
 #' )
+#' }
 geomarker_download_file <- function(
   url,
   overwrite = FALSE,

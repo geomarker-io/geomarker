@@ -52,6 +52,7 @@ will be ignored even if etag is TRUE. An error is produced
 for unavailable files while \code{R_GEOMARKER_NO_DOWNLOAD} is set.
 }
 \examples{
+\dontrun{
 geomarker_download_file(
   paste0(
     "https://www2.census.gov/geo/tiger/",
@@ -59,4 +60,5 @@ geomarker_download_file(
     "tl_2024_us_internationalboundary.zip"
  )
 )
+}
 }

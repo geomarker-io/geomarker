@@ -42,7 +42,7 @@ nei_test_zip <- function(data, member = "nei-facility-summary.csv") {
   csv_file <- file.path(tempdir(), member)
   zip_file <- tempfile(fileext = ".zip")
   utils::write.csv(data, csv_file, row.names = FALSE, na = "")
-  utils::zip(zipfile = zip_file, files = csv_file, flags = "-j")
+  utils::zip(zipfile = zip_file, files = csv_file, flags = "-jq")
   unlink(csv_file)
   zip_file
 }

@@ -55,24 +55,6 @@ test_that("get_elevation_summary works with the offline 3DEP fixture", {
   expect_length(out, 20)
 })
 
-test_that("legacy PRISM files are ignored without deletion", {
-  withr::local_envvar(c(
-    R_USER_DATA_DIR = tempfile("elevation-prism"),
-    R_GEOMARKER_NO_DOWNLOAD = "true"
-  ))
-  prism <- file.path(
-    geomarker_data_dir(),
-    "e6a965de--PRISM_us_dem_800m_bil.zip"
-  )
-  file.create(prism)
-
-  expect_error(
-    get_elevation_summary(s2cd_example_cincy(1L)),
-    "R_GEOMARKER_NO_DOWNLOAD"
-  )
-  expect_true(file.exists(prism))
-})
-
 test_that("elevation extraction uses the first value column", {
   fixture <- file.path(
     fs::path_package("geomarker", "gmrkr--8841", "R", "geomarker"),

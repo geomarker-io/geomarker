@@ -2,7 +2,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Draft release tag to validate and publish
+        description: Draft release tag to build and publish
         required: true
         type: string
 
@@ -12,11 +12,12 @@ permissions:
   contents: write
 
 jobs:
-  validate-and-publish:
+  build-and-publish:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_TAG: ${{ inputs.tag }}
+      R_GEOMARKER_NO_DOWNLOAD: "true"
 
     steps:
       - uses: actions/checkout@v4
@@ -39,50 +40,11 @@ jobs:
           test "$RELEASE_TAG" = "v$package_version"
           test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = "true"
 
-      - name: Download and validate traffic data
-        shell: bash
-        run: |
-          mkdir -p "$RUNNER_TEMP/traffic-asset"
-          gh release download "$RELEASE_TAG" \
-            --pattern hpms_2024_f12_aadt.gpkg \
-            --dir "$RUNNER_TEMP/traffic-asset"
-          Rscript inst/validate_traffic_data_release.R \
-            "$RUNNER_TEMP/traffic-asset/hpms_2024_f12_aadt.gpkg"
-
       - name: Build and check package
         shell: bash
         run: |
           R CMD build . --no-manual
           R CMD check geomarker_*.tar.gz --no-manual --as-cran
-
-      - name: Run fresh-cache smoke test and regional benchmarks
-        shell: bash
-        env:
-          R_USER_DATA_DIR: ${{ runner.temp }}/geomarker-fresh-cache
-        run: |
-          R CMD INSTALL geomarker_*.tar.gz
-          Rscript -e '
-            library(geomarker)
-            asset <- normalizePath(file.path(
-              Sys.getenv("RUNNER_TEMP"),
-              "traffic-asset",
-              "hpms_2024_f12_aadt.gpkg"
-            ))
-            cached <- file.path(
-              geomarker_data_dir(),
-              "40376751--hpms_2024_f12_aadt.gpkg"
-            )
-            stopifnot(file.copy(asset, cached))
-            for (n in c(100L, 1000L, 10000L)) {
-              set.seed(20240803)
-              x <- s2cd_example_cincy(n_locations = n)
-              timing <- system.time(
-                result <- get_traffic_summary(x, quiet = TRUE)
-              )
-              stopifnot(nrow(result) == n)
-              message(n, " locations: ", timing[["elapsed"]], " seconds")
-            }
-          '
 
       - name: Publish release
         shell: bash

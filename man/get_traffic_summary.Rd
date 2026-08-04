@@ -4,16 +4,14 @@
 \alias{get_traffic_summary}
 \title{Summarize nearby traffic}
 \usage{
-get_traffic_summary(x, buffer = 400, overwrite = FALSE, quiet = FALSE)
+get_traffic_summary(x, buffer = 400, ...)
 }
 \arguments{
 \item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 
-\item{overwrite}{logical; overwrite cached traffic data?}
-
-\item{quiet}{logical; suppress download and processing messages?}
+\item{...}{passed to \code{geomarker_download_file()}}
 }
 \value{
 data frame with one row per input location and numeric traffic
@@ -39,12 +37,10 @@ combination AADT greater than total AADT; the documented passenger-vehicle
 subtraction is preserved for those source records rather than silently
 modifying them.
 
-The packaged release URL and layer name are defaults, not a strict data
-contract. At runtime, geomarker uses the first GeoPackage layer containing
-\code{AADT}, \code{AADT_SINGLE_UNIT}, and \code{AADT_COMBINATION} (matched without regard
-to case), accepts any CRS, and coerces those fields to numeric. It does not
-reject a usable GeoPackage because its release version, checksum, storage
-types, or layer name differ from the packaged release metadata.
+The processed traffic data are distributed separately from the R package as
+a GeoPackage asset attached to the geomarker package release. The file is
+downloaded to \code{geomarker_data_dir()} the first time it is required by
+\code{get_traffic_summary()} and reused from the local cache on subsequent calls.
 }
 \examples{
 withr::local_envvar(

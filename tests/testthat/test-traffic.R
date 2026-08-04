@@ -4,6 +4,33 @@ test_that("traffic metadata supplies a default asset and preferred layer", {
   expect_true(nzchar(manifest[["Asset-Layer"]]))
 })
 
+test_that("traffic download arguments are forwarded", {
+  received <- NULL
+  testthat::local_mocked_bindings(
+    geomarker_download_file = function(url, ...) {
+      received <<- list(url = url, ...)
+      "traffic.gpkg"
+    },
+    .package = "geomarker"
+  )
+
+  expect_identical(
+    traffic_data_file(
+      overwrite = TRUE,
+      quiet = TRUE,
+      etag = FALSE,
+      subdir = "traffic"
+    ),
+    "traffic.gpkg"
+  )
+  expect_identical(received$url, traffic_data_url())
+  expect_identical(received$overwrite, TRUE)
+  expect_identical(received$quiet, TRUE)
+  expect_identical(received$etag, FALSE)
+  expect_identical(received$subdir, "traffic")
+  expect_identical(names(formals(get_traffic_summary)), c("x", "buffer", "..."))
+})
+
 test_that("traffic data accepts alternate layer names, field case, and CRS", {
   withr::local_envvar(
     R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),

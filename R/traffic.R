@@ -14,12 +14,10 @@ traffic_data_url <- function() {
   url
 }
 
-traffic_data_file <- function(overwrite = FALSE, quiet = FALSE) {
+traffic_data_file <- function(...) {
   geomarker_download_file(
     traffic_data_url(),
-    overwrite = overwrite,
-    quiet = quiet,
-    etag = FALSE
+    ...
   )
 }
 
@@ -127,17 +125,14 @@ traffic_zero_summary <- function() {
 #' subtraction is preserved for those source records rather than silently
 #' modifying them.
 #'
-#' The packaged release URL and layer name are defaults, not a strict data
-#' contract. At runtime, geomarker uses the first GeoPackage layer containing
-#' `AADT`, `AADT_SINGLE_UNIT`, and `AADT_COMBINATION` (matched without regard
-#' to case), accepts any CRS, and coerces those fields to numeric. It does not
-#' reject a usable GeoPackage because its release version, checksum, storage
-#' types, or layer name differ from the packaged release metadata.
+#' The processed traffic data are distributed separately from the R package as
+#' a GeoPackage asset attached to the geomarker package release. The file is
+#' downloaded to `geomarker_data_dir()` the first time it is required by
+#' `get_traffic_summary()` and reused from the local cache on subsequent calls.
 #'
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param buffer distance from s2 cell (in meters) to summarize data
-#' @param overwrite logical; overwrite cached traffic data?
-#' @param quiet logical; suppress download and processing messages?
+#' @param ... passed to `geomarker_download_file()`
 #' @return data frame with one row per input location and numeric traffic
 #'   summaries `aadtm_trucks_buses`, `aadtm_tractor_trailer`, and
 #'   `aadtm_passenger`
@@ -158,19 +153,14 @@ traffic_zero_summary <- function() {
 get_traffic_summary <- function(
   x,
   buffer = 400,
-  overwrite = FALSE,
-  quiet = FALSE
+  ...
 ) {
   stopifnot(
     "x must be a s2_cell_dates vector" = is_s2cd(x),
     "buffer must be numeric" = is.numeric(buffer),
     "buffer must be length one" = length(buffer) == 1,
     "buffer must be finite" = is.finite(buffer),
-    "buffer must not be negative" = buffer >= 0,
-    "overwrite must be logical" = is.logical(overwrite),
-    "overwrite must be length one" = length(overwrite) == 1,
-    "quiet must be logical" = is.logical(quiet),
-    "quiet must be length one" = length(quiet) == 1
+    "buffer must not be negative" = buffer >= 0
   )
   check_installed("sf", "to summarize traffic data.")
 
@@ -184,7 +174,8 @@ get_traffic_summary <- function(
     )))
   }
 
-  data_file <- traffic_data_file(overwrite = overwrite, quiet = quiet)
+  quiet <- isTRUE(list(...)$quiet)
+  data_file <- traffic_data_file(...)
   source <- traffic_data_source(data_file)
 
   cell_keys <- as.character(cells)

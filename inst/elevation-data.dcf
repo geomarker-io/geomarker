@@ -1,0 +1,28 @@
+Source-Program: USGS 3D Elevation Program (3DEP)
+Source-Service-URL: https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer
+Source-Service-Data-As-Of: 2026-07-20
+Source-Export-URL: https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage?f=image&bbox=-2361600,252000,2264000,3177600&bboxSR=5070&imageSR=5070&size=5782,3657&format=tiff&pixelType=S16&interpolation=RSP_BilinearInterpolation&compression=LZ77
+Source-Exported-UTC: 2026-08-04T19:49:00Z
+Source-BBox-XMin-YMin-XMax-YMax: -2361600,252000,2264000,3177600
+Source-CRS: EPSG:5070
+Source-Width: 5782
+Source-Height: 3657
+Source-Resolution-X-Y-Meters: 800,800
+Source-Pixel-Type: S16
+Source-Interpolation: RSP_BilinearInterpolation
+Source-Format: tiff
+Source-Compression: LZ77
+Package-Release: v0.0.1
+Asset-Name: usgs_3dep_conus_800m.tif
+Asset-URL: https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/usgs_3dep_conus_800m.tif
+Asset-Bytes: 21394573
+Asset-SHA256: 6436fc84f29f2abb0535caff2939bb8cfef0cfdd766c9ab287868fdd487c019c
+Asset-Layers: 1
+Asset-Terra-Datatype: INT2S
+Asset-CRS: EPSG:5070
+Asset-Extent-XMin-XMax-YMin-YMax: -2361600,2264000,252000,3177600
+Asset-Resolution-X-Y-Meters: 800,800
+Asset-Rows: 3657
+Asset-Columns: 5782
+Fixture-Name: 40376751--usgs_3dep_conus_800m.tif
+Attribution: USGS National Map 3D Elevation Program (3DEP)

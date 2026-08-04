@@ -14,7 +14,33 @@ test_that("get_elevation_summary validates inputs", {
   )
 })
 
-test_that("get_elevation_summary works with fixture", {
+test_that("get_elevation_summary uses the versioned asset downloader", {
+  fixture <- file.path(
+    fs::path_package("geomarker", "gmrkr--8841", "R", "geomarker"),
+    "40376751--usgs_3dep_conus_800m.tif"
+  )
+  received <- NULL
+  testthat::local_mocked_bindings(
+    geomarker_download_file = function(url, ...) {
+      received <<- list(url = url, ...)
+      fixture
+    },
+    .package = "geomarker"
+  )
+
+  out <- get_elevation_summary(
+    s2cd_example_cincy(2L),
+    quiet = TRUE,
+    etag = TRUE
+  )
+  expect_type(out, "double")
+  expect_match(received$url, "/releases/download/v0[.]0[.]1/")
+  expect_match(received$url, "usgs_3dep_conus_800m[.]tif$")
+  expect_identical(received$quiet, TRUE)
+  expect_identical(received$etag, FALSE)
+})
+
+test_that("get_elevation_summary works with the offline 3DEP fixture", {
   withr::local_envvar(
     R_USER_DATA_DIR = fs::path_package(
       "geomarker",
@@ -24,12 +50,68 @@ test_that("get_elevation_summary works with fixture", {
   )
   set.seed(11)
   out <- s2cd_example_cincy(n_locations = 20L) |>
-    get_elevation_summary(etag = FALSE)
+    get_elevation_summary()
   expect_type(out, "double")
   expect_length(out, 20)
 })
 
-test_that("get_elevation_summary() works", {
+test_that("legacy PRISM files are ignored without deletion", {
+  withr::local_envvar(c(
+    R_USER_DATA_DIR = tempfile("elevation-prism"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  ))
+  prism <- file.path(
+    geomarker_data_dir(),
+    "e6a965de--PRISM_us_dem_800m_bil.zip"
+  )
+  file.create(prism)
+
+  expect_error(
+    get_elevation_summary(s2cd_example_cincy(1L)),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_true(file.exists(prism))
+})
+
+test_that("elevation extraction uses the first value column", {
+  fixture <- file.path(
+    fs::path_package("geomarker", "gmrkr--8841", "R", "geomarker"),
+    "40376751--usgs_3dep_conus_800m.tif"
+  )
+  raster <- terra::rast(fixture)
+  names(raster) <- "unexpected_layer_name"
+  renamed <- tempfile(fileext = ".tif")
+  withr::defer(unlink(renamed))
+  terra::writeRaster(raster, renamed, overwrite = TRUE, datatype = "INT2S")
+  testthat::local_mocked_bindings(
+    geomarker_download_file = function(...) renamed,
+    .package = "geomarker"
+  )
+
+  expect_type(get_elevation_summary(s2cd_example_cincy(2L)), "double")
+})
+
+test_that("elevation fixture uses the downloader cache filename", {
+  source <- file.path(
+    fs::path_package("geomarker", "gmrkr--8841", "R", "geomarker"),
+    "40376751--usgs_3dep_conus_800m.tif"
+  )
+  output_dir <- tempfile("elevation-fixture")
+  withr::defer(unlink(output_dir, recursive = TRUE))
+  install_elevation_geomarker_fixture(
+    s2::as_s2_cell("8841"),
+    as.Date("2024-01-01"),
+    output_dir,
+    source_file = source
+  )
+
+  expect_true(file.exists(file.path(
+    output_dir,
+    "40376751--usgs_3dep_conus_800m.tif"
+  )))
+})
+
+test_that("get_elevation_summary() works with the published asset", {
   skip_on_ci()
   skip_on_cran()
   skip_if_offline()

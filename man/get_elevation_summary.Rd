@@ -13,7 +13,8 @@ get_elevation_summary(x, fun = stats::median, buffer = 800, ...)
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 
-\item{...}{passed to \code{geomarker_download_file()}}
+\item{...}{passed to \code{geomarker_download_file()}. The \code{etag} argument is
+always set to \code{FALSE} for this versioned release asset.}
 }
 \value{
 numeric vector of elevation summaries
@@ -24,9 +25,15 @@ the buffer distance of each s2 cell;
 dates are not used to link to elevation data.
 }
 \details{
-Elevation data is downloaded from the PRISM Group at Oregon
-State University as a digital elevation model in BIL format at an 800 m grid.
-See \url{https://prism.oregonstate.edu/normals/} for more details.
+Elevation data come from a reproducible snapshot of the U.S. Geological
+Survey 3D Elevation Program (3DEP) Bare Earth DEM Dynamic service. The
+service snapshot, reflecting 3DEP data published through July 20, 2026, was
+exported directly as a single-band signed 16-bit GeoTIFF in EPSG:5070 at an
+800 m grid and is distributed as a versioned geomarker release asset.
+See \url{https://www.usgs.gov/3d-elevation-program/about-3dep-products-services}
+and
+\url{https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer}.
+Data courtesy of the U.S. Geological Survey.
 }
 \examples{
  withr::local_envvar(

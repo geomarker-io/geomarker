@@ -281,8 +281,17 @@ merra_release_files <- function(months, ..., warn = TRUE) {
 #' "earthdata")`. Local monthly data take precedence over a released half-year
 #' asset.
 #'
-#' Source builds require `EARTHDATA_USER` and `EARTHDATA_PASSWORD`. The
-#' credentials are written to temporary private netrc and cookie files in the
+#' Source builds require a free NASA Earthdata Login account. Follow NASA's
+#' [registration guide](https://urs.earthdata.nasa.gov/documentation/for_users/how_to_register)
+#' to create and activate an account. Before the first source build, sign in to
+#' the [Cloud OPeNDAP service](https://opendap.earthdata.nasa.gov/login) and
+#' authorize the `Hyrax in the cloud` application when prompted. NASA also
+#' documents how to
+#' [preauthorize an application](https://urs.earthdata.nasa.gov/documentation/for_users/how_to_preauth_app)
+#' if the prompt does not appear.
+#'
+#' Set the account credentials in `EARTHDATA_USER` and `EARTHDATA_PASSWORD`.
+#' They are written to temporary private netrc and cookie files in the
 #' geomarker data cache while NASA's authenticated redirects are followed.
 #'
 #' Source concentrations are converted to micrograms per cubic meter and

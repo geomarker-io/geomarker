@@ -50,8 +50,17 @@ July--December asset per available year. A fully available calendar month
 may instead be built locally with \code{install_merra_data(source = "earthdata")}. Local monthly data take precedence over a released half-year
 asset.
 
-Source builds require \code{EARTHDATA_USER} and \code{EARTHDATA_PASSWORD}. The
-credentials are written to temporary private netrc and cookie files in the
+Source builds require a free NASA Earthdata Login account. Follow NASA's
+\href{https://urs.earthdata.nasa.gov/documentation/for_users/how_to_register}{registration guide}
+to create and activate an account. Before the first source build, sign in to
+the \href{https://opendap.earthdata.nasa.gov/login}{Cloud OPeNDAP service} and
+authorize the \verb{Hyrax in the cloud} application when prompted. NASA also
+documents how to
+\href{https://urs.earthdata.nasa.gov/documentation/for_users/how_to_preauth_app}{preauthorize an application}
+if the prompt does not appear.
+
+Set the account credentials in \code{EARTHDATA_USER} and \code{EARTHDATA_PASSWORD}.
+They are written to temporary private netrc and cookie files in the
 geomarker data cache while NASA's authenticated redirects are followed.
 
 Source concentrations are converted to micrograms per cubic meter and

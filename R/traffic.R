@@ -283,11 +283,13 @@ install_traffic_geomarker_fixture <- function(
   cell,
   dates,
   output_dir,
-  source_file = NULL
+  source_file = NULL,
+  buffer = 400
 ) {
   check_installed("sf", "to create traffic fixture data.")
   check_installed("terra", "to create traffic fixture data.")
   cell <- geomarker_fixture_cell(cell)
+  buffer <- geomarker_fixture_buffer(buffer)
   geomarker_fixture_dates(dates)
   output_dir <- geomarker_fixture_output_dir(output_dir)
   if (is.null(source_file)) {
@@ -303,9 +305,9 @@ install_traffic_geomarker_fixture <- function(
     url_to_filename(traffic_data_url(), etag = FALSE)
   )
   source <- traffic_data_source(source_file)
-  traffic_read_region(source_file, source, cell, 0) |>
+  traffic_read_region(source_file, source, cell, buffer) |>
     terra::vect() |>
-    geomarker_fixture_crop_to_cell(cell = cell) |>
+    geomarker_fixture_crop_to_cell(cell = cell, buffer = buffer) |>
     sf::st_as_sf() |>
     sf::st_write(
       output_file,

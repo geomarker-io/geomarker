@@ -82,3 +82,22 @@ test_that("geomarker fixture cells must be level 6", {
     "fixture cell must be level 6"
   )
 })
+
+test_that("geomarker fixture regions include requested buffer halos", {
+  cell <- s2::as_s2_cell("8841")
+  cell_bbox <- geomarker_fixture_cell_bbox(cell)
+  halo_bbox <- geomarker_fixture_cell_bbox(cell, buffer = 10000)
+
+  expect_lt(halo_bbox[[1]], cell_bbox[[1]])
+  expect_lt(halo_bbox[[2]], cell_bbox[[2]])
+  expect_gt(halo_bbox[[3]], cell_bbox[[3]])
+  expect_gt(halo_bbox[[4]], cell_bbox[[4]])
+  expect_error(
+    geomarker_fixture_region(cell, buffer = -1),
+    "must not be negative"
+  )
+  expect_error(
+    geomarker_fixture_region(cell, buffer = Inf),
+    "must be finite"
+  )
+})

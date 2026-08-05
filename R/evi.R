@@ -782,7 +782,12 @@ evi_move_raster_file <- function(tmp, dest) {
   invisible(TRUE)
 }
 
-evi_quality_filtered_fixture_raster <- function(href, quality_href, cell) {
+evi_quality_filtered_fixture_raster <- function(
+  href,
+  quality_href,
+  cell,
+  buffer
+) {
   r <- evi_sign_asset(href) |>
     terra::rast()
   q <- evi_sign_asset(quality_href) |>
@@ -790,17 +795,15 @@ evi_quality_filtered_fixture_raster <- function(href, quality_href, cell) {
   # COG tags store a display scale; reset it before applying the EVI scale.
   terra::scoff(r) <- cbind(1, 0)
   terra::scoff(q) <- cbind(1, 0)
-  r <- geomarker_fixture_crop_to_cell(r, cell = cell)
-  q <- geomarker_fixture_crop_to_cell(q, cell = cell)
+  r <- geomarker_fixture_crop_to_cell(r, cell = cell, buffer = buffer)
+  q <- geomarker_fixture_crop_to_cell(q, cell = cell, buffer = buffer)
   terra::ifel(q <= 1, r * 0.0001, NA)
 }
 
-evi_fixture_item_overlaps_cell <- function(href, cell) {
+evi_fixture_item_overlaps_cell <- function(href, cell, buffer) {
   r <- terra::rast(evi_sign_asset(href))
   cover <-
-    cell |>
-    s2::as_s2_cell() |>
-    s2::s2_cell_polygon() |>
+    geomarker_fixture_region(cell, buffer = buffer) |>
     sf::st_as_sfc() |>
     sf::st_transform(terra::crs(r)) |>
     terra::vect()
@@ -982,10 +985,12 @@ install_evi_geomarker_fixture <- function(
   output_dir,
   overwrite = FALSE,
   quiet = FALSE,
-  subdir = "evi"
+  subdir = "evi",
+  buffer = 400
 ) {
   check_installed("terra", "to create EVI fixture data.")
   cell <- geomarker_fixture_cell(cell)
+  buffer <- geomarker_fixture_buffer(buffer)
   dates <- geomarker_fixture_dates(dates)
   years <- evi_requested_years(list(dates))
   output_dir <- geomarker_fixture_output_dir(output_dir)
@@ -993,7 +998,7 @@ install_evi_geomarker_fixture <- function(
   dir.create(evi_dir, showWarnings = FALSE, recursive = TRUE)
 
   items <- evi_planetary_computer_items(
-    bbox = geomarker_fixture_cell_bbox(cell),
+    bbox = geomarker_fixture_cell_bbox(cell, buffer = buffer),
     date_range = evi_search_date_range(list(dates))
   )
   items$year <- format(items$start_date, "%Y")
@@ -1018,7 +1023,11 @@ install_evi_geomarker_fixture <- function(
         ,
         drop = FALSE
       ]
-      evi_fixture_item_overlaps_cell(group_items$href[[1]], cell)
+      evi_fixture_item_overlaps_cell(
+        group_items$href[[1]],
+        cell,
+        buffer = buffer
+      )
     },
     FUN.VALUE = logical(1)
   )
@@ -1074,7 +1083,8 @@ install_evi_geomarker_fixture <- function(
       evi_quality_filtered_fixture_raster(
         href = group_items$href[[j]],
         quality_href = group_items$quality_href[[j]],
-        cell = cell
+        cell = cell,
+        buffer = buffer
       )
     })
     if (!quiet) {

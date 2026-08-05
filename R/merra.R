@@ -722,21 +722,44 @@ create_daily_merra_data <- function(
   if (!file.exists(subset_file) || overwrite) {
     partial <- paste0(subset_file, ".partial")
     on.exit(unlink(partial), add = TRUE)
-    curl::curl_download(
-      subset_url,
-      partial,
-      quiet = TRUE,
-      mode = "wb",
-      handle = curl::new_handle(
-        httpheader = c("User-Agent" = "geomarker R package"),
-        netrc = 1L,
-        netrc_file = auth$netrc,
-        cookiefile = auth$cookies,
-        cookiejar = auth$cookies,
-        followlocation = TRUE,
-        failonerror = TRUE
+    download_error <- NULL
+    for (attempt in 1:3) {
+      download_error <- tryCatch(
+        {
+          curl::curl_download(
+            subset_url,
+            partial,
+            quiet = TRUE,
+            mode = "wb",
+            handle = curl::new_handle(
+              httpheader = c("User-Agent" = "geomarker R package"),
+              netrc = 1L,
+              netrc_file = auth$netrc,
+              cookiefile = auth$cookies,
+              cookiejar = auth$cookies,
+              followlocation = TRUE,
+              failonerror = TRUE
+            )
+          )
+          NULL
+        },
+        error = identity
       )
-    )
+      if (is.null(download_error)) {
+        break
+      }
+      unlink(partial)
+      if (attempt < 3) {
+        Sys.sleep(2^attempt)
+      }
+    }
+    if (!is.null(download_error)) {
+      stop(
+        "NASA MERRA subset download failed after three attempts: ",
+        conditionMessage(download_error),
+        call. = FALSE
+      )
+    }
     if (
       !file.rename(partial, subset_file) &&
         !file.copy(partial, subset_file, overwrite = TRUE)

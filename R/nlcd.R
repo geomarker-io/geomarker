@@ -62,13 +62,13 @@ get_nlcd_fct_imp_data <- function(
       ...
     )
     nlcd_raster <- terra::rast(paste0(
-        "/vsizip/",
-        nlcd_file,
-        "/",
-        "Annual_NLCD_FctImp_",
-        year,
-        "_CU_C1V2.tif"
-      ))
+      "/vsizip/",
+      nlcd_file,
+      "/",
+      "Annual_NLCD_FctImp_",
+      year,
+      "_CU_C1V2.tif"
+    ))
     x_buffer <-
       terra::project(x_vect, nlcd_raster) |>
       terra::buffer(width = buffer)
@@ -97,7 +97,8 @@ install_nlcd_geomarker_fixture <- function(cell, dates, output_dir) {
     filename <- paste0("Annual_NLCD_FctImp_", year, "_CU_C1V2")
     url <- paste0(
       "https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data-bundles/",
-      filename, ".zip"
+      filename,
+      ".zip"
     )
     tif <- file.path(tempdir(), paste0(filename, ".tif"))
     zip <- tempfile(fileext = ".zip")

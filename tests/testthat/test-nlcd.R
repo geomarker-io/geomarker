@@ -24,15 +24,19 @@ test_that("get_nlcd_fct_imp_data works with multiple years", {
   years <- sort(unique(unlist(lapply(s2cd_dates(x), format, "%Y"))))
   urls <- paste0(
     "https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data-bundles/",
-    "Annual_NLCD_FctImp_", years, "_CU_C1V2.zip"
+    "Annual_NLCD_FctImp_",
+    years,
+    "_CU_C1V2.zip"
   )
   withr::local_envvar(R_GEOMARKER_NO_DOWNLOAD = "true")
   cached <- vapply(
     urls,
-    \(url) !inherits(
-      try(geomarker_download_file(url, quiet = TRUE), silent = TRUE),
-      "try-error"
-    ),
+    \(url) {
+      !inherits(
+        try(geomarker_download_file(url, quiet = TRUE), silent = TRUE),
+        "try-error"
+      )
+    },
     logical(1)
   )
   skip_if_not(

@@ -34,7 +34,11 @@ work_dir <- normalizePath(args[[3]], mustWork = FALSE)
 dir.create(work_dir, recursive = TRUE, showWarnings = FALSE)
 Sys.setenv(R_USER_DATA_DIR = work_dir)
 default_name <- sprintf("merra2_%d_%s_pm25.rds", year, tolower(half))
-output_file <- if (length(args) == 4) args[[4]] else file.path(work_dir, default_name)
+output_file <- if (length(args) == 4) {
+  args[[4]]
+} else {
+  file.path(work_dir, default_name)
+}
 output_name <- basename(output_file)
 pattern <- sprintf(
   "^merra2_%d_%s_pm25[.]rds$",
@@ -86,7 +90,9 @@ record <- list(
   `Source-Collection-ID` = "C1276812830-GES_DISC",
   `Source-Collection` = "M2T1NXAER 5.12.4",
   `Source-Granule-URs` = field("Source-Granule-URs"),
-  `Source-Granule-Concept-Revisions` = field("Source-Granule-Concept-Revisions"),
+  `Source-Granule-Concept-Revisions` = field(
+    "Source-Granule-Concept-Revisions"
+  ),
   `Source-Subset-SHA256` = field("Source-Subset-SHA256"),
   `Source-Variables` = paste(merra_variables, collapse = ","),
   `Source-BBox-West-South-East-North` = paste(merra_bbox, collapse = ","),
@@ -109,10 +115,13 @@ record <- list(
   `Asset-Compression` = "RDS-XZ",
   `Grid-Longitude-Resolution-Degrees` = "0.625",
   `Grid-Latitude-Resolution-Degrees` = "0.5",
-  `Fixture-Name` = url_to_filename(paste0(
-    "https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/",
-    output_name
-  ), etag = FALSE),
+  `Fixture-Name` = url_to_filename(
+    paste0(
+      "https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/",
+      output_name
+    ),
+    etag = FALSE
+  ),
   Attribution = "NASA Global Modeling and Assimilation Office MERRA-2",
   `Built-UTC` = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 )

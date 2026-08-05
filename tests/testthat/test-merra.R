@@ -12,7 +12,8 @@ test_merra_data <- function(dates, grid = test_merra_grid()) {
     KEEP.OUT.ATTRS = FALSE,
     stringsAsFactors = FALSE
   )
-  value <- as.numeric(data$date - min(as.Date(dates))) + match(data$s2, grid) / 10
+  value <- as.numeric(data$date - min(as.Date(dates))) +
+    match(data$s2, grid) / 10
   data$merra_dust <- value
   data$merra_oc <- value + 1
   data$merra_bc <- value + 2
@@ -29,42 +30,58 @@ test_write_merra <- function(path, data, fields = list()) {
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   saveRDS(data, path, compress = "xz")
   dates <- sort(unique(data$date))
-  record <- c(fields, list(
-    `Coverage-Start` = as.character(min(dates)),
-    `Coverage-End` = as.character(max(dates)),
-    `Asset-Days` = as.character(length(dates)),
-    `Asset-Name` = basename(path),
-    `Asset-Bytes` = as.character(file.info(path)$size),
-    `Asset-SHA256` = digest::digest(path, algo = "sha256", file = TRUE),
-    `Asset-Rows` = as.character(nrow(data)),
-    `Asset-Grid-Cells` = as.character(length(unique(data$s2))),
-    `Asset-Schema` = merra_schema,
-    `Asset-Compression` = "RDS-XZ"
-  ))
-  write.dcf(as.data.frame(record, check.names = FALSE), sub("[.]rds$", ".dcf", path))
+  record <- c(
+    fields,
+    list(
+      `Coverage-Start` = as.character(min(dates)),
+      `Coverage-End` = as.character(max(dates)),
+      `Asset-Days` = as.character(length(dates)),
+      `Asset-Name` = basename(path),
+      `Asset-Bytes` = as.character(file.info(path)$size),
+      `Asset-SHA256` = digest::digest(path, algo = "sha256", file = TRUE),
+      `Asset-Rows` = as.character(nrow(data)),
+      `Asset-Grid-Cells` = as.character(length(unique(data$s2))),
+      `Asset-Schema` = merra_schema,
+      `Asset-Compression` = "RDS-XZ"
+    )
+  )
+  write.dcf(
+    as.data.frame(record, check.names = FALSE),
+    sub("[.]rds$", ".dcf", path)
+  )
   record
 }
 
 test_release_merra <- function(year, half) {
   start <- as.Date(sprintf("%d-%s-01", year, if (half == "H1") "01" else "07"))
-  end <- if (half == "H1") as.Date(sprintf("%d-06-30", year)) else
+  end <- if (half == "H1") {
+    as.Date(sprintf("%d-06-30", year))
+  } else {
     as.Date(sprintf("%d-12-31", year))
+  }
   name <- sprintf("merra2_%d_%s_pm25.rds", year, tolower(half))
   path <- tempfile(fileext = ".rds")
   data <- test_merra_data(seq(start, end, by = 1), test_merra_grid()[1])
-  record <- test_write_merra(path, data, list(
-    `MERRA-Year` = as.character(year),
-    `MERRA-Half` = half
-  ))
+  record <- test_write_merra(
+    path,
+    data,
+    list(
+      `MERRA-Year` = as.character(year),
+      `MERRA-Half` = half
+    )
+  )
   record[["Asset-Name"]] <- name
   record[["Asset-URL"]] <- paste0("https://example.com/", name)
   list(path = path, record = record)
 }
 
 test_records <- function(x) {
-  do.call(rbind, lapply(x, function(y) {
-    as.data.frame(y$record, stringsAsFactors = FALSE, check.names = FALSE)
-  }))
+  do.call(
+    rbind,
+    lapply(x, function(y) {
+      as.data.frame(y$record, stringsAsFactors = FALSE, check.names = FALSE)
+    })
+  )
 }
 
 test_that("MERRA months and daily PM2.5 are calculated explicitly", {
@@ -75,9 +92,12 @@ test_that("MERRA months and daily PM2.5 are calculated explicitly", {
   expect_error(merra_months("2016-12"), "from 2017 onward")
   expect_error(merra_months("2024-13"), "YYYY-MM")
 
-  hourly <- stats::setNames(lapply(1:5, function(x) {
-    matrix(x * 1e-9, nrow = 2, ncol = 24)
-  }), merra_variables)
+  hourly <- stats::setNames(
+    lapply(1:5, function(x) {
+      matrix(x * 1e-9, nrow = 2, ncol = 24)
+    }),
+    merra_variables
+  )
   out <- merra_daily_values(hourly)
   expect_equal(out$merra_dust, c(1, 1))
   expect_equal(out$merra_so4, c(5, 5))
@@ -212,8 +232,14 @@ test_that("Earthdata builds complete months and records exact provenance", {
       builds <<- builds + 1L
       daily_overwrite <<- c(daily_overwrite, overwrite)
       list(
-        data = test_merra_data(as.Date(granule[["date"]]), test_merra_grid()[1]),
-        subset_url = paste0("https://opendap.earthdata.nasa.gov/", granule[["concept_id"]]),
+        data = test_merra_data(
+          as.Date(granule[["date"]]),
+          test_merra_grid()[1]
+        ),
+        subset_url = paste0(
+          "https://opendap.earthdata.nasa.gov/",
+          granule[["concept_id"]]
+        ),
         subset_sha256 = paste(rep("a", 64), collapse = "")
       )
     },
@@ -243,16 +269,23 @@ test_that("Earthdata builds complete months and records exact provenance", {
 })
 
 test_that("CMR discovery requires exactly one granule per day", {
-  item <- function(date) list(
-    meta = list(`concept-id` = paste0("G", date), `revision-id` = 1L),
-    umm = list(
-      TemporalExtent = list(RangeDateTime = list(
-        BeginningDateTime = paste0(date, "T00:00:00Z")
-      )),
-      GranuleUR = paste0("MERRA:", date),
-      RelatedUrls = list(list(Subtype = "OPENDAP DATA", URL = "https://example.com"))
+  item <- function(date) {
+    list(
+      meta = list(`concept-id` = paste0("G", date), `revision-id` = 1L),
+      umm = list(
+        TemporalExtent = list(
+          RangeDateTime = list(
+            BeginningDateTime = paste0(date, "T00:00:00Z")
+          )
+        ),
+        GranuleUR = paste0("MERRA:", date),
+        RelatedUrls = list(list(
+          Subtype = "OPENDAP DATA",
+          URL = "https://example.com"
+        ))
+      )
     )
-  )
+  }
   dates <- merra_month_dates("2024-02")
   testthat::local_mocked_bindings(
     merra_json = function(...) list(items = lapply(as.character(dates), item)),
@@ -260,7 +293,9 @@ test_that("CMR discovery requires exactly one granule per day", {
   )
   expect_equal(merra_granules("2024-02")$date, dates)
   testthat::local_mocked_bindings(
-    merra_json = function(...) list(items = lapply(as.character(dates[-1]), item)),
+    merra_json = function(...) {
+      list(items = lapply(as.character(dates[-1]), item))
+    },
     .package = "geomarker"
   )
   expect_error(merra_granules("2024-02"), "not complete")
@@ -281,15 +316,25 @@ test_that("daily caches resume only with matching hashes and revisions", {
   dir.create(dirname(subset), recursive = TRUE)
   dir.create(dirname(daily), recursive = TRUE)
   writeLines("cached subset", subset)
-  saveRDS(test_merra_data(granule$date, test_merra_grid()[1]), daily, compress = "xz")
+  saveRDS(
+    test_merra_data(granule$date, test_merra_grid()[1]),
+    daily,
+    compress = "xz"
+  )
   hash <- digest::digest(subset, algo = "sha256", file = TRUE)
-  write.dcf(as.data.frame(list(
-    `Granule-UR` = granule$granule_ur,
-    `Granule-Concept-ID` = granule$concept_id,
-    `Granule-Revision-ID` = "3",
-    `Subset-URL` = "https://opendap.earthdata.nasa.gov/G1",
-    `Subset-SHA256` = hash
-  ), check.names = FALSE), paste0(daily, ".dcf"))
+  write.dcf(
+    as.data.frame(
+      list(
+        `Granule-UR` = granule$granule_ur,
+        `Granule-Concept-ID` = granule$concept_id,
+        `Granule-Revision-ID` = "3",
+        `Subset-URL` = "https://opendap.earthdata.nasa.gov/G1",
+        `Subset-SHA256` = hash
+      ),
+      check.names = FALSE
+    ),
+    paste0(daily, ".dcf")
+  )
   testthat::local_mocked_bindings(
     merra_json = function(...) stop("NASA should not be called"),
     .package = "geomarker"

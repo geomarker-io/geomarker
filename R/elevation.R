@@ -85,10 +85,12 @@ install_elevation_geomarker_fixture <- function(
   cell,
   dates,
   output_dir,
-  source_file = NULL
+  source_file = NULL,
+  buffer = 800
 ) {
   check_installed("terra", "to create elevation fixture data.")
   cell <- geomarker_fixture_cell(cell)
+  buffer <- geomarker_fixture_buffer(buffer)
   geomarker_fixture_dates(dates)
   output_dir <- geomarker_fixture_output_dir(output_dir)
   elevation_url <- paste0(
@@ -100,7 +102,7 @@ install_elevation_geomarker_fixture <- function(
   }
   source_file |>
     terra::rast() |>
-    geomarker_fixture_crop_to_cell(cell = cell) |>
+    geomarker_fixture_crop_to_cell(cell = cell, buffer = buffer) |>
     terra::writeRaster(
       file.path(output_dir, url_to_filename(elevation_url, etag = FALSE)),
       overwrite = TRUE,

@@ -258,6 +258,55 @@ test_that("NEI source ZIP is the only persistent cached artifact", {
   )
 })
 
+test_that("NEI fixtures retain point sources in the requested buffer halo", {
+  cell <- s2::as_s2_cell("8841")
+  outside <- s2::s2_cell_edge_neighbour(cell, 0)
+  for (level in 7:30) {
+    children <- s2::s2_cell_child(rep(outside, 4), 0:3)
+    distances <- s2::s2_distance(
+      s2::s2_cell_center(children),
+      rep(s2::s2_cell_polygon(cell), 4)
+    )
+    outside <- children[[which.min(distances)]]
+  }
+  coordinates <- as.data.frame(s2::s2_cell_to_lnglat(outside))
+  source_file <- nei_test_zip(data.frame(
+    `site latitude` = coordinates$y,
+    `site longitude` = coordinates$x,
+    `pollutant code` = "PM25-PRI",
+    `total emissions` = 1,
+    check.names = FALSE
+  ))
+  withr::defer(unlink(source_file))
+  source_files <- stats::setNames(source_file, "2023")
+  no_halo_dir <- tempfile("nei-no-halo-")
+  halo_dir <- tempfile("nei-halo-")
+  withr::defer(unlink(c(no_halo_dir, halo_dir), recursive = TRUE))
+
+  install_nei_point_geomarker_fixture(
+    cell,
+    as.Date("2024-01-01"),
+    no_halo_dir,
+    source_files = source_files,
+    buffer = 0
+  )
+  install_nei_point_geomarker_fixture(
+    cell,
+    as.Date("2024-01-01"),
+    halo_dir,
+    source_files = source_files,
+    buffer = 1000
+  )
+  read_fixture <- function(directory) {
+    zip_file <- file.path(directory, "nei-2023-facility-summary.zip")
+    member <- utils::unzip(zip_file, list = TRUE)$Name[[1]]
+    utils::read.csv(unz(zip_file, member), check.names = FALSE)
+  }
+
+  expect_equal(nrow(read_fixture(no_halo_dir)), 0)
+  expect_equal(nrow(read_fixture(halo_dir)), 1)
+})
+
 test_that("get_nei_point_summary works with the Cincinnati fixture", {
   withr::local_envvar(
     R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),

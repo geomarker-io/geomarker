@@ -52,6 +52,8 @@ This means it is available to use again across other R sessions and projects by 
 `geomarker_download_file()` is the common download and cache layer that powers most of the package's data assets: it gives each source URL a stable local filename (using an ETag when available), stores the file in `geomarker_data_dir()`, and reuses the cached copy in later assessments.
 The same cache contract makes it possible to prepare data in advance for a specific level-6 S2 cell and date range.
 The source-specific `install_*_geomarker_fixture()` helpers download and spatially subset the required assets into an `inst/gmrkr--<cell>/R/geomarker` directory; see `inst/install_cincy_geomarker_fixture.R` for a complete example.
+For assessments that summarize within a buffer, the corresponding fixture installer accepts a `buffer` in meters and includes that halo around the level-6 fixture cell.
+Set it to the largest buffer that the prepared fixture must support; each installer defaults to the assessment function's default buffer.
 A fixture for the Cincinnati-area cell `8841` is included with geomarker.
 To use it without downloading from the original sources, set `R_USER_DATA_DIR` to `system.file("gmrkr--8841", package = "geomarker")` and set `R_GEOMARKER_NO_DOWNLOAD=true`.
 This pattern can also be used to package data for another study region first and then run geomarker assessments from those prepared assets when source downloads are unavailable, restricted, slow, or otherwise not preferable.

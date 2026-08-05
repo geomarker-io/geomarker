@@ -87,9 +87,15 @@ get_nlcd_fct_imp_data <- function(
   out
 }
 
-install_nlcd_geomarker_fixture <- function(cell, dates, output_dir) {
+install_nlcd_geomarker_fixture <- function(
+  cell,
+  dates,
+  output_dir,
+  buffer = 800
+) {
   check_installed("terra", "to create Annual NLCD fixture data.")
   cell <- geomarker_fixture_cell(cell)
+  buffer <- geomarker_fixture_buffer(buffer)
   years <- intersect(geomarker_fixture_years(dates), as.character(1985:2025))
   output_dir <- geomarker_fixture_output_dir(output_dir)
 
@@ -107,7 +113,7 @@ install_nlcd_geomarker_fixture <- function(cell, dates, output_dir) {
     geomarker_download_file(url, quiet = TRUE) |>
       paste0("/vsizip/", url = _, "/", filename, ".tif") |>
       terra::rast() |>
-      geomarker_fixture_crop_to_cell(cell = cell) |>
+      geomarker_fixture_crop_to_cell(cell = cell, buffer = buffer) |>
       terra::writeRaster(
         tif,
         filetype = "GTiff",

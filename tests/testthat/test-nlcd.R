@@ -13,6 +13,11 @@ test_that("get_nlcd_fct_imp_data works with fixture dir", {
   expect_type(out, "list")
   expect_type(out[[1]], "double")
   expect_type(out[[2]], "double")
+  expect_true(all(is.finite(unlist(out, use.names = FALSE))))
+  expect_identical(
+    out[[2]],
+    rep(0, length(s2cd_dates(x)[[2]]))
+  )
 })
 
 test_that("get_nlcd_fct_imp_data works with multiple years", {

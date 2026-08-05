@@ -231,7 +231,8 @@ install_nei_point_geomarker_fixture <- function(
   cell,
   dates,
   output_dir,
-  source_files = NULL
+  source_files = NULL,
+  buffer = 1000
 ) {
   check_installed("readr", "to create NEI point-source fixture data")
   source_urls <- c(
@@ -249,6 +250,7 @@ install_nei_point_geomarker_fixture <- function(
     )
   )
   cell <- geomarker_fixture_cell(cell)
+  buffer <- geomarker_fixture_buffer(buffer)
   date_years <- as.integer(format(geomarker_fixture_dates(dates), "%Y"))
   years <- intersect(
     unique(as.character(2017L + 3L * round((date_years - 2017L) / 3))),
@@ -352,7 +354,7 @@ install_nei_point_geomarker_fixture <- function(
       point_data$latitude
     )
     within <- s2::s2_contains_matrix(
-      s2::s2_cell_polygon(cell),
+      geomarker_fixture_region(cell, buffer = buffer),
       point_geographies
     )[[1]]
     point_data <- point_data[within, , drop = FALSE]

@@ -131,13 +131,36 @@ geomarker_fixture_cell <- function(cell) {
   cell
 }
 
-geomarker_fixture_crop_to_cell <- function(x, cell) {
+geomarker_fixture_buffer <- function(buffer) {
+  stopifnot(
+    "fixture buffer must be numeric" = is.numeric(buffer),
+    "fixture buffer must be length one" = length(buffer) == 1,
+    "fixture buffer must be finite" = is.finite(buffer),
+    "fixture buffer must not be negative" = buffer >= 0
+  )
+  as.numeric(buffer)
+}
+
+geomarker_fixture_region <- function(cell, buffer = 0) {
+  cell <- geomarker_fixture_cell(cell)
+  buffer <- geomarker_fixture_buffer(buffer)
+  region <- s2::s2_cell_polygon(cell)
+  if (buffer > 0) {
+    region <- s2::s2_buffer_cells(
+      region,
+      distance = buffer,
+      max_cells = 1000,
+      min_level = -1
+    )
+  }
+  region
+}
+
+geomarker_fixture_crop_to_cell <- function(x, cell, buffer = 0) {
   check_installed("sf", "to crop geomarker fixture data.")
   check_installed("terra", "to crop geomarker fixture data.")
-  cell <- geomarker_fixture_cell(cell)
   cover <-
-    cell |>
-    s2::s2_cell_polygon() |>
+    geomarker_fixture_region(cell, buffer = buffer) |>
     sf::st_as_sfc() |>
     sf::st_transform(terra::crs(x)) |>
     terra::vect()
@@ -148,12 +171,10 @@ geomarker_fixture_crop_to_cell <- function(x, cell) {
   out
 }
 
-geomarker_fixture_cell_bbox <- function(cell) {
+geomarker_fixture_cell_bbox <- function(cell, buffer = 0) {
   check_installed("sf", "to create geomarker fixture data.")
-  cell <- geomarker_fixture_cell(cell)
   bbox <-
-    cell |>
-    s2::s2_cell_polygon() |>
+    geomarker_fixture_region(cell, buffer = buffer) |>
     sf::st_as_sfc() |>
     sf::st_bbox()
   unname(c(bbox[["xmin"]], bbox[["ymin"]], bbox[["xmax"]], bbox[["ymax"]]))

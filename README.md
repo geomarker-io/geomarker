@@ -41,6 +41,7 @@ Use the [S2 Cell Viewer](https://vesoyu.github.io/s2cell) to inspect individual 
 | 🏙️ land cover and imperviousness | `get_nlcd_fct_imp_data()` |
 | 🚦 traffic | `get_traffic_summary()` |
 | 🏭 point-source emissions | `get_nei_point_summary()` |
+| 🌫️ MERRA-2 surface PM2.5 | `get_merra_data()` |
 | 🗺️ Census block group linkage | `s2_join_tiger_bg()` |
 
 ### Geomarker Data
@@ -54,3 +55,25 @@ The source-specific `install_*_geomarker_fixture()` helpers download and spatial
 A fixture for the Cincinnati-area cell `8841` is included with geomarker.
 To use it without downloading from the original sources, set `R_USER_DATA_DIR` to `system.file("gmrkr--8841", package = "geomarker")` and set `R_GEOMARKER_NO_DOWNLOAD=true`.
 This pattern can also be used to package data for another study region first and then run geomarker assessments from those prepared assets when source downloads are unavailable, restricted, slow, or otherwise not preferable.
+
+### MERRA-2 data cadence
+
+MERRA-2 PM2.5 release data are cataloged in `inst/merra-data.dcf` as complete half-year assets: January through June (`H1`) and July through December (`H2`).
+Assets are added to the package's provisional `v0.0.1` GitHub release only after every expected daily granule has been discovered and validated.
+There is one fixed asset name for each year and half-year. It may be recreated from the latest NASA data while preparing a package release, but the checked-in DCF records exactly one published file and checksum. A later data correction is distributed with a new package and GitHub release.
+
+`get_merra_data()` first uses a complete monthly artifact built in the user's geomarker data directory and then tries the matching official half-year release.
+When neither is present, it returns aligned missing values with one warning rather than substituting an older period.
+
+A user with an [Earthdata Login](https://urs.earthdata.nasa.gov/) can build any fully elapsed and fully available month directly from NASA. Set the account username and password:
+
+```r
+Sys.setenv(EARTHDATA_USER = "...", EARTHDATA_PASSWORD = "...")
+install_merra_data("2026-07", source = "earthdata")
+```
+
+The source build discovers the exact daily `M2T1NXAER` v5.12.4 granules through NASA CMR, downloads authenticated variable-and-CONUS subsets, caches daily work for resumption, and writes an adjacent DCF with exact granule revisions and subset hashes.
+Set `overwrite = TRUE` to recreate a month from the latest CMR listing; daily caches whose source granule revision and hash still match are reused.
+This is a manual, potentially large build intended for an HPC or similarly provisioned environment; ordinary package checks do not contact NASA.
+
+The bundled Cincinnati MERRA fixtures use deterministic synthetic concentrations solely to exercise the offline API and both half-year branches. They are not scientific data and must not be used for analysis.

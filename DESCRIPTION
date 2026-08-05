@@ -17,12 +17,14 @@ Imports:
 Suggests: 
     curl,
     fs,
+    jsonlite,
     dplyr,
     sf,
     tibble,
     pillar,
     readr,
     terra,
+    tidync,
     testthat (>= 3.0.0),
     withr
 Config/testthat/edition: 3

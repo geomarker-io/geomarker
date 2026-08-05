@@ -17,5 +17,10 @@ install_gridmet_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
 install_narr_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
 install_elevation_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
 install_traffic_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
+install_merra_geomarker_fixture(
+  the_cell,
+  as.Date(c("2024-01-01", "2024-09-13")),
+  fixture_dir
+)
 install_tiger_geomarker_fixture(the_cell, fixture_dates, fixture_dir)
 install_evi_geomarker_fixture(the_cell, fixture_dates, fixture_dir)

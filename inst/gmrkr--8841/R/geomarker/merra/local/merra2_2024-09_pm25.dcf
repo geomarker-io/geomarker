@@ -1,0 +1,32 @@
+MERRA-Year: 2024
+MERRA-Month: 2024-09
+Distribution: fixture-synthetic
+Fixture-Synthetic: true
+Coverage-Start: 2024-09-01
+Coverage-End: 2024-09-30
+Asset-Days: 30
+Source-Collection-ID: synthetic-fixture
+Source-Collection: Deterministic offline geomarker test fixture
+Source-Granule-URs: not-applicable
+Source-Granule-Concept-Revisions: not-applicable
+Source-Subset-URLs: not-applicable
+Source-Subset-SHA256: not-applicable
+Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
+Source-BBox-West-South-East-North:
+        -126.474609,24.766785,-66.445313,49.894634
+Transformation-ID: m2t1nxaer-daily-pm25-v1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
+        132.14 / 96.06
+Asset-Name: merra2_2024-09_pm25.rds
+Asset-Bytes: 880
+Asset-SHA256:
+        e6d678a8fbe734335b47afd6665719eac5b105fc8306a1724c951c4dc56e7641
+Asset-Rows: 60
+Asset-Grid-Cells: 2
+Asset-Schema:
+        date:Date,merra_dust:double,merra_oc:double,merra_bc:double,merra_ss:double,merra_so4:double,merra_pm25:double,s2:character
+Asset-Compression: RDS-XZ
+Grid-Longitude-Resolution-Degrees: not-applicable
+Grid-Latitude-Resolution-Degrees: not-applicable
+Attribution: Synthetic values for geomarker offline tests only
+Built-UTC: 2026-08-04T00:00:00Z

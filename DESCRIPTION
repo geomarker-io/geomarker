@@ -17,6 +17,7 @@ Imports:
 Suggests: 
     curl,
     fs,
+    jsonlite,
     dplyr,
     sf,
     tibble,

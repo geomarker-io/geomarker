@@ -50,6 +50,10 @@ July--December asset per available year. A fully available calendar month
 may instead be built locally with \code{install_merra_data(source = "earthdata")}. Local monthly data take precedence over a released half-year
 asset.
 
+Source builds require \code{EARTHDATA_USER} and \code{EARTHDATA_PASSWORD}. The
+credentials are written to temporary private netrc and cookie files in the
+geomarker data cache while NASA's authenticated redirects are followed.
+
 Source concentrations are converted to micrograms per cubic meter and
 averaged across each day. Total PM2.5 is calculated as \code{DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06}.
 }

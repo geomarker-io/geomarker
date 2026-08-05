@@ -5,4 +5,5 @@
 ^inst/make_traffic_data_release\.R$
 ^inst/make_elevation_data_release\.R$
 ^inst/make_merra_data_release\.R$
+^merra2_.*_pm25[.](dcf|rds)$
 docs

@@ -106,6 +106,30 @@ test_that("MERRA months and daily PM2.5 are calculated explicitly", {
   expect_error(merra_daily_values(hourly), "24 hourly slices")
 })
 
+test_that("MERRA validation accepts equivalent Date storage types", {
+  path <- tempfile(fileext = ".rds")
+  data <- test_merra_data(as.Date(c("2025-01-01", "2025-01-02")))
+  data$date <- structure(as.integer(data$date), class = "Date")
+  record <- test_write_merra(path, data)
+  expect_equal(merra_read_data(path, record), data)
+})
+
+test_that("Earthdata credentials create private curl authentication files", {
+  withr::local_envvar(R_USER_DATA_DIR = tempfile("merra-auth-"))
+  withr::local_envvar(
+    EARTHDATA_USER = "test-user",
+    EARTHDATA_PASSWORD = "test-password"
+  )
+  auth <- merra_earthdata_auth()
+  expect_true(file.exists(auth$netrc))
+  expect_true(file.exists(auth$cookies))
+  expect_match(readLines(auth$netrc), "test-user")
+  if (.Platform$OS.type != "windows") {
+    expect_identical(as.character(file.info(auth$netrc)$mode), "600")
+    expect_identical(as.character(file.info(auth$cookies)$mode), "600")
+  }
+})
+
 test_that("local monthly data preserve dates, duplicates, and location order", {
   withr::local_envvar(R_USER_DATA_DIR = tempfile("merra-local-"))
   month <- "2024-01"
@@ -142,9 +166,9 @@ test_that("unavailable periods are aligned once and CONUS is enforced", {
   )
   x <- s2cd(
     s2::as_s2_cell("8841b39a7c46e25f"),
-    list(as.Date(c("2016-12-01", "2025-01-01", "2025-02-01")))
+    list(as.Date(c("2016-12-01", "2025-07-01", "2025-08-01")))
   )
-  expect_warning(out <- get_merra_data(x), "2016-12, 2025-01, 2025-02")
+  expect_warning(out <- get_merra_data(x), "2016-12, 2025-07, 2025-08")
   expect_true(all(is.na(out[[1]])))
 
   empty_dates <- s2cd(
@@ -215,20 +239,22 @@ test_that("recorded release checksum and schema failures are errors", {
 test_that("Earthdata builds complete months and records exact provenance", {
   withr::local_envvar(
     R_USER_DATA_DIR = tempfile("merra-earthdata-"),
-    EARTHDATA_TOKEN = "test-token"
+    EARTHDATA_USER = "test-user",
+    EARTHDATA_PASSWORD = "test-password"
   )
   dates <- merra_month_dates("2024-02")
   granules <- data.frame(
     date = dates,
     granule_ur = paste0("MERRA:", dates),
     concept_id = paste0("G", seq_along(dates)),
-    revision_id = seq_along(dates)
+    revision_id = seq_along(dates),
+    opendap_url = paste0("https://opendap.earthdata.nasa.gov/", dates)
   )
   builds <- 0L
   daily_overwrite <- logical()
   testthat::local_mocked_bindings(
     merra_granules = function(month) granules,
-    create_daily_merra_data = function(granule, source_dir, token, overwrite) {
+    create_daily_merra_data = function(granule, source_dir, auth, overwrite) {
       builds <<- builds + 1L
       daily_overwrite <<- c(daily_overwrite, overwrite)
       list(
@@ -302,7 +328,6 @@ test_that("CMR discovery requires exactly one granule per day", {
 })
 
 test_that("daily caches resume only with matching hashes and revisions", {
-  skip_if_not_installed("terra")
   source_dir <- tempfile("merra-daily-")
   granule <- data.frame(
     date = as.Date("2024-01-01"),
@@ -339,7 +364,7 @@ test_that("daily caches resume only with matching hashes and revisions", {
     merra_json = function(...) stop("NASA should not be called"),
     .package = "geomarker"
   )
-  out <- create_daily_merra_data(granule, source_dir, "token")
+  out <- create_daily_merra_data(granule, source_dir, list())
   expect_equal(out$data, readRDS(daily))
   expect_identical(out$subset_sha256, hash)
 })

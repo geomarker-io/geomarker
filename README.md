@@ -65,10 +65,10 @@ There is one fixed asset name for each year and half-year. It may be recreated f
 `get_merra_data()` first uses a complete monthly artifact built in the user's geomarker data directory and then tries the matching official half-year release.
 When neither is present, it returns aligned missing values with one warning rather than substituting an older period.
 
-A user with an [Earthdata Login](https://urs.earthdata.nasa.gov/) bearer token can build any fully elapsed and fully available month directly from NASA:
+A user with an [Earthdata Login](https://urs.earthdata.nasa.gov/) can build any fully elapsed and fully available month directly from NASA. Set the account username and password:
 
 ```r
-Sys.setenv(EARTHDATA_TOKEN = "your-token")
+Sys.setenv(EARTHDATA_USER = "...", EARTHDATA_PASSWORD = "...")
 install_merra_data("2026-07", source = "earthdata")
 ```
 

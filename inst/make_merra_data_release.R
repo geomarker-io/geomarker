@@ -126,6 +126,6 @@ record <- list(
   `Built-UTC` = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 )
 write.dcf(as.data.frame(record, check.names = FALSE), dcf_file)
-merra_read_data(output_file, record)
+invisible(merra_read_data(output_file, record))
 message("Validated MERRA release asset: ", output_file)
 message("Candidate DCF record: ", dcf_file)

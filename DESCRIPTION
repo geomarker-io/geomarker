@@ -24,6 +24,7 @@ Suggests:
     pillar,
     readr,
     terra,
+    tidync,
     testthat (>= 3.0.0),
     withr
 Config/testthat/edition: 3

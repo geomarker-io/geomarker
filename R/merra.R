@@ -152,7 +152,10 @@ merra_read_data <- function(path, record = NULL) {
       by = 1
     )
     cells <- unique(data$s2)
-    valid <- identical(sort(unique(data$date)), dates) &&
+    valid <- identical(
+      as.character(sort(unique(data$date))),
+      as.character(dates)
+    ) &&
       nrow(data) == length(dates) * length(cells) &&
       as.numeric(record[["Asset-Days"]]) == length(dates) &&
       as.numeric(record[["Asset-Rows"]]) == nrow(data) &&
@@ -277,6 +280,10 @@ merra_release_files <- function(months, ..., warn = TRUE) {
 #' may instead be built locally with `install_merra_data(source =
 #' "earthdata")`. Local monthly data take precedence over a released half-year
 #' asset.
+#'
+#' Source builds require `EARTHDATA_USER` and `EARTHDATA_PASSWORD`. The
+#' credentials are written to temporary private netrc and cookie files in the
+#' geomarker data cache while NASA's authenticated redirects are followed.
 #'
 #' Source concentrations are converted to micrograms per cubic meter and
 #' averaged across each day. Total PM2.5 is calculated as `DUSMASS25 +
@@ -482,7 +489,7 @@ install_merra_data <- function(
   stats::setNames(unname(paths[match(months, names(paths))]), months)
 }
 
-merra_json <- function(url, query = list(), token = NULL) {
+merra_json <- function(url, query = list()) {
   check_installed("curl", "to access NASA Earthdata")
   check_installed("jsonlite", "to read NASA Earthdata metadata")
   if (length(query) > 0) {
@@ -497,24 +504,52 @@ merra_json <- function(url, query = list(), token = NULL) {
     )
     url <- paste0(url, "?", paste(query, collapse = "&"))
   }
-  headers <- c("User-Agent" = "geomarker R package")
-  if (!is.null(token)) {
-    headers <- c(
-      headers,
-      "Echo-Token" = token,
-      "Authorization" = paste("Bearer", token),
-      "Accept" = "application/vnd.cmr-service-bridge.v3"
-    )
-  }
   response <- curl::curl_fetch_memory(
     url,
-    handle = curl::new_handle(httpheader = headers, failonerror = FALSE)
+    handle = curl::new_handle(
+      httpheader = c("User-Agent" = "geomarker R package"),
+      failonerror = FALSE
+    )
   )
   body <- rawToChar(response$content)
   if (response$status_code < 200 || response$status_code >= 300) {
     stop("NASA Earthdata request failed: ", body, call. = FALSE)
   }
   jsonlite::fromJSON(body, simplifyVector = FALSE)
+}
+
+merra_earthdata_auth <- function() {
+  credentials <- Sys.getenv(
+    c("EARTHDATA_USER", "EARTHDATA_PASSWORD"),
+    unset = ""
+  )
+  if (any(!nzchar(credentials))) {
+    stop(
+      "Set EARTHDATA_USER and EARTHDATA_PASSWORD before ",
+      "building MERRA data from source.",
+      call. = FALSE
+    )
+  }
+
+  auth_dir <- file.path(geomarker_data_dir("merra"), "earthdata")
+  dir.create(auth_dir, recursive = TRUE, showWarnings = FALSE)
+  netrc <- tempfile(".netrc-", auth_dir)
+  cookies <- tempfile("cookies-", auth_dir)
+  writeLines(
+    paste(
+      "machine urs.earthdata.nasa.gov login",
+      unname(credentials[["EARTHDATA_USER"]]),
+      "password",
+      unname(credentials[["EARTHDATA_PASSWORD"]])
+    ),
+    netrc
+  )
+  Sys.chmod(netrc, mode = "0600")
+  if (!file.exists(cookies)) {
+    file.create(cookies)
+  }
+  Sys.chmod(cookies, mode = "0600")
+  list(netrc = netrc, cookies = cookies)
 }
 
 merra_granules <- function(month) {
@@ -553,6 +588,7 @@ merra_granules <- function(month) {
       granule_ur = item$umm$GranuleUR,
       concept_id = item$meta[["concept-id"]],
       revision_id = as.integer(item$meta[["revision-id"]]),
+      opendap_url = urls[[which(keep)]][["URL"]],
       stringsAsFactors = FALSE
     )
   })
@@ -561,7 +597,8 @@ merra_granules <- function(month) {
       date = as.Date(character()),
       granule_ur = character(),
       concept_id = character(),
-      revision_id = integer()
+      revision_id = integer(),
+      opendap_url = character()
     )
   } else {
     granules <- do.call(rbind, granules)
@@ -605,10 +642,9 @@ merra_daily_values <- function(hourly) {
 create_daily_merra_data <- function(
   granule,
   source_dir,
-  token,
+  auth,
   overwrite = FALSE
 ) {
-  check_installed("terra", "to process NASA MERRA subsets")
   stem <- paste0(
     gsub("[^A-Za-z0-9._-]", "_", granule[["granule_ur"]]),
     "-cmr-r",
@@ -650,28 +686,37 @@ create_daily_merra_data <- function(
     }
   }
 
-  response <- merra_json(
-    paste0(
-      "https://cmr.earthdata.nasa.gov/service-bridge/ous/collection/",
-      "C1276812830-GES_DISC"
-    ),
-    list(
-      granules = granule[["concept_id"]],
-      variable_aliases = merra_variables,
-      `bounding-box` = merra_bbox,
-      format = "nc4",
-      `dap-version` = 4
-    ),
-    token
+  check_installed("tidync", "to process NASA MERRA subsets")
+  lon_indices <- c(
+    ceiling((merra_bbox[[1]] + 180) / 0.625),
+    floor((merra_bbox[[3]] + 180) / 0.625)
   )
-  subset_url <- unlist(response$items, use.names = FALSE)
-  if (
-    length(response$warnings) > 0 ||
-      length(subset_url) != 1 ||
-      !startsWith(subset_url, "https://opendap.earthdata.nasa.gov/")
-  ) {
-    stop("NASA did not return exactly one bounded MERRA subset.", call. = FALSE)
-  }
+  lat_indices <- c(
+    ceiling((merra_bbox[[2]] + 90) / 0.5),
+    floor((merra_bbox[[4]] + 90) / 0.5)
+  )
+  slice <- sprintf(
+    "[0:1:23][%d:1:%d][%d:1:%d]",
+    lat_indices[[1]],
+    lat_indices[[2]],
+    lon_indices[[1]],
+    lon_indices[[2]]
+  )
+  constraint <- paste0(
+    paste0("/", merra_variables, slice, collapse = ";"),
+    sprintf(
+      ";/lat[%d:1:%d];/lon[%d:1:%d];/time[0:1:23]",
+      lat_indices[[1]],
+      lat_indices[[2]],
+      lon_indices[[1]],
+      lon_indices[[2]]
+    )
+  )
+  subset_url <- paste0(
+    granule[["opendap_url"]],
+    ".dap.nc4?dap4.ce=",
+    curl::curl_escape(constraint)
+  )
 
   dir.create(dirname(subset_file), recursive = TRUE, showWarnings = FALSE)
   if (!file.exists(subset_file) || overwrite) {
@@ -683,10 +728,12 @@ create_daily_merra_data <- function(
       quiet = TRUE,
       mode = "wb",
       handle = curl::new_handle(
-        httpheader = c(
-          "Echo-Token" = token,
-          "Authorization" = paste("Bearer", token)
-        ),
+        httpheader = c("User-Agent" = "geomarker R package"),
+        netrc = 1L,
+        netrc_file = auth$netrc,
+        cookiefile = auth$cookies,
+        cookiejar = auth$cookies,
+        followlocation = TRUE,
         failonerror = TRUE
       )
     )
@@ -698,62 +745,42 @@ create_daily_merra_data <- function(
     }
   }
 
-  rasters <- lapply(merra_variables, function(variable) {
-    raster <- tryCatch(
-      terra::rast(subset_file, subds = variable),
-      error = function(e) NULL
+  hourly <- tidync::tidync(subset_file) |>
+    tidync::hyper_tibble(select_var = merra_variables)
+  required <- c("lon", "lat", merra_variables)
+  if (!all(required %in% names(hourly)) || anyNA(hourly[required])) {
+    stop(
+      "MERRA subset does not contain the expected hourly data.",
+      call. = FALSE
     )
-    if (is.null(raster)) {
-      raster <- tryCatch(
-        terra::rast(paste0(
-          'NETCDF:"',
-          normalizePath(subset_file),
-          '":',
-          variable
-        )),
-        error = function(e) NULL
-      )
-    }
-    if (is.null(raster) || terra::nlyr(raster) != 24) {
-      stop(
-        "MERRA subset is missing 24 hourly slices for ",
-        variable,
-        ".",
-        call. = FALSE
-      )
-    }
-    raster
-  })
-  names(rasters) <- merra_variables
-  if (
-    any(
-      !vapply(
-        rasters[-1],
-        terra::compareGeom,
-        logical(1),
-        rasters[[1]],
-        stopOnError = FALSE
-      )
-    )
-  ) {
-    stop("MERRA variables do not share one spatial grid.", call. = FALSE)
   }
-  daily <- merra_daily_values(lapply(rasters, terra::values, mat = TRUE))
-  coordinates <- terra::xyFromCell(
-    rasters[[1]],
-    seq_len(terra::ncell(rasters[[1]]))
+  grid_key <- interaction(hourly$lon, hourly$lat, drop = TRUE)
+  if (length(table(grid_key)) == 0 || any(table(grid_key) != 24)) {
+    stop(
+      "MERRA subset must contain 24 hourly slices per grid point.",
+      call. = FALSE
+    )
+  }
+  daily <- stats::aggregate(
+    hourly[merra_variables],
+    list(lon = hourly$lon, lat = hourly$lat),
+    mean
   )
-  keep <- stats::complete.cases(daily) &
-    coordinates[, 1] >= merra_bbox[[1]] &
-    coordinates[, 1] <= merra_bbox[[3]] &
-    coordinates[, 2] >= merra_bbox[[2]] &
-    coordinates[, 2] <= merra_bbox[[4]]
+  daily[merra_variables] <- lapply(
+    daily[merra_variables],
+    function(x) x * 1e9
+  )
+  names(daily)[match(merra_variables, names(daily))] <- merra_columns[1:5]
+  daily$merra_pm25 <- with(
+    daily,
+    merra_dust + merra_oc + merra_bc + merra_ss + merra_so4 * 132.14 / 96.06
+  )
   data <- data.frame(
-    date = rep(as.Date(granule[["date"]]), sum(keep)),
-    daily[keep, , drop = FALSE],
+    date = rep(as.Date(granule[["date"]]), nrow(daily)),
+    daily[merra_columns],
     s2 = as.character(s2::as_s2_cell(s2::s2_lnglat(
-      coordinates[keep, 1],
-      coordinates[keep, 2]
+      daily$lon,
+      daily$lat
     ))),
     row.names = NULL
   )[, merra_data_columns]
@@ -807,13 +834,8 @@ merra_build_month <- function(month, overwrite = FALSE, quiet = FALSE) {
     merra_read_data(asset, record[1, ])
     return(asset)
   }
-  token <- Sys.getenv("EARTHDATA_TOKEN")
-  if (!nzchar(token)) {
-    stop(
-      "Set EARTHDATA_TOKEN before building MERRA data from source.",
-      call. = FALSE
-    )
-  }
+  auth <- merra_earthdata_auth()
+  on.exit(unlink(unname(unlist(auth))), add = TRUE)
   if (!quiet) {
     message("Discovering and building complete MERRA month ", month, "...")
   }
@@ -826,7 +848,7 @@ merra_build_month <- function(month, overwrite = FALSE, quiet = FALSE) {
     create_daily_merra_data(
       granules[i, , drop = FALSE],
       source_dir,
-      token,
+      auth,
       overwrite = FALSE
     )
   })

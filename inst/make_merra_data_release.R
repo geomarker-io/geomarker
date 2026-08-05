@@ -77,9 +77,6 @@ row.names(data) <- NULL
 dir.create(dirname(output_file), recursive = TRUE, showWarnings = FALSE)
 merra_save_data(data, output_file)
 
-field <- function(name) {
-  paste(vapply(month_records, `[[`, "", name), collapse = ",")
-}
 dates <- sort(unique(data$date))
 record <- list(
   `MERRA-Year` = as.character(year),
@@ -89,11 +86,6 @@ record <- list(
   `Asset-Days` = as.character(length(dates)),
   `Source-Collection-ID` = "C1276812830-GES_DISC",
   `Source-Collection` = "M2T1NXAER 5.12.4",
-  `Source-Granule-URs` = field("Source-Granule-URs"),
-  `Source-Granule-Concept-Revisions` = field(
-    "Source-Granule-Concept-Revisions"
-  ),
-  `Source-Subset-SHA256` = field("Source-Subset-SHA256"),
   `Source-Variables` = paste(merra_variables, collapse = ","),
   `Source-BBox-West-South-East-North` = paste(merra_bbox, collapse = ","),
   `Transformation-ID` = "m2t1nxaer-daily-pm25-v1",

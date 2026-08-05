@@ -166,9 +166,9 @@ test_that("unavailable periods are aligned once and CONUS is enforced", {
   )
   x <- s2cd(
     s2::as_s2_cell("8841b39a7c46e25f"),
-    list(as.Date(c("2016-12-01", "2025-07-01", "2025-08-01")))
+    list(as.Date(c("2016-12-01", "2099-07-01", "2099-08-01")))
   )
-  expect_warning(out <- get_merra_data(x), "2016-12, 2025-07, 2025-08")
+  expect_warning(out <- get_merra_data(x), "2016-12, 2099-07, 2099-08")
   expect_true(all(is.na(out[[1]])))
 
   empty_dates <- s2cd(

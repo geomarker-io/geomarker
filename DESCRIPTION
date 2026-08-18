@@ -13,7 +13,7 @@ Roxygen: list(markdown = TRUE)
 Imports: 
     s2,
     digest,
-    stow (>= 0.1.0),
+    stow (>= 0.2.0),
     vctrs
 Remotes:
     cole-brokamp/stow

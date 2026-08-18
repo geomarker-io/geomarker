@@ -15,8 +15,9 @@ traffic_data_url <- function() {
 }
 
 traffic_data_file <- function(...) {
-  geomarker_download_file(
+  geomarker_stow(
     traffic_data_url(),
+    "get_traffic_summary",
     ...
   )
 }
@@ -127,12 +128,13 @@ traffic_zero_summary <- function() {
 #'
 #' The processed traffic data are distributed separately from the R package as
 #' a GeoPackage asset attached to the geomarker package release. The file is
-#' downloaded to `geomarker_data_dir()` the first time it is required by
-#' `get_traffic_summary()` and reused from the local cache on subsequent calls.
+#' downloaded to the `get_traffic_summary` directory in the geomarker cache
+#' the first time it is required and reused on subsequent calls.
 #'
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param buffer distance from s2 cell (in meters) to summarize data
-#' @param ... passed to `geomarker_download_file()`
+#' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
+#'   are fixed by geomarker.
 #' @return data frame with one row per input location and numeric traffic
 #'   summaries `aadtm_trucks_buses`, `aadtm_tractor_trailer`, and
 #'   `aadtm_passenger`
@@ -293,16 +295,24 @@ install_traffic_geomarker_fixture <- function(
   geomarker_fixture_dates(dates)
   output_dir <- geomarker_fixture_output_dir(output_dir)
   if (is.null(source_file)) {
-    source_file <- traffic_data_file()
+    source_file <- geomarker_stow(
+      traffic_data_url(),
+      "get_traffic_summary",
+      .etag = FALSE
+    )
   }
   stopifnot(
     "source_file must be length one" = length(source_file) == 1,
     "source_file must exist" = file.exists(source_file)
   )
 
-  output_file <- file.path(
+  fixture_dir <- geomarker_fixture_cache_dir(
     output_dir,
-    url_to_filename(traffic_data_url(), etag = FALSE)
+    "get_traffic_summary"
+  )
+  output_file <- file.path(
+    fixture_dir,
+    geomarker_stow_filename(traffic_data_url())
   )
   source <- traffic_data_source(source_file)
   traffic_read_region(source_file, source, cell, buffer) |>

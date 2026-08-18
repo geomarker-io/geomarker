@@ -42,14 +42,18 @@ Use the [S2 Cell Viewer](https://vesoyu.github.io/s2cell) to inspect individual 
 | 🚦 traffic | `get_traffic_summary()` |
 | 🏭 point-source emissions | `get_nei_point_summary()` |
 | 🌫️ MERRA-2 surface PM2.5 | `get_merra_data()` |
-| 🗺️ Census block group linkage | `s2_join_tiger_bg()` |
+| 🗺️ Census block group linkage | `get_tiger_bg()` |
 
 ### Geomarker Data
 
 Most data required for geomarker assessment does not come with the package, but is installed on first use by downloading (and pre-processing) source data to the geomarker package's user data directory (see [`tools::R_user_dir()`](https://search.r-project.org/R/refmans/tools/html/userdir.html)).
 This means it is available to use again across other R sessions and projects by the same user and will not need to be downloaded more than once.
 
-`geomarker_download_file()` is the common download and cache layer that powers most of the package's data assets: it gives each source URL a stable local filename (using an ETag when available), stores the file in `geomarker_data_dir()`, and reuses the cached copy in later assessments.
+The [`stow`](https://github.com/cole-brokamp/stow) package provides the common download and cache layer for ordinary source files.
+Every cached file is stored with `package = "geomarker"` in a subdirectory named for the function that consumes it, such as `get_elevation_summary` or `get_tiger_bg`.
+EVI and authenticated MERRA source builds use the same function-named directory layout while retaining their specialized signed or query-based download transport.
+Use `stow::stow_path(package = "geomarker")` to locate the cache and `stow::stow_info(package = "geomarker")` to inspect its contents.
+This layout is a clean cutover: files in the previous flat, `hms`, `evi`, or `merra` locations are not moved or searched automatically.
 The same cache contract makes it possible to prepare data in advance for a specific level-6 S2 cell and date range.
 The source-specific `install_*_geomarker_fixture()` helpers download and spatially subset the required assets into an `inst/gmrkr--<cell>/R/geomarker` directory; see `inst/install_cincy_geomarker_fixture.R` for a complete example.
 For assessments that summarize within a buffer, the corresponding fixture installer accepts a `buffer` in meters and includes that halo around the level-6 fixture cell.
@@ -64,7 +68,7 @@ MERRA-2 PM2.5 release data are cataloged in `inst/merra-data.dcf` as complete ha
 Assets are added to the package's provisional `v0.0.1` GitHub release only after every expected daily granule has been discovered and validated.
 There is one fixed asset name for each year and half-year. It may be recreated from the latest NASA data while preparing a package release, but the checked-in DCF records exactly one published file and checksum. A later data correction is distributed with a new package and GitHub release.
 
-`get_merra_data()` first uses a complete monthly artifact built in the user's geomarker data directory and then tries the matching official half-year release.
+`get_merra_data()` first uses a complete monthly artifact built under the `get_merra_data` directory in the user's geomarker cache and then tries the matching official half-year release.
 When neither is present, it returns aligned missing values with one warning rather than substituting an older period.
 
 A user with an [Earthdata Login](https://urs.earthdata.nasa.gov/) can build any fully elapsed and fully available month directly from NASA. Set the account username and password:

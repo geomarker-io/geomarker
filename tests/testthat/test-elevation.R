@@ -14,15 +14,30 @@ test_that("get_elevation_summary validates inputs", {
   )
 })
 
-test_that("get_elevation_summary uses the versioned asset downloader", {
-  fixture <- file.path(
-    fs::path_package("geomarker", "gmrkr--8841", "R", "geomarker"),
-    "40376751--usgs_3dep_conus_800m.tif"
+elevation_test_url <- function() {
+  paste0(
+    "https://github.com/geomarker-io/geomarker/releases/download/",
+    "v0.0.1/usgs_3dep_conus_800m.tif"
   )
+}
+
+elevation_test_fixture <- function() {
+  file.path(
+    fs::path_package("geomarker", "gmrkr--8841", "R", "geomarker"),
+    "get_elevation_summary",
+    geomarker_stow_filename(elevation_test_url())
+  )
+}
+
+test_that("get_elevation_summary uses the versioned asset downloader", {
+  fixture <- elevation_test_fixture()
   received <- NULL
   testthat::local_mocked_bindings(
-    geomarker_download_file = function(url, ...) {
-      received <<- list(url = url, ...)
+    geomarker_stow = function(url, .subdir, ..., .etag = NULL) {
+      received <<- c(
+        list(url = url, subdir = .subdir, forced_etag = .etag),
+        list(...)
+      )
       fixture
     },
     .package = "geomarker"
@@ -36,8 +51,9 @@ test_that("get_elevation_summary uses the versioned asset downloader", {
   expect_type(out, "double")
   expect_match(received$url, "/releases/download/v0[.]0[.]1/")
   expect_match(received$url, "usgs_3dep_conus_800m[.]tif$")
+  expect_identical(received$subdir, "get_elevation_summary")
   expect_identical(received$quiet, TRUE)
-  expect_identical(received$etag, FALSE)
+  expect_identical(received$forced_etag, FALSE)
 })
 
 test_that("get_elevation_summary works with the offline 3DEP fixture", {
@@ -56,17 +72,14 @@ test_that("get_elevation_summary works with the offline 3DEP fixture", {
 })
 
 test_that("elevation extraction uses the first value column", {
-  fixture <- file.path(
-    fs::path_package("geomarker", "gmrkr--8841", "R", "geomarker"),
-    "40376751--usgs_3dep_conus_800m.tif"
-  )
+  fixture <- elevation_test_fixture()
   raster <- terra::rast(fixture)
   names(raster) <- "unexpected_layer_name"
   renamed <- tempfile(fileext = ".tif")
   withr::defer(unlink(renamed))
   terra::writeRaster(raster, renamed, overwrite = TRUE, datatype = "INT2S")
   testthat::local_mocked_bindings(
-    geomarker_download_file = function(...) renamed,
+    geomarker_stow = function(...) renamed,
     .package = "geomarker"
   )
 
@@ -74,10 +87,7 @@ test_that("elevation extraction uses the first value column", {
 })
 
 test_that("elevation fixture uses the downloader cache filename", {
-  source <- file.path(
-    fs::path_package("geomarker", "gmrkr--8841", "R", "geomarker"),
-    "40376751--usgs_3dep_conus_800m.tif"
-  )
+  source <- elevation_test_fixture()
   output_dir <- tempfile("elevation-fixture")
   withr::defer(unlink(output_dir, recursive = TRUE))
   install_elevation_geomarker_fixture(
@@ -89,7 +99,8 @@ test_that("elevation fixture uses the downloader cache filename", {
 
   expect_true(file.exists(file.path(
     output_dir,
-    "40376751--usgs_3dep_conus_800m.tif"
+    "get_elevation_summary",
+    geomarker_stow_filename(elevation_test_url())
   )))
 })
 

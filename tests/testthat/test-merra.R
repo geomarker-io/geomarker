@@ -195,9 +195,12 @@ test_that("release DCF downloads each fixed half-year asset once", {
   arguments <- list()
   testthat::local_mocked_bindings(
     merra_release_manifest = function() records,
-    geomarker_download_file = function(url, ...) {
+    geomarker_stow = function(url, .subdir, ..., .etag = NULL) {
       downloads <<- c(downloads, url)
-      arguments[[url]] <<- list(...)
+      arguments[[url]] <<- c(
+        list(subdir = .subdir, forced_etag = .etag),
+        list(...)
+      )
       if (identical(url, h1$record[["Asset-URL"]])) h1$path else h2$path
     },
     .package = "geomarker"
@@ -207,8 +210,11 @@ test_that("release DCF downloads each fixed half-year asset once", {
   expect_identical(paths[[1]], paths[[2]])
   expect_identical(paths[[1]], paths[[4]])
   expect_length(downloads, 2)
-  expect_identical(arguments[[downloads[[1]]]]$etag, FALSE)
-  expect_identical(arguments[[downloads[[1]]]]$subdir, "merra")
+  expect_identical(arguments[[downloads[[1]]]]$forced_etag, FALSE)
+  expect_identical(
+    arguments[[downloads[[1]]]]$subdir,
+    "get_merra_data"
+  )
 })
 
 test_that("release DCF allows only one record per half-year", {
@@ -227,7 +233,7 @@ test_that("recorded release checksum and schema failures are errors", {
   records[1, "Asset-SHA256"] <- paste(rep("0", 64), collapse = "")
   testthat::local_mocked_bindings(
     merra_release_manifest = function() records,
-    geomarker_download_file = function(...) release$path,
+    geomarker_stow = function(...) release$path,
     .package = "geomarker"
   )
   expect_error(install_merra_data("2024-01"), "SHA-256")

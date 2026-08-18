@@ -11,13 +11,14 @@
 #' mirror of NASA LP DAAC MOD13Q1/MYD13Q1 Version 6.1 Cloud Optimized GeoTIFFs.
 #' See <https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061>
 #' for collection details. Source 16-day EVI and pixel reliability rasters are
-#' staged under `geomarker_data_dir("evi")` only when an annual composite is
+#' staged under the `get_evi_data` directory in the geomarker cache only when
+#' an annual composite is
 #' missing; if a build fails, complete source downloads are reused on the next
 #' attempt and removed after the annual composite is successfully written.
 #' EVI source rasters are downloaded by MODIS tile; 14 MODIS tiles intersect the
 #' contiguous United States. Planetary Computer assets are accessed with
 #' reusable container SAS tokens to reduce signing API calls.
-#' Annual composite rasters are cached in `geomarker_data_dir("evi")`. EVI
+#' Annual composite rasters are cached in that same directory. EVI
 #' source raster values are scaled by 0.0001 while creating annual composites.
 #' EVI is a greenness index designed to emphasize photosynthetically active
 #' vegetation while reducing atmospheric and soil background effects. In this
@@ -178,11 +179,11 @@ evi_download_assets <- function(
   label = "EVI rasters",
   overwrite = FALSE,
   quiet = FALSE,
-  subdir = "evi",
+  subdir = "get_evi_data",
   dest_dir = NULL
 ) {
   if (is.null(dest_dir)) {
-    dest_dir <- geomarker_data_dir(subdir = subdir)
+    dest_dir <- geomarker_stow_path(subdir)
   } else if (!file.exists(dest_dir)) {
     dir.create(dest_dir, recursive = TRUE)
   }
@@ -412,7 +413,7 @@ evi_annual_composite_files <- function(
   years,
   overwrite = FALSE,
   quiet = FALSE,
-  subdir = "evi"
+  subdir = "get_evi_data"
 ) {
   items$year <- format(items$start_date, "%Y")
   items <- items[items$year %in% years, , drop = FALSE]
@@ -430,7 +431,7 @@ evi_annual_composite_files <- function(
   }
 
   dests <- file.path(
-    geomarker_data_dir(subdir = subdir),
+    geomarker_stow_path(subdir),
     evi_annual_composite_filename(groups$year, groups$tile)
   )
   needs_build <- overwrite | !file.exists(dests)
@@ -496,8 +497,11 @@ evi_annual_composite_filename <- function(year, tile) {
   sprintf("modis-13Q1-061-%s-%s-annual-evi-median-q01.tif", year, tile)
 }
 
-evi_cached_annual_composite_files <- function(years, subdir = "evi") {
-  evi_dir <- geomarker_data_dir(subdir = subdir)
+evi_cached_annual_composite_files <- function(
+  years,
+  subdir = "get_evi_data"
+) {
+  evi_dir <- geomarker_stow_path(subdir)
   files <- list.files(
     evi_dir,
     pattern = "^modis-13Q1-061-[0-9]{4}-h[0-9]{2}v[0-9]{2}-annual-evi-median-q01[.]tif$",
@@ -985,7 +989,7 @@ install_evi_geomarker_fixture <- function(
   output_dir,
   overwrite = FALSE,
   quiet = FALSE,
-  subdir = "evi",
+  subdir = "get_evi_data",
   buffer = 400
 ) {
   check_installed("terra", "to create EVI fixture data.")

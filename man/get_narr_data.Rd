@@ -16,7 +16,8 @@ get_narr_data(
 
 \item{narr_var}{character; name of NARR variable}
 
-\item{...}{passed to geomarker_download_file()}
+\item{...}{passed to \code{\link[stow:stow]{stow::stow()}}. The \code{package} and \code{subdir} arguments
+are fixed by geomarker.}
 }
 \value{
 a list of numeric vectors of NARR values

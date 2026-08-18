@@ -13,8 +13,9 @@ get_elevation_summary(x, fun = stats::median, buffer = 800, ...)
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 
-\item{...}{passed to \code{geomarker_download_file()}. The \code{etag} argument is
-always set to \code{FALSE} for this versioned release asset.}
+\item{...}{passed to \code{\link[stow:stow]{stow::stow()}}. The \code{package} and \code{subdir} arguments
+are fixed by geomarker, and \code{etag} is always set to \code{FALSE} for this
+versioned release asset.}
 }
 \value{
 numeric vector of elevation summaries

@@ -9,7 +9,7 @@ get_smoke_summary(x, ...)
 \arguments{
 \item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 
-\item{...}{passed to \verb{get_daily_smoke_data() (and on to }geomarker_download_file()`)}
+\item{...}{passed to \code{get_daily_smoke_data()} and then \code{\link[stow:stow]{stow::stow()}}.}
 }
 \value{
 a list of ordered factors (Levels: None > Light > Medium > Heavy)

@@ -47,7 +47,7 @@ merra_month_dates <- function(month) {
 
 merra_local_file <- function(month) {
   file.path(
-    geomarker_data_dir("merra"),
+    geomarker_stow_path("get_merra_data"),
     "local",
     paste0("merra2_", month, "_pm25.rds")
   )
@@ -248,9 +248,9 @@ merra_release_files <- function(months, ..., warn = TRUE) {
       if (!exists(key, paths, inherits = FALSE)) {
         args <- list(...)
         args$url <- record[["Asset-URL"]]
-        args$etag <- FALSE
-        args$subdir <- "merra"
-        path <- do.call(geomarker_download_file, args)
+        args$.subdir <- "get_merra_data"
+        args$.etag <- FALSE
+        path <- do.call(geomarker_stow, args)
         merra_read_data(path, record)
         assign(key, path, paths)
       }
@@ -299,8 +299,8 @@ merra_release_files <- function(months, ..., warn = TRUE) {
 #' OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06`.
 #'
 #' @param x a s2_cell_dates vector (see `?s2cd`)
-#' @param ... passed to `geomarker_download_file()` when an official release
-#'   asset is needed
+#' @param ... passed to [stow::stow()] when an official release asset is
+#'   needed. The `package` and `subdir` arguments are fixed by geomarker.
 #' @return A named list with one data frame per input location and one row per
 #'   requested date. Columns are `merra_dust`, `merra_oc`, `merra_bc`,
 #'   `merra_ss`, `merra_so4`, and `merra_pm25`. Unavailable periods contain
@@ -540,7 +540,10 @@ merra_earthdata_auth <- function() {
     )
   }
 
-  auth_dir <- file.path(geomarker_data_dir("merra"), "earthdata")
+  auth_dir <- file.path(
+    geomarker_stow_path("get_merra_data"),
+    "earthdata"
+  )
   dir.create(auth_dir, recursive = TRUE, showWarnings = FALSE)
   netrc <- tempfile(".netrc-", auth_dir)
   cookies <- tempfile("cookies-", auth_dir)
@@ -872,7 +875,11 @@ merra_build_month <- function(month, overwrite = FALSE, quiet = FALSE) {
     message("Discovering and building complete MERRA month ", month, "...")
   }
   granules <- merra_granules(month)
-  source_dir <- file.path(geomarker_data_dir("merra"), "source", month)
+  source_dir <- file.path(
+    geomarker_stow_path("get_merra_data"),
+    "source",
+    month
+  )
   days <- lapply(seq_len(nrow(granules)), function(i) {
     if (!quiet) {
       message("  ", granules$date[[i]], " (", i, "/", nrow(granules), ")")
@@ -981,7 +988,7 @@ install_merra_geomarker_fixture <- function(
     }
     destination <- file.path(
       output_dir,
-      "merra",
+      "get_merra_data",
       "local",
       paste0("merra2_", month, "_pm25.rds")
     )

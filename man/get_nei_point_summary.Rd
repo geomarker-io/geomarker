@@ -22,7 +22,8 @@ get_nei_point_summary(
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 
-\item{...}{passed to \code{geomarker_download_file()}}
+\item{...}{passed to \code{\link[stow:stow]{stow::stow()}}. The \code{package} and \code{subdir} arguments
+are fixed by geomarker.}
 }
 \value{
 a list of numeric vectors of point-source emissions summaries, one

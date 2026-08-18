@@ -18,7 +18,8 @@
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param fun function to summarize extracted data
 #' @param buffer distance from s2 cell (in meters) to summarize data
-#' @param ... passed to `geomarker_download_file()`
+#' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
+#'   are fixed by geomarker.
 #' @return a list of numeric vectors of NLCD fraction imperviousness summaries.
 #' Dates in unavailable years return `NA_real_`.
 #' @export
@@ -52,13 +53,14 @@ get_nlcd_fct_imp_data <- function(
       \(years) year %in% years,
       logical(1)
     ))
-    nlcd_file <- geomarker_download_file(
+    nlcd_file <- geomarker_stow(
       paste0(
         "https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data-bundles/",
         "Annual_NLCD_FctImp_",
         year,
         "_CU_C1V2.zip"
       ),
+      "get_nlcd_fct_imp_data",
       ...
     )
     nlcd_raster <- terra::rast(paste0(
@@ -98,6 +100,10 @@ install_nlcd_geomarker_fixture <- function(
   buffer <- geomarker_fixture_buffer(buffer)
   years <- intersect(geomarker_fixture_years(dates), as.character(1985:2025))
   output_dir <- geomarker_fixture_output_dir(output_dir)
+  fixture_dir <- geomarker_fixture_cache_dir(
+    output_dir,
+    "get_nlcd_fct_imp_data"
+  )
 
   lapply(years, \(year) {
     filename <- paste0("Annual_NLCD_FctImp_", year, "_CU_C1V2")
@@ -110,7 +116,12 @@ install_nlcd_geomarker_fixture <- function(
     zip <- tempfile(fileext = ".zip")
     on.exit(unlink(c(tif, zip)), add = TRUE)
 
-    geomarker_download_file(url, quiet = TRUE) |>
+    geomarker_stow(
+      url,
+      "get_nlcd_fct_imp_data",
+      quiet = TRUE,
+      .etag = FALSE
+    ) |>
       paste0("/vsizip/", url = _, "/", filename, ".tif") |>
       terra::rast() |>
       geomarker_fixture_crop_to_cell(cell = cell, buffer = buffer) |>
@@ -123,7 +134,7 @@ install_nlcd_geomarker_fixture <- function(
     utils::zip(zipfile = zip, files = tif, flags = "-j")
     file.copy(
       zip,
-      file.path(output_dir, url_to_filename(url, etag = FALSE)),
+      file.path(fixture_dir, geomarker_stow_filename(url)),
       overwrite = TRUE
     )
   })

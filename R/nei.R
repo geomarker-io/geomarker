@@ -25,7 +25,8 @@
 #' `PMFINE`
 #' @param fun function used to summarize nearby annual emissions
 #' @param buffer distance from s2 cell (in meters) to summarize data
-#' @param ... passed to `geomarker_download_file()`
+#' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
+#'   are fixed by geomarker.
 #' @return a list of numeric vectors of point-source emissions summaries, one
 #' vector per input location and one value per associated date. Values passed
 #' to `fun` are in tons per year. Dates mapping to unavailable inventory
@@ -107,18 +108,11 @@ get_nei_point_summary <- function(
     ))
     unique_keys <- unique(cell_keys[location_index])
     unique_cells <- cells[match(unique_keys, cell_keys)]
-    fixture_file <- file.path(
-      geomarker_data_dir(),
-      paste0("nei-", year, "-facility-summary.zip")
+    source_file <- geomarker_stow(
+      source_urls[[year]],
+      "get_nei_point_summary",
+      ...
     )
-    source_file <- if (
-      nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD")) &&
-        file.exists(fixture_file)
-    ) {
-      fixture_file
-    } else {
-      geomarker_download_file(source_urls[[year]], ...)
-    }
     members <- utils::unzip(source_file, list = TRUE)$Name
     csv_members <- members[grepl("[.]csv$", members, ignore.case = TRUE)]
     if (length(csv_members) != 1) {
@@ -257,6 +251,10 @@ install_nei_point_geomarker_fixture <- function(
     names(source_urls)
   )
   output_dir <- geomarker_fixture_output_dir(output_dir)
+  fixture_dir <- geomarker_fixture_cache_dir(
+    output_dir,
+    "get_nei_point_summary"
+  )
   if (!is.null(source_files)) {
     stopifnot(
       "source_files must be a named character vector" = is.character(
@@ -272,7 +270,12 @@ install_nei_point_geomarker_fixture <- function(
 
   lapply(years, \(year) {
     source_file <- if (is.null(source_files)) {
-      geomarker_download_file(source_urls[[year]], quiet = TRUE)
+      geomarker_stow(
+        source_urls[[year]],
+        "get_nei_point_summary",
+        quiet = TRUE,
+        .etag = FALSE
+      )
     } else {
       source_files[[year]]
     }
@@ -382,8 +385,8 @@ install_nei_point_geomarker_fixture <- function(
     file.copy(
       zip_file,
       file.path(
-        output_dir,
-        paste0("nei-", year, "-facility-summary.zip")
+        fixture_dir,
+        geomarker_stow_filename(source_urls[[year]])
       ),
       overwrite = TRUE
     )

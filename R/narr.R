@@ -9,7 +9,8 @@
 #' Data is updated monthly.
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param narr_var character; name of NARR variable
-#' @param ... passed to geomarker_download_file()
+#' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
+#'   are fixed by geomarker.
 #' @return a list of numeric vectors of NARR values
 #' @export
 #' @examples
@@ -51,12 +52,9 @@ get_narr_data <- function(
     s2cd_years(x)
   )
 
-  narr_files <- vapply(
-    narr_urls,
-    geomarker_download_file,
-    FUN.VALUE = character(1),
-    ...
-  )
+  narr_files <- vapply(narr_urls, function(url) {
+    geomarker_stow(url, "get_narr_data", ...)
+  }, character(1))
   narr_rasters <- suppressWarnings(lapply(narr_files, terra::rast))
   narr_rasters <- mapply(
     function(.x, .y) {
@@ -107,13 +105,19 @@ install_narr_geomarker_fixture <- function(
     narr_var,
     years
   )
+  fixture_dir <- geomarker_fixture_cache_dir(output_dir, "get_narr_data")
 
   lapply(narr_urls, \(url) {
-    geomarker_download_file(url) |>
+    geomarker_stow(
+      url,
+      "get_narr_data",
+      quiet = TRUE,
+      .etag = FALSE
+    ) |>
       terra::rast() |>
       geomarker_fixture_crop_to_cell(cell = cell) |>
       terra::writeCDF(
-        file.path(output_dir, url_to_filename(url, etag = FALSE)),
+        file.path(fixture_dir, geomarker_stow_filename(url)),
         overwrite = TRUE
       )
   }) |>

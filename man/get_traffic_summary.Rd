@@ -11,7 +11,8 @@ get_traffic_summary(x, buffer = 400, ...)
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 
-\item{...}{passed to \code{geomarker_download_file()}}
+\item{...}{passed to \code{\link[stow:stow]{stow::stow()}}. The \code{package} and \code{subdir} arguments
+are fixed by geomarker.}
 }
 \value{
 data frame with one row per input location and numeric traffic
@@ -39,8 +40,8 @@ modifying them.
 
 The processed traffic data are distributed separately from the R package as
 a GeoPackage asset attached to the geomarker package release. The file is
-downloaded to \code{geomarker_data_dir()} the first time it is required by
-\code{get_traffic_summary()} and reused from the local cache on subsequent calls.
+downloaded to the \code{get_traffic_summary} directory in the geomarker cache
+the first time it is required and reused on subsequent calls.
 }
 \examples{
 withr::local_envvar(

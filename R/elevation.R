@@ -16,8 +16,9 @@
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param fun function to summarize extracted values
 #' @param buffer distance from s2 cell (in meters) to summarize data
-#' @param ... passed to `geomarker_download_file()`. The `etag` argument is
-#'   always set to `FALSE` for this versioned release asset.
+#' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
+#'   are fixed by geomarker, and `etag` is always set to `FALSE` for this
+#'   versioned release asset.
 #' @return numeric vector of elevation summaries
 #' @export
 #' @examples
@@ -49,11 +50,11 @@ get_elevation_summary <- function(
     "https://github.com/geomarker-io/geomarker/releases/download/",
     "v0.0.1/usgs_3dep_conus_800m.tif"
   )
-  download_args <- list(...)
-  download_args$etag <- FALSE
-  elevation_raster <- do.call(
-    geomarker_download_file,
-    c(list(url = elevation_url), download_args)
+  elevation_raster <- geomarker_stow(
+    elevation_url,
+    "get_elevation_summary",
+    ...,
+    .etag = FALSE
   ) |>
     terra::rast()
 
@@ -98,13 +99,21 @@ install_elevation_geomarker_fixture <- function(
     "v0.0.1/usgs_3dep_conus_800m.tif"
   )
   if (is.null(source_file)) {
-    source_file <- geomarker_download_file(elevation_url, etag = FALSE)
+    source_file <- geomarker_stow(
+      elevation_url,
+      "get_elevation_summary",
+      .etag = FALSE
+    )
   }
+  fixture_dir <- geomarker_fixture_cache_dir(
+    output_dir,
+    "get_elevation_summary"
+  )
   source_file |>
     terra::rast() |>
     geomarker_fixture_crop_to_cell(cell = cell, buffer = buffer) |>
     terra::writeRaster(
-      file.path(output_dir, url_to_filename(elevation_url, etag = FALSE)),
+      file.path(fixture_dir, geomarker_stow_filename(elevation_url)),
       overwrite = TRUE,
       filetype = "GTiff",
       datatype = "INT2S",

@@ -38,7 +38,14 @@ test_that("get_nlcd_fct_imp_data works with multiple years", {
     urls,
     \(url) {
       !inherits(
-        try(geomarker_download_file(url, quiet = TRUE), silent = TRUE),
+        try(
+          geomarker_stow(
+            url,
+            "get_nlcd_fct_imp_data",
+            quiet = TRUE
+          ),
+          silent = TRUE
+        ),
         "try-error"
       )
     },

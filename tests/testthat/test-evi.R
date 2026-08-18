@@ -90,7 +90,7 @@ test_that("EVI download helper reports batch cache progress", {
     "https://example.com/evi/b.tif"
   )
   cached <- file.path(
-    geomarker_data_dir("evi"),
+    geomarker_stow_path("get_evi_data"),
     vapply(hrefs, url_to_filename, character(1), etag = FALSE)
   )
   file.create(cached)
@@ -173,7 +173,7 @@ test_that("EVI annual composite files use cached derived rasters", {
     R_GEOMARKER_NO_DOWNLOAD = "true"
   ))
   dest <- file.path(
-    geomarker_data_dir("evi"),
+    geomarker_stow_path("get_evi_data"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   file.create(dest)
@@ -207,7 +207,7 @@ test_that("EVI annual composite keeps staged sources after source errors", {
   href <- "https://example.com/evi/evi_2024_h11v05.tif"
   quality_href <- "https://example.com/evi/quality_2024_h11v05.tif"
   dest <- file.path(
-    geomarker_data_dir("evi"),
+    geomarker_stow_path("get_evi_data"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   source_dir <- evi_source_staging_dir(dest)
@@ -246,7 +246,7 @@ test_that("EVI annual composite reuses and cleans staged sources", {
     ".tif"
   )
   dest <- file.path(
-    geomarker_data_dir("evi"),
+    geomarker_stow_path("get_evi_data"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   source_dir <- evi_source_staging_dir(dest)
@@ -310,7 +310,7 @@ test_that("get_evi_data uses cached annual composites without downloads", {
   terra::writeRaster(
     r,
     file.path(
-      geomarker_data_dir("evi"),
+      geomarker_stow_path("get_evi_data"),
       evi_annual_composite_filename("2024", "h11v05")
     ),
     overwrite = TRUE

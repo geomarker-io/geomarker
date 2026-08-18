@@ -15,7 +15,8 @@ get_gridmet_data(
 
 \item{gridmet_var}{character; name of gridMET variable}
 
-\item{...}{passed to geomarker_download_file()}
+\item{...}{passed to \code{\link[stow:stow]{stow::stow()}}. The \code{package} and \code{subdir} arguments
+are fixed by geomarker.}
 }
 \value{
 a list of numeric vectors of gridMET values

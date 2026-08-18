@@ -17,8 +17,8 @@ install_merra_data(
 \arguments{
 \item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 
-\item{...}{passed to \code{geomarker_download_file()} when an official release
-asset is needed}
+\item{...}{passed to \code{\link[stow:stow]{stow::stow()}} when an official release asset is
+needed. The \code{package} and \code{subdir} arguments are fixed by geomarker.}
 
 \item{merra_month}{character vector of calendar months in \code{YYYY-MM} format,
 from 2017 onward}

@@ -16,8 +16,9 @@ tiger_state_url <- function(year) {
 }
 
 tiger_block_groups <- function(state, year, ...) {
-  dest <- geomarker_download_file(
+  dest <- geomarker_stow(
     tiger_block_group_url(state, year),
+    "get_tiger_bg",
     ...
   )
   out <-
@@ -33,8 +34,9 @@ tiger_block_groups <- function(state, year, ...) {
 }
 
 tiger_states <- function(year, ...) {
-  dest <- geomarker_download_file(
+  dest <- geomarker_stow(
     tiger_state_url(year),
+    "get_tiger_bg",
     ...
   )
   out <-
@@ -56,7 +58,8 @@ tiger_states <- function(year, ...) {
 #' @param x object coercible to an s2_cell vector; non-missing cells must be
 #' full-resolution (level 30) cells
 #' @param year vintage of TIGER/Line block group geography files
-#' @param ... passed to `geomarker_download_file()`
+#' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
+#'   are fixed by geomarker.
 #' @returns character vector of matched census block group identifiers
 #' @export
 #' @examples
@@ -68,8 +71,8 @@ tiger_states <- function(year, ...) {
 #'    R_GEOMARKER_NO_DOWNLOAD = "true"
 #'  )
 #' set.seed(123)
-#' s2_join_tiger_bg(s2cd_example_cincy(8L))
-s2_join_tiger_bg <- function(x, year = as.character(2024:2013), ...) {
+#' get_tiger_bg(s2cd_example_cincy(8L))
+get_tiger_bg <- function(x, year = as.character(2024:2013), ...) {
   check_installed("sf", "read TIGER/Line census block group geographies")
   check_installed("s2", "s2 geometry calculations")
   x <- tryCatch(
@@ -126,6 +129,7 @@ install_tiger_geomarker_fixture <- function(cell, dates, output_dir) {
   cell <- geomarker_fixture_cell(cell)
   years <- geomarker_fixture_years(dates)
   output_dir <- geomarker_fixture_output_dir(output_dir)
+  fixture_dir <- geomarker_fixture_cache_dir(output_dir, "get_tiger_bg")
   cell_geometry <- sf::st_as_sfc(s2::s2_cell_polygon(cell))
 
   lapply(years, \(year) {
@@ -133,7 +137,12 @@ install_tiger_geomarker_fixture <- function(cell, dates, output_dir) {
     tgr_st <- sf::st_read(
       paste0(
         "/vsizip/",
-        geomarker_download_file(tgr_st_url, etag = FALSE)
+        geomarker_stow(
+          tgr_st_url,
+          "get_tiger_bg",
+          quiet = TRUE,
+          .etag = FALSE
+        )
       ),
       quiet = TRUE
     )
@@ -153,8 +162,8 @@ install_tiger_geomarker_fixture <- function(cell, dates, output_dir) {
       quiet = TRUE
     )
     state_dest <- file.path(
-      output_dir,
-      url_to_filename(tgr_st_url, etag = FALSE)
+      fixture_dir,
+      geomarker_stow_filename(tgr_st_url)
     )
     unlink(state_dest)
     utils::zip(
@@ -168,7 +177,12 @@ install_tiger_geomarker_fixture <- function(cell, dates, output_dir) {
       tgr_bg <- sf::st_read(
         paste0(
           "/vsizip/",
-          geomarker_download_file(tgr_bg_url, etag = FALSE)
+          geomarker_stow(
+            tgr_bg_url,
+            "get_tiger_bg",
+            quiet = TRUE,
+            .etag = FALSE
+          )
         ),
         quiet = TRUE
       )
@@ -188,8 +202,8 @@ install_tiger_geomarker_fixture <- function(cell, dates, output_dir) {
         quiet = TRUE
       )
       bg_dest <- file.path(
-        output_dir,
-        url_to_filename(tgr_bg_url, etag = FALSE)
+        fixture_dir,
+        geomarker_stow_filename(tgr_bg_url)
       )
       unlink(bg_dest)
       utils::zip(

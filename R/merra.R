@@ -499,6 +499,7 @@ install_merra_data <- function(
 }
 
 merra_json <- function(url, query = list()) {
+  geomarker_require_download("query NASA Earthdata")
   check_installed("curl", "to access NASA Earthdata")
   check_installed("jsonlite", "to read NASA Earthdata metadata")
   if (length(query) > 0) {
@@ -732,6 +733,7 @@ create_daily_merra_data <- function(
 
   dir.create(dirname(subset_file), recursive = TRUE, showWarnings = FALSE)
   if (!file.exists(subset_file) || overwrite) {
+    geomarker_require_download("download a NASA MERRA subset")
     partial <- paste0(subset_file, ".partial")
     on.exit(unlink(partial), add = TRUE)
     download_error <- NULL
@@ -869,6 +871,7 @@ merra_build_month <- function(month, overwrite = FALSE, quiet = FALSE) {
     merra_read_data(asset, record[1, ])
     return(asset)
   }
+  geomarker_require_download("build MERRA data from NASA Earthdata")
   auth <- merra_earthdata_auth()
   on.exit(unlink(unname(unlist(auth))), add = TRUE)
   if (!quiet) {

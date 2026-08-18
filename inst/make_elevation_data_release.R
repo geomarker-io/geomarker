@@ -170,10 +170,6 @@ if (length(args) < 1 || length(args) > 2) {
     "OUTPUT_FILE [MANIFEST]"
   )
 }
-if (!requireNamespace("curl", quietly = TRUE)) {
-  elevation_release_stop("The curl package is required to export 3DEP data.")
-}
-
 output_file <- normalizePath(args[[1]], winslash = "/", mustWork = FALSE)
 manifest_file <- if (length(args) == 2) {
   normalizePath(args[[2]], winslash = "/", mustWork = TRUE)
@@ -194,6 +190,15 @@ if (file.exists(output_file)) {
   elevation_validate_release_asset(output_file, manifest)
   message("Existing pinned elevation asset is valid; no network request made.")
   quit(save = "no", status = 0)
+}
+if (nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD", unset = ""))) {
+  elevation_release_stop(
+    "R_GEOMARKER_NO_DOWNLOAD is set; the elevation release asset will not ",
+    "be downloaded."
+  )
+}
+if (!requireNamespace("curl", quietly = TRUE)) {
+  elevation_release_stop("The curl package is required to export 3DEP data.")
 }
 
 partial_file <- paste0(output_file, ".partial")

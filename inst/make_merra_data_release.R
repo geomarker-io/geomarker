@@ -14,7 +14,7 @@ if (length(script_arg) != 1) {
 }
 repo_dir <- dirname(dirname(normalizePath(sub("^--file=", "", script_arg))))
 source(file.path(repo_dir, "R", "helper.R"))
-source(file.path(repo_dir, "R", "geomarker_data.R"))
+source(file.path(repo_dir, "R", "stow.R"))
 source(file.path(repo_dir, "R", "merra.R"))
 
 args <- commandArgs(trailingOnly = TRUE)

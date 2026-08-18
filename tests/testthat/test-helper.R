@@ -8,6 +8,23 @@ test_that("check_installed works", {
     expect_true()
 })
 
+test_that("R_GEOMARKER_NO_DOWNLOAD blocks direct network access", {
+  withr::local_envvar(R_GEOMARKER_NO_DOWNLOAD = NA)
+  expect_false(geomarker_no_download())
+  expect_invisible(geomarker_require_download())
+
+  Sys.setenv(R_GEOMARKER_NO_DOWNLOAD = "false")
+  expect_true(geomarker_no_download())
+  expect_error(
+    geomarker_require_download("contact a test service"),
+    "R_GEOMARKER_NO_DOWNLOAD.*contact a test service"
+  )
+  expect_error(
+    url_etag("https://example.com"),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+})
+
 test_that("is_non_decreasing works", {
   expect_true(is_non_decreasing(numeric(0)))
   expect_true(is_non_decreasing(1))

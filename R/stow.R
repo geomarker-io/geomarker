@@ -11,7 +11,7 @@ geomarker_stow <- function(url, .subdir, ..., .etag = NULL) {
   if (!is.null(.etag)) {
     args$etag <- .etag
   }
-  if (nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))) {
+  if (geomarker_no_download()) {
     args$offline <- TRUE
   }
   args$url <- url

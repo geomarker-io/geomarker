@@ -167,6 +167,44 @@ test_that("EVI retry helpers use Retry-After headers", {
   )
 })
 
+test_that("direct EVI network paths respect no-download mode", {
+  withr::local_envvar(R_GEOMARKER_NO_DOWNLOAD = "true")
+
+  expect_error(
+    evi_fetch_url_curl("https://example.com", attempts = 1L),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    evi_fetch_url_base("https://example.com", attempts = 1L),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    evi_quality_filtered_fixture_raster(
+      "https://example.com/evi.tif",
+      "https://example.com/quality.tif",
+      cell = NULL,
+      buffer = 0
+    ),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    evi_fixture_item_overlaps_cell(
+      "https://example.com/evi.tif",
+      cell = NULL,
+      buffer = 0
+    ),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    install_evi_geomarker_fixture(
+      "8841",
+      as.Date("2024-01-01"),
+      tempfile("evi-fixture-")
+    ),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+})
+
 test_that("EVI annual composite files use cached derived rasters", {
   withr::local_envvar(c(
     R_USER_DATA_DIR = tempdir(),

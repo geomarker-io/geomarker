@@ -72,7 +72,7 @@ get_evi_data <- function(
 
   x_points <- evi_s2cd_points(x)
   years <- evi_requested_years(x_dates)
-  if (nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))) {
+  if (geomarker_no_download()) {
     annual_files <- evi_cached_annual_composite_files(years)
     evi_values <- evi_extract_annual_values(x, annual_files, buffer = buffer)
     return(evi_summarize_annual_values(
@@ -233,14 +233,7 @@ evi_download_asset <- function(
   label = "EVI rasters",
   quiet = FALSE
 ) {
-  if (nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))) {
-    stop(
-      "The envvar R_GEOMARKER_NO_DOWNLOAD is set, but ",
-      dest,
-      " does not exist",
-      call. = FALSE
-    )
-  }
+  geomarker_require_download(paste0("download the missing EVI asset to ", dest))
 
   signed_href <- evi_sign_asset(href)
   tmp <- tempfile(pattern = "geomarker_evi_")
@@ -445,7 +438,7 @@ evi_annual_composite_files <- function(
       n_build
     ))
   }
-  if (n_build > 0 && nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD"))) {
+  if (n_build > 0 && geomarker_no_download()) {
     stop(
       "The envvar R_GEOMARKER_NO_DOWNLOAD is set, but at least one annual ",
       "EVI composite does not exist: ",
@@ -792,6 +785,7 @@ evi_quality_filtered_fixture_raster <- function(
   cell,
   buffer
 ) {
+  geomarker_require_download("read remote EVI source rasters")
   r <- evi_sign_asset(href) |>
     terra::rast()
   q <- evi_sign_asset(quality_href) |>
@@ -805,6 +799,7 @@ evi_quality_filtered_fixture_raster <- function(
 }
 
 evi_fixture_item_overlaps_cell <- function(href, cell, buffer) {
+  geomarker_require_download("read a remote EVI source raster")
   r <- terra::rast(evi_sign_asset(href))
   cover <-
     geomarker_fixture_region(cell, buffer = buffer) |>
@@ -997,6 +992,7 @@ install_evi_geomarker_fixture <- function(
   buffer <- geomarker_fixture_buffer(buffer)
   dates <- geomarker_fixture_dates(dates)
   years <- evi_requested_years(list(dates))
+  geomarker_require_download("build an EVI fixture from remote source data")
   output_dir <- geomarker_fixture_output_dir(output_dir)
   evi_dir <- file.path(output_dir, subdir)
   dir.create(evi_dir, showWarnings = FALSE, recursive = TRUE)
@@ -1111,6 +1107,7 @@ evi_fetch_url_curl <- function(
   attempts = 5L,
   retry_status = c(429L, 500L, 502L, 503L, 504L)
 ) {
+  geomarker_require_download("query the Planetary Computer")
   for (attempt in seq_len(attempts)) {
     handle <- curl::new_handle(followlocation = TRUE)
     res <- tryCatch(
@@ -1147,6 +1144,7 @@ evi_fetch_url_curl <- function(
 }
 
 evi_fetch_url_base <- function(url, attempts = 5L) {
+  geomarker_require_download("query the Planetary Computer")
   for (attempt in seq_len(attempts)) {
     out <- tryCatch(
       paste(readLines(url, warn = FALSE), collapse = "\n"),

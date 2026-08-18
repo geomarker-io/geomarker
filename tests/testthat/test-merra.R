@@ -130,6 +130,37 @@ test_that("Earthdata credentials create private curl authentication files", {
   }
 })
 
+test_that("Earthdata builds respect no-download mode and reuse finished data", {
+  withr::local_envvar(c(
+    R_USER_DATA_DIR = tempfile("merra-offline-"),
+    R_GEOMARKER_NO_DOWNLOAD = "true",
+    EARTHDATA_USER = NA,
+    EARTHDATA_PASSWORD = NA
+  ))
+
+  expect_error(
+    merra_json("https://example.com"),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    install_merra_data("2024-01", source = "earthdata", quiet = TRUE),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+
+  month <- "2024-01"
+  path <- merra_local_file(month)
+  data <- test_merra_data(merra_month_dates(month))
+  test_write_merra(
+    path,
+    data,
+    list(`MERRA-Year` = "2024", `MERRA-Month` = month)
+  )
+  expect_identical(
+    unname(install_merra_data(month, source = "earthdata", quiet = TRUE)),
+    path
+  )
+})
+
 test_that("local monthly data preserve dates, duplicates, and location order", {
   withr::local_envvar(R_USER_DATA_DIR = tempfile("merra-local-"))
   month <- "2024-01"

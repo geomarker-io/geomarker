@@ -59,8 +59,25 @@ The source-specific `install_*_geomarker_fixture()` helpers download and spatial
 For assessments that summarize within a buffer, the corresponding fixture installer accepts a `buffer` in meters and includes that halo around the level-6 fixture cell.
 Set it to the largest buffer that the prepared fixture must support; each installer defaults to the assessment function's default buffer.
 A fixture for the Cincinnati-area cell `8841` is included with geomarker.
-To use it without downloading from the original sources, set `R_USER_DATA_DIR` to `system.file("gmrkr--8841", package = "geomarker")` and set `R_GEOMARKER_NO_DOWNLOAD=true`.
 This pattern can also be used to package data for another study region first and then run geomarker assessments from those prepared assets when source downloads are unavailable, restricted, slow, or otherwise not preferable.
+
+### Cache-only operation
+
+To use a prepared fixture without downloading from the original sources, set `R_USER_DATA_DIR` to the fixture directory and set `R_GEOMARKER_NO_DOWNLOAD=true`.
+For example, select the fixture included with geomarker for the current R session with:
+
+```r
+Sys.setenv(
+  R_USER_DATA_DIR = system.file("gmrkr--8841", package = "geomarker"),
+  R_GEOMARKER_NO_DOWNLOAD = "true"
+)
+```
+
+When `R_GEOMARKER_NO_DOWNLOAD` is set to any nonempty value, including `false`, geomarker assessment functions use only files already available in the selected cache; a required file that is not cached produces an error rather than an automatic download.
+Unset cache-only operation with `Sys.unsetenv("R_GEOMARKER_NO_DOWNLOAD")`.
+
+`R_GEOMARKER_NO_DOWNLOAD` is checked by geomarker's cache layer and by its known direct network paths, including Planetary Computer requests and remote raster reads, NASA Earthdata source builds, and release-preparation downloads.
+It is a best-effort application control, not a network security boundary; use operating-system or container network controls when network isolation must be guaranteed.
 
 ### MERRA-2 data cadence
 

@@ -277,7 +277,8 @@ test_that("Earthdata builds complete months and records exact provenance", {
   withr::local_envvar(
     R_USER_DATA_DIR = tempfile("merra-earthdata-"),
     EARTHDATA_USER = "test-user",
-    EARTHDATA_PASSWORD = "test-password"
+    EARTHDATA_PASSWORD = "test-password",
+    R_GEOMARKER_NO_DOWNLOAD = NA
   )
   dates <- merra_month_dates("2024-02")
   granules <- data.frame(

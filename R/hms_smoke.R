@@ -4,7 +4,8 @@
 #' the smoke polygon of each distinct smoke plume and classifying it as "Heavy",
 #' "Light", or "Medium" based on its apparent thickness.
 #' @param x Date vector; files are organized and retrieved by date for all of CONUS
-#' @param ... passed to `geomarker_download_file()`
+#' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
+#'   are fixed by geomarker.
 #' @returns a list of daily tibbles, each with columns for geometry and density
 #' @details Daily files for HMS smoke data are used again instead of
 #' re-downloading, unless there is an updated version of the daily data
@@ -38,10 +39,10 @@ get_daily_smoke_data <- function(x, ...) {
   # } else {
   smoke_file <- vapply(
     smoke_url,
-    geomarker_download_file,
-    FUN.VALUE = character(1),
-    subdir = "hms",
-    ...
+    function(url) {
+      geomarker_stow(url, "get_daily_smoke_data", ...)
+    },
+    character(1)
   ) |>
     paste0("/vsizip/", the_files = _)
   # }
@@ -68,8 +69,7 @@ get_daily_smoke_data <- function(x, ...) {
 #' If no smoke polygons are intersected, "None" is used to summarize the maximum
 #' intensity.
 #' @param x a s2_cell_dates vector (see `?s2cd`)
-#' @param ... passed to `get_daily_smoke_data()
-#' (and on to `geomarker_download_file()`)
+#' @param ... passed to `get_daily_smoke_data()` and then [stow::stow()].
 #' @returns a list of ordered factors (Levels: None > Light > Medium > Heavy)
 #' @export
 #' @examples
@@ -124,8 +124,10 @@ install_hms_smoke_geomarker_fixture <- function(cell, dates, output_dir) {
   cell <- geomarker_fixture_cell(cell)
   dates <- geomarker_fixture_dates(dates)
   output_dir <- geomarker_fixture_output_dir(output_dir)
-  hms_dir <- file.path(output_dir, "hms")
-  dir.create(hms_dir, showWarnings = FALSE, recursive = TRUE)
+  hms_dir <- geomarker_fixture_stow_dir(
+    output_dir,
+    "get_daily_smoke_data"
+  )
 
   lapply(dates, \(date) {
     stopifnot(inherits(date, "Date"))
@@ -139,13 +141,21 @@ install_hms_smoke_geomarker_fixture <- function(cell, dates, output_dir) {
       )
     dest_path <- file.path(
       hms_dir,
-      url_to_filename(smoke_url, etag = FALSE)
+      geomarker_stow_filename(smoke_url)
     ) |>
       tools::file_path_sans_ext() |>
       paste0(path_sans_ext = _, ".shz")
     final_path <- paste0(tools::file_path_sans_ext(dest_path), ".zip")
     unlink(c(dest_path, final_path), recursive = TRUE, force = TRUE)
-    paste0("/vsizip/", geomarker_download_file(smoke_url, subdir = "hms")) |>
+    paste0(
+      "/vsizip/",
+      geomarker_stow(
+        smoke_url,
+        "get_daily_smoke_data",
+        quiet = TRUE,
+        .etag = FALSE
+      )
+    ) |>
       sf::read_sf(quiet = TRUE) |>
       terra::vect() |>
       geomarker_fixture_crop_to_cell(cell = cell) |>

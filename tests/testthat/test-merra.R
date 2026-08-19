@@ -130,6 +130,37 @@ test_that("Earthdata credentials create private curl authentication files", {
   }
 })
 
+test_that("Earthdata builds respect no-download mode and reuse finished data", {
+  withr::local_envvar(c(
+    R_USER_DATA_DIR = tempfile("merra-offline-"),
+    R_GEOMARKER_NO_DOWNLOAD = "true",
+    EARTHDATA_USER = NA,
+    EARTHDATA_PASSWORD = NA
+  ))
+
+  expect_error(
+    merra_json("https://example.com"),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    install_merra_data("2024-01", source = "earthdata", quiet = TRUE),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+
+  month <- "2024-01"
+  path <- merra_local_file(month)
+  data <- test_merra_data(merra_month_dates(month))
+  test_write_merra(
+    path,
+    data,
+    list(`MERRA-Year` = "2024", `MERRA-Month` = month)
+  )
+  expect_identical(
+    unname(install_merra_data(month, source = "earthdata", quiet = TRUE)),
+    path
+  )
+})
+
 test_that("local monthly data preserve dates, duplicates, and location order", {
   withr::local_envvar(R_USER_DATA_DIR = tempfile("merra-local-"))
   month <- "2024-01"
@@ -195,9 +226,12 @@ test_that("release DCF downloads each fixed half-year asset once", {
   arguments <- list()
   testthat::local_mocked_bindings(
     merra_release_manifest = function() records,
-    geomarker_download_file = function(url, ...) {
+    geomarker_stow = function(url, .subdir, ..., .etag = NULL) {
       downloads <<- c(downloads, url)
-      arguments[[url]] <<- list(...)
+      arguments[[url]] <<- c(
+        list(subdir = .subdir, forced_etag = .etag),
+        list(...)
+      )
       if (identical(url, h1$record[["Asset-URL"]])) h1$path else h2$path
     },
     .package = "geomarker"
@@ -207,8 +241,11 @@ test_that("release DCF downloads each fixed half-year asset once", {
   expect_identical(paths[[1]], paths[[2]])
   expect_identical(paths[[1]], paths[[4]])
   expect_length(downloads, 2)
-  expect_identical(arguments[[downloads[[1]]]]$etag, FALSE)
-  expect_identical(arguments[[downloads[[1]]]]$subdir, "merra")
+  expect_identical(arguments[[downloads[[1]]]]$forced_etag, FALSE)
+  expect_identical(
+    arguments[[downloads[[1]]]]$subdir,
+    "get_merra_data"
+  )
 })
 
 test_that("release DCF allows only one record per half-year", {
@@ -227,7 +264,7 @@ test_that("recorded release checksum and schema failures are errors", {
   records[1, "Asset-SHA256"] <- paste(rep("0", 64), collapse = "")
   testthat::local_mocked_bindings(
     merra_release_manifest = function() records,
-    geomarker_download_file = function(...) release$path,
+    geomarker_stow = function(...) release$path,
     .package = "geomarker"
   )
   expect_error(install_merra_data("2024-01"), "SHA-256")
@@ -240,7 +277,8 @@ test_that("Earthdata builds complete months and records exact provenance", {
   withr::local_envvar(
     R_USER_DATA_DIR = tempfile("merra-earthdata-"),
     EARTHDATA_USER = "test-user",
-    EARTHDATA_PASSWORD = "test-password"
+    EARTHDATA_PASSWORD = "test-password",
+    R_GEOMARKER_NO_DOWNLOAD = NA
   )
   dates <- merra_month_dates("2024-02")
   granules <- data.frame(
@@ -327,7 +365,7 @@ test_that("CMR discovery requires exactly one granule per day", {
   expect_error(merra_granules("2024-02"), "not complete")
 })
 
-test_that("daily caches resume only with matching hashes and revisions", {
+test_that("staged daily sources resume only with matching hashes and revisions", {
   source_dir <- tempfile("merra-daily-")
   granule <- data.frame(
     date = as.Date("2024-01-01"),

@@ -54,6 +54,13 @@ nei_test_x <- function(dates = as.Date("2024-01-01")) {
   )
 }
 
+nei_test_2023_url <- function() {
+  paste0(
+    "https://gaftp.epa.gov/Air/nei/2023/data_summaries/",
+    "eis_report_38234_2023NEI_facility_summary_21jul2026.zip"
+  )
+}
+
 test_that("get_nei_point_summary validates inputs", {
   x <- nei_test_x()
   expect_error(
@@ -86,7 +93,7 @@ test_that("unavailable NEI cycles return missing without dependencies", {
   x <- nei_test_x(as.Date(c("2014-01-01", "2025-01-01", "2027-12-31")))
   testthat::local_mocked_bindings(
     check_installed = function(...) stop("check_installed was called"),
-    geomarker_download_file = function(...) stop("download was called"),
+    geomarker_stow = function(...) stop("download was called"),
     .package = "geomarker"
   )
 
@@ -100,7 +107,7 @@ test_that("NEI point CSVs are read, filtered, and cleaned", {
   zip_file <- nei_test_zip(nei_test_data())
   withr::defer(unlink(zip_file))
   testthat::local_mocked_bindings(
-    geomarker_download_file = function(...) zip_file,
+    geomarker_stow = function(...) zip_file,
     .package = "geomarker"
   )
 
@@ -116,7 +123,7 @@ test_that("NEI point CSV structure is validated", {
   column_zip <- nei_test_zip(missing_column, "missing-column.csv")
   withr::defer(unlink(column_zip))
   testthat::local_mocked_bindings(
-    geomarker_download_file = function(...) column_zip,
+    geomarker_stow = function(...) column_zip,
     .package = "geomarker"
   )
   expect_error(
@@ -129,7 +136,7 @@ test_that("nearby NEI emissions use the requested summary", {
   zip_file <- nei_test_zip(nei_test_data())
   withr::defer(unlink(zip_file))
   testthat::local_mocked_bindings(
-    geomarker_download_file = function(...) zip_file,
+    geomarker_stow = function(...) zip_file,
     .package = "geomarker"
   )
   x <- nei_test_x(as.Date(c("2023-03-01", "2024-09-01")))
@@ -166,7 +173,7 @@ test_that("empty NEI buffers use the function's empty-vector result", {
   zip_file <- nei_test_zip(nei_test_data())
   withr::defer(unlink(zip_file))
   testthat::local_mocked_bindings(
-    geomarker_download_file = function(...) zip_file,
+    geomarker_stow = function(...) zip_file,
     .package = "geomarker"
   )
   x <- nei_test_x()
@@ -198,7 +205,7 @@ test_that("calendar years request each NEI source once", {
   zip_file <- nei_test_zip(nei_test_data()[1, , drop = FALSE])
   withr::defer(unlink(zip_file))
   testthat::local_mocked_bindings(
-    geomarker_download_file = function(url, ...) {
+    geomarker_stow = function(url, ...) {
       downloads <<- c(downloads, url)
       zip_file
     },
@@ -230,7 +237,7 @@ test_that("calendar years request each NEI source once", {
   )
 })
 
-test_that("NEI source ZIP is the only persistent cached artifact", {
+test_that("NEI source ZIP is the only durable managed local copy", {
   zip_file <- nei_test_zip(nei_test_data())
   withr::defer(unlink(zip_file))
   data_root <- tempfile("geomarker-nei-cache-")
@@ -240,10 +247,10 @@ test_that("NEI source ZIP is the only persistent cached artifact", {
     R_USER_DATA_DIR = data_root,
     R_GEOMARKER_NO_DOWNLOAD = "true"
   )
-  cache_dir <- geomarker_data_dir()
+  cache_dir <- geomarker_stow_path("get_nei_point_summary")
   cached_zip <- file.path(
     cache_dir,
-    "nei-2023-facility-summary.zip"
+    geomarker_stow_filename(nei_test_2023_url())
   )
   file.copy(zip_file, cached_zip)
   before <- list.files(cache_dir, all.files = TRUE, no.. = TRUE)
@@ -298,7 +305,12 @@ test_that("NEI fixtures retain point sources in the requested buffer halo", {
     buffer = 1000
   )
   read_fixture <- function(directory) {
-    zip_file <- file.path(directory, "nei-2023-facility-summary.zip")
+    zip_file <- file.path(
+      directory,
+      "stow",
+      "get_nei_point_summary",
+      geomarker_stow_filename(nei_test_2023_url())
+    )
     member <- utils::unzip(zip_file, list = TRUE)$Name[[1]]
     utils::read.csv(unz(zip_file, member), check.names = FALSE)
   }

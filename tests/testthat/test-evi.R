@@ -83,21 +83,21 @@ test_that("EVI item filter keeps tiles containing requested points", {
   expect_equal(out$id, c("hit", "unknown"))
 })
 
-test_that("EVI download helper reports batch cache progress", {
+test_that("EVI download helper reports staged-file progress", {
   withr::local_envvar(R_USER_DATA_DIR = tempdir())
   hrefs <- c(
     "https://example.com/evi/a.tif",
     "https://example.com/evi/b.tif"
   )
   cached <- file.path(
-    geomarker_data_dir("evi"),
+    geomarker_stow_path("get_evi_data"),
     vapply(hrefs, url_to_filename, character(1), etag = FALSE)
   )
   file.create(cached)
 
   expect_message(
     out <- evi_download_assets(hrefs, quiet = FALSE),
-    "EVI rasters: 2 found, 2 cached, 0 to download.",
+    "EVI rasters: 2 found, 2 already staged, 0 to download.",
     fixed = TRUE
   )
   expect_equal(out, cached)
@@ -167,13 +167,51 @@ test_that("EVI retry helpers use Retry-After headers", {
   )
 })
 
-test_that("EVI annual composite files use cached derived rasters", {
+test_that("direct EVI network paths respect no-download mode", {
+  withr::local_envvar(R_GEOMARKER_NO_DOWNLOAD = "true")
+
+  expect_error(
+    evi_fetch_url_curl("https://example.com", attempts = 1L),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    evi_fetch_url_base("https://example.com", attempts = 1L),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    evi_quality_filtered_fixture_raster(
+      "https://example.com/evi.tif",
+      "https://example.com/quality.tif",
+      cell = NULL,
+      buffer = 0
+    ),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    evi_fixture_item_overlaps_cell(
+      "https://example.com/evi.tif",
+      cell = NULL,
+      buffer = 0
+    ),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+  expect_error(
+    install_evi_geomarker_fixture(
+      "8841",
+      as.Date("2024-01-01"),
+      tempfile("evi-fixture-")
+    ),
+    "R_GEOMARKER_NO_DOWNLOAD"
+  )
+})
+
+test_that("EVI annual composite files use durable managed local copies", {
   withr::local_envvar(c(
     R_USER_DATA_DIR = tempdir(),
     R_GEOMARKER_NO_DOWNLOAD = "true"
   ))
   dest <- file.path(
-    geomarker_data_dir("evi"),
+    geomarker_stow_path("get_evi_data"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   file.create(dest)
@@ -193,7 +231,10 @@ test_that("EVI annual composite files use cached derived rasters", {
 
   expect_message(
     out <- evi_annual_composite_files(items, years = "2024", quiet = FALSE),
-    "Annual EVI composites: 1 required, 1 cached, 0 to build.",
+    paste0(
+      "Annual EVI composites: 1 required, 1 available as durable managed ",
+      "local copies, 0 to build."
+    ),
     fixed = TRUE
   )
   expect_equal(out$file, dest)
@@ -207,7 +248,7 @@ test_that("EVI annual composite keeps staged sources after source errors", {
   href <- "https://example.com/evi/evi_2024_h11v05.tif"
   quality_href <- "https://example.com/evi/quality_2024_h11v05.tif"
   dest <- file.path(
-    geomarker_data_dir("evi"),
+    geomarker_stow_path("get_evi_data"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   source_dir <- evi_source_staging_dir(dest)
@@ -246,7 +287,7 @@ test_that("EVI annual composite reuses and cleans staged sources", {
     ".tif"
   )
   dest <- file.path(
-    geomarker_data_dir("evi"),
+    geomarker_stow_path("get_evi_data"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   source_dir <- evi_source_staging_dir(dest)
@@ -287,7 +328,7 @@ test_that("EVI annual composite reuses and cleans staged sources", {
   )
 })
 
-test_that("get_evi_data uses cached annual composites without downloads", {
+test_that("get_evi_data uses managed annual composites without downloads", {
   skip_if_not_installed("terra")
   withr::local_envvar(c(
     R_USER_DATA_DIR = tempdir(),
@@ -310,7 +351,7 @@ test_that("get_evi_data uses cached annual composites without downloads", {
   terra::writeRaster(
     r,
     file.path(
-      geomarker_data_dir("evi"),
+      geomarker_stow_path("get_evi_data"),
       evi_annual_composite_filename("2024", "h11v05")
     ),
     overwrite = TRUE

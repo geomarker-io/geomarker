@@ -1,3 +1,5 @@
 docs/*
 merra2_*_pm25.dcf
 merra2_*_pm25.rds
+!inst/gmrkr--*/R/geomarker/stow/get_merra_data/local/merra2_*_pm25.dcf
+!inst/gmrkr--*/R/geomarker/stow/get_merra_data/local/merra2_*_pm25.rds

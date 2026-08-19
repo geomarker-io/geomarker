@@ -17,8 +17,8 @@ install_merra_data(
 \arguments{
 \item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 
-\item{...}{passed to \code{geomarker_download_file()} when an official release
-asset is needed}
+\item{...}{passed to \code{\link[stow:stow]{stow::stow()}} when an official release asset is
+needed. The \code{package} and \code{subdir} arguments are fixed by geomarker.}
 
 \item{merra_month}{character vector of calendar months in \code{YYYY-MM} format,
 from 2017 onward}
@@ -27,7 +27,7 @@ from 2017 onward}
 asset or \code{"earthdata"} to build each complete month from NASA}
 
 \item{overwrite}{logical; recreate monthly data from the latest CMR listing?
-Matching daily source caches are still reused.}
+Matching staged daily source files are still reused.}
 
 \item{quiet}{logical; suppress progress messages?}
 }
@@ -60,8 +60,9 @@ documents how to
 if the prompt does not appear.
 
 Set the account credentials in \code{EARTHDATA_USER} and \code{EARTHDATA_PASSWORD}.
-They are written to temporary private netrc and cookie files in the
-geomarker data cache while NASA's authenticated redirects are followed.
+They are written to temporary private netrc and cookie files in geomarker's
+durable managed local copy directory while NASA's authenticated redirects
+are followed.
 
 Source concentrations are converted to micrograms per cubic meter and
 averaged across each day. Total PM2.5 is calculated as \code{DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06}.

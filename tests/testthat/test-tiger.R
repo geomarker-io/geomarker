@@ -1,4 +1,4 @@
-test_that("s2_join_tiger_bg() works", {
+test_that("get_tiger_bg() works", {
   withr::local_envvar(
     R_USER_DATA_DIR = fs::path_package(
       "geomarker",
@@ -7,10 +7,16 @@ test_that("s2_join_tiger_bg() works", {
     R_GEOMARKER_NO_DOWNLOAD = "true"
   )
   set.seed(12)
-  out <- s2_join_tiger_bg(s2cd_example_cincy(n_locations = 16L))
+  out <- get_tiger_bg(s2cd_example_cincy(n_locations = 16L))
   expect_type(out, "character")
   expect_length(out, 16)
   expect_true(all(sapply(out, nchar) == 12))
+})
+
+test_that("get_tiger_bg is the only exported TIGER linkage API", {
+  exports <- getNamespaceExports("geomarker")
+  expect_true("get_tiger_bg" %in% exports)
+  expect_false("s2_join_tiger_bg" %in% exports)
 })
 
 test_that("TIGER URLs use Census HTTPS source", {
@@ -24,9 +30,9 @@ test_that("TIGER URLs use Census HTTPS source", {
   )
 })
 
-test_that("s2_join_tiger_bg() validates full-resolution cells", {
+test_that("get_tiger_bg() validates full-resolution cells", {
   expect_error(
-    s2_join_tiger_bg(s2::s2_cell("8841")),
+    get_tiger_bg(s2::s2_cell("8841")),
     "full-resolution level 30"
   )
 })

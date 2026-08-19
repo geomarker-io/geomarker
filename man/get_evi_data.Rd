@@ -11,7 +11,8 @@ get_evi_data(x, buffer = 400, overwrite = FALSE, quiet = FALSE)
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 
-\item{overwrite}{logical; overwrite cached annual EVI rasters?}
+\item{overwrite}{logical; replace existing annual EVI rasters stored as
+durable managed local copies?}
 
 \item{quiet}{logical; show download progress messages?}
 }
@@ -31,14 +32,16 @@ Data are downloaded from the
 mirror of NASA LP DAAC MOD13Q1/MYD13Q1 Version 6.1 Cloud Optimized GeoTIFFs.
 See \url{https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061}
 for collection details. Source 16-day EVI and pixel reliability rasters are
-staged under \code{geomarker_data_dir("evi")} only when an annual composite is
-missing; if a build fails, complete source downloads are reused on the next
-attempt and removed after the annual composite is successfully written.
+staged under the \code{get_evi_data} subdirectory of geomarker's durable managed
+local copy directory only when an annual composite is missing. If a build
+fails, complete source downloads are reused on the next attempt and removed
+after the annual composite is successfully written.
 EVI source rasters are downloaded by MODIS tile; 14 MODIS tiles intersect the
 contiguous United States. Planetary Computer assets are accessed with
 reusable container SAS tokens to reduce signing API calls.
-Annual composite rasters are cached in \code{geomarker_data_dir("evi")}. EVI
-source raster values are scaled by 0.0001 while creating annual composites.
+Annual composite rasters are retained there as durable managed local copies.
+EVI source raster values are scaled by 0.0001 while creating annual
+composites.
 EVI is a greenness index designed to emphasize photosynthetically active
 vegetation while reducing atmospheric and soil background effects. In this
 MODIS product, scaled EVI values are expected to range from about -0.2 to

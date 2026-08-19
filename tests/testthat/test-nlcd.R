@@ -38,7 +38,14 @@ test_that("get_nlcd_fct_imp_data works with multiple years", {
     urls,
     \(url) {
       !inherits(
-        try(geomarker_download_file(url, quiet = TRUE), silent = TRUE),
+        try(
+          geomarker_stow(
+            url,
+            "get_nlcd_fct_imp_data",
+            quiet = TRUE
+          ),
+          silent = TRUE
+        ),
         "try-error"
       )
     },
@@ -46,7 +53,7 @@ test_that("get_nlcd_fct_imp_data works with multiple years", {
   )
   skip_if_not(
     all(cached),
-    "Annual NLCD bundles for all requested years are not cached"
+    "Annual NLCD durable managed local copies are unavailable"
   )
   expect_no_warning(out <- get_nlcd_fct_imp_data(x, buffer = 400))
   expect_length(out, length(x))

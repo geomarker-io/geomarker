@@ -11,7 +11,8 @@
 #' preliminary and subject to change.
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param gridmet_var character; name of gridMET variable
-#' @param ... passed to geomarker_download_file()
+#' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
+#'   are fixed by geomarker.
 #' @return a list of numeric vectors of gridMET values
 #' @export
 #' @examples
@@ -56,9 +57,10 @@ get_gridmet_data <- function(
 
   gridmet_files <- vapply(
     gridmet_urls,
-    geomarker_download_file,
-    FUN.VALUE = character(1),
-    ...
+    function(url) {
+      geomarker_stow(url, "get_gridmet_data", ...)
+    },
+    character(1)
   )
   gridmet_rasters <- suppressWarnings(lapply(gridmet_files, terra::rast))
   gridmet_rasters <- mapply(
@@ -110,13 +112,22 @@ install_gridmet_geomarker_fixture <- function(
     gridmet_var,
     years
   )
+  fixture_dir <- geomarker_fixture_stow_dir(
+    output_dir,
+    "get_gridmet_data"
+  )
 
   lapply(gridmet_urls, \(url) {
-    geomarker_download_file(url) |>
+    geomarker_stow(
+      url,
+      "get_gridmet_data",
+      quiet = TRUE,
+      .etag = FALSE
+    ) |>
       terra::rast() |>
       geomarker_fixture_crop_to_cell(cell = cell) |>
       terra::writeCDF(
-        file.path(output_dir, url_to_filename(url, etag = FALSE)),
+        file.path(fixture_dir, geomarker_stow_filename(url)),
         overwrite = TRUE
       )
   }) |>

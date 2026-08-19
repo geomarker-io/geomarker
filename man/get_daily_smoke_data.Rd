@@ -9,7 +9,8 @@ get_daily_smoke_data(x, ...)
 \arguments{
 \item{x}{Date vector; files are organized and retrieved by date for all of CONUS}
 
-\item{...}{passed to \code{geomarker_download_file()}}
+\item{...}{passed to \code{\link[stow:stow]{stow::stow()}}. The \code{package} and \code{subdir} arguments
+are fixed by geomarker.}
 }
 \value{
 a list of daily tibbles, each with columns for geometry and density

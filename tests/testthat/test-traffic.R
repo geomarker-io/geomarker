@@ -7,8 +7,8 @@ test_that("traffic metadata supplies a default asset and preferred layer", {
 test_that("traffic download arguments are forwarded", {
   received <- NULL
   testthat::local_mocked_bindings(
-    geomarker_download_file = function(url, ...) {
-      received <<- list(url = url, ...)
+    geomarker_stow = function(url, .subdir, ...) {
+      received <<- c(list(url = url, subdir = .subdir), list(...))
       "traffic.gpkg"
     },
     .package = "geomarker"
@@ -18,8 +18,7 @@ test_that("traffic download arguments are forwarded", {
     traffic_data_file(
       overwrite = TRUE,
       quiet = TRUE,
-      etag = FALSE,
-      subdir = "traffic"
+      etag = FALSE
     ),
     "traffic.gpkg"
   )
@@ -27,7 +26,7 @@ test_that("traffic download arguments are forwarded", {
   expect_identical(received$overwrite, TRUE)
   expect_identical(received$quiet, TRUE)
   expect_identical(received$etag, FALSE)
-  expect_identical(received$subdir, "traffic")
+  expect_identical(received$subdir, "get_traffic_summary")
   expect_identical(names(formals(get_traffic_summary)), c("x", "buffer", "..."))
 })
 

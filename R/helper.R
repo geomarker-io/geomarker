@@ -21,6 +21,22 @@ check_installed <- function(pkg, reason = NULL) {
   invisible(TRUE)
 }
 
+geomarker_no_download <- function() {
+  nzchar(Sys.getenv("R_GEOMARKER_NO_DOWNLOAD", unset = ""))
+}
+
+geomarker_require_download <- function(action = "access the network") {
+  if (geomarker_no_download()) {
+    stop(
+      "R_GEOMARKER_NO_DOWNLOAD is set; geomarker will not ",
+      action,
+      ".",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
 is_non_decreasing <- function(x) {
   if (length(x) <= 1) {
     return(TRUE)
@@ -70,6 +86,7 @@ url_etag <- function(url) {
     "url must be length one" = length(url) == 1,
     "url must be character" = inherits(url, "character")
   )
+  geomarker_require_download("request URL headers")
   check_installed("curl", "to check URL headers.")
   response <- curl::curl_fetch_memory(
     url = url,

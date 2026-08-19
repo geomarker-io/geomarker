@@ -1,111 +1,3 @@
-traffic_data_manifest <- function() {
-  manifest_path <- system.file("traffic-data.dcf", package = "geomarker")
-  if (!nzchar(manifest_path)) {
-    manifest_path <- file.path("inst", "traffic-data.dcf")
-  }
-  as.list(read.dcf(manifest_path)[1, ])
-}
-
-traffic_data_url <- function() {
-  url <- traffic_data_manifest()[["Asset-URL"]]
-  if (is.null(url) || length(url) != 1 || !nzchar(url)) {
-    stop("Traffic metadata does not provide an asset URL.", call. = FALSE)
-  }
-  url
-}
-
-traffic_data_file <- function(...) {
-  geomarker_download_file(
-    traffic_data_url(),
-    ...
-  )
-}
-
-traffic_data_source <- function(path) {
-  required_fields <- c("AADT", "AADT_SINGLE_UNIT", "AADT_COMBINATION")
-  layers <- sf::st_layers(path, do_count = FALSE)$name
-  preferred_layer <- traffic_data_manifest()[["Asset-Layer"]]
-  if (!is.null(preferred_layer) && preferred_layer %in% layers) {
-    layers <- c(preferred_layer, setdiff(layers, preferred_layer))
-  }
-
-  for (layer in layers) {
-    escaped_layer <- gsub('"', '""', layer, fixed = TRUE)
-    sample <- tryCatch(
-      sf::st_read(
-        path,
-        query = paste0('SELECT * FROM "', escaped_layer, '" LIMIT 1'),
-        quiet = TRUE
-      ),
-      error = function(err) NULL
-    )
-    if (is.null(sample)) {
-      next
-    }
-    field_indices <- match(tolower(required_fields), tolower(names(sample)))
-    if (!anyNA(field_indices)) {
-      return(list(
-        layer = layer,
-        fields = stats::setNames(names(sample)[field_indices], required_fields),
-        crs = sf::st_crs(sample)
-      ))
-    }
-  }
-
-  stop(
-    "Traffic data must contain a spatial layer with the fields ",
-    paste(required_fields, collapse = ", "),
-    ".",
-    call. = FALSE
-  )
-}
-
-traffic_region_filter_wkt <- function(parent, buffer, crs = sf::st_crs(4326)) {
-  region <- parent |>
-    s2::s2_cell_polygon() |>
-    s2::s2_buffer_cells(
-      distance = buffer,
-      max_cells = 1000,
-      min_level = -1
-    ) |>
-    sf::st_as_sfc() |>
-    sf::st_bbox() |>
-    sf::st_as_sfc()
-  if (!is.na(crs)) {
-    region <- sf::st_transform(region, crs)
-  }
-  sf::st_as_text(region)
-}
-
-traffic_read_region <- function(path, source, parent, buffer) {
-  hpms <- sf::read_sf(
-    path,
-    layer = source$layer,
-    wkt_filter = traffic_region_filter_wkt(parent, buffer, source$crs),
-    quiet = TRUE
-  )
-  names(hpms)[match(unname(source$fields), names(hpms))] <- names(source$fields)
-  if (is.na(sf::st_crs(hpms))) {
-    hpms <- sf::st_set_crs(hpms, 4326)
-  } else {
-    hpms <- sf::st_transform(hpms, 4326)
-  }
-  for (field in names(source$fields)) {
-    hpms[[field]] <- suppressWarnings(as.numeric(hpms[[field]]))
-  }
-  hpms[
-    stats::complete.cases(sf::st_drop_geometry(hpms)[names(source$fields)]),
-  ]
-}
-
-traffic_zero_summary <- function() {
-  c(
-    aadtm_trucks_buses = 0,
-    aadtm_tractor_trailer = 0,
-    aadtm_passenger = 0
-  )
-}
-
 #' Summarize nearby traffic
 #'
 #' Summarizes average annual daily traffic meters (`aadtm`) traveled
@@ -127,12 +19,13 @@ traffic_zero_summary <- function() {
 #'
 #' The processed traffic data are distributed separately from the R package as
 #' a GeoPackage asset attached to the geomarker package release. The file is
-#' downloaded to `geomarker_data_dir()` the first time it is required by
-#' `get_traffic_summary()` and reused from the local cache on subsequent calls.
+#' saved as a durable managed local copy in the `get_traffic_summary`
+#' directory the first time it is required and reused on subsequent calls.
 #'
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param buffer distance from s2 cell (in meters) to summarize data
-#' @param ... passed to `geomarker_download_file()`
+#' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
+#'   are fixed by geomarker.
 #' @return data frame with one row per input location and numeric traffic
 #'   summaries `aadtm_trucks_buses`, `aadtm_tractor_trailer`, and
 #'   `aadtm_passenger`
@@ -293,16 +186,24 @@ install_traffic_geomarker_fixture <- function(
   geomarker_fixture_dates(dates)
   output_dir <- geomarker_fixture_output_dir(output_dir)
   if (is.null(source_file)) {
-    source_file <- traffic_data_file()
+    source_file <- geomarker_stow(
+      traffic_data_url(),
+      "get_traffic_summary",
+      .etag = FALSE
+    )
   }
   stopifnot(
     "source_file must be length one" = length(source_file) == 1,
     "source_file must exist" = file.exists(source_file)
   )
 
-  output_file <- file.path(
+  fixture_dir <- geomarker_fixture_stow_dir(
     output_dir,
-    url_to_filename(traffic_data_url(), etag = FALSE)
+    "get_traffic_summary"
+  )
+  output_file <- file.path(
+    fixture_dir,
+    geomarker_stow_filename(traffic_data_url())
   )
   source <- traffic_data_source(source_file)
   traffic_read_region(source_file, source, cell, buffer) |>
@@ -317,4 +218,113 @@ install_traffic_geomarker_fixture <- function(
       quiet = TRUE
     )
   invisible(output_dir)
+}
+
+traffic_data_manifest <- function() {
+  manifest_path <- system.file("traffic-data.dcf", package = "geomarker")
+  if (!nzchar(manifest_path)) {
+    manifest_path <- file.path("inst", "traffic-data.dcf")
+  }
+  as.list(read.dcf(manifest_path)[1, ])
+}
+
+traffic_data_url <- function() {
+  url <- traffic_data_manifest()[["Asset-URL"]]
+  if (is.null(url) || length(url) != 1 || !nzchar(url)) {
+    stop("Traffic metadata does not provide an asset URL.", call. = FALSE)
+  }
+  url
+}
+
+traffic_data_file <- function(...) {
+  geomarker_stow(
+    traffic_data_url(),
+    "get_traffic_summary",
+    ...
+  )
+}
+
+traffic_data_source <- function(path) {
+  required_fields <- c("AADT", "AADT_SINGLE_UNIT", "AADT_COMBINATION")
+  layers <- sf::st_layers(path, do_count = FALSE)$name
+  preferred_layer <- traffic_data_manifest()[["Asset-Layer"]]
+  if (!is.null(preferred_layer) && preferred_layer %in% layers) {
+    layers <- c(preferred_layer, setdiff(layers, preferred_layer))
+  }
+
+  for (layer in layers) {
+    escaped_layer <- gsub('"', '""', layer, fixed = TRUE)
+    sample <- tryCatch(
+      sf::st_read(
+        path,
+        query = paste0('SELECT * FROM "', escaped_layer, '" LIMIT 1'),
+        quiet = TRUE
+      ),
+      error = function(err) NULL
+    )
+    if (is.null(sample)) {
+      next
+    }
+    field_indices <- match(tolower(required_fields), tolower(names(sample)))
+    if (!anyNA(field_indices)) {
+      return(list(
+        layer = layer,
+        fields = stats::setNames(names(sample)[field_indices], required_fields),
+        crs = sf::st_crs(sample)
+      ))
+    }
+  }
+
+  stop(
+    "Traffic data must contain a spatial layer with the fields ",
+    paste(required_fields, collapse = ", "),
+    ".",
+    call. = FALSE
+  )
+}
+
+traffic_region_filter_wkt <- function(parent, buffer, crs = sf::st_crs(4326)) {
+  region <- parent |>
+    s2::s2_cell_polygon() |>
+    s2::s2_buffer_cells(
+      distance = buffer,
+      max_cells = 1000,
+      min_level = -1
+    ) |>
+    sf::st_as_sfc() |>
+    sf::st_bbox() |>
+    sf::st_as_sfc()
+  if (!is.na(crs)) {
+    region <- sf::st_transform(region, crs)
+  }
+  sf::st_as_text(region)
+}
+
+traffic_read_region <- function(path, source, parent, buffer) {
+  hpms <- sf::read_sf(
+    path,
+    layer = source$layer,
+    wkt_filter = traffic_region_filter_wkt(parent, buffer, source$crs),
+    quiet = TRUE
+  )
+  names(hpms)[match(unname(source$fields), names(hpms))] <- names(source$fields)
+  if (is.na(sf::st_crs(hpms))) {
+    hpms <- sf::st_set_crs(hpms, 4326)
+  } else {
+    hpms <- sf::st_transform(hpms, 4326)
+  }
+  for (field in names(source$fields)) {
+    hpms[[field]] <- suppressWarnings(as.numeric(hpms[[field]]))
+  }
+  hpms[
+    stats::complete.cases(sf::st_drop_geometry(hpms)[names(source$fields)]),
+  ]
+}
+
+traffic_zero_summary <- function() {
+  c(
+    aadtm_trucks_buses = 0,
+    aadtm_tractor_trailer = 0,
+    aadtm_passenger = 0
+  )
 }

@@ -1,3 +1,189 @@
+#' MERRA-2 aerosol diagnostics data
+#'
+#' Links daily surface PM2.5 and its aerosol components from NASA's MERRA-2
+#' `M2T1NXAER` v5.12.4 product to each location and date in an `s2cd` vector.
+#'
+#' Each package release records one complete January--June and one complete
+#' July--December asset per available year. A fully available calendar month
+#' may instead be built locally with `install_merra_data(source =
+#' "earthdata")`. Local monthly data take precedence over a released half-year
+#' asset.
+#'
+#' Source builds require a free NASA Earthdata Login account. Follow NASA's
+#' [registration guide](https://urs.earthdata.nasa.gov/documentation/for_users/how_to_register)
+#' to create and activate an account. Before the first source build, sign in to
+#' the [Cloud OPeNDAP service](https://opendap.earthdata.nasa.gov/login) and
+#' authorize the `Hyrax in the cloud` application when prompted. NASA also
+#' documents how to
+#' [preauthorize an application](https://urs.earthdata.nasa.gov/documentation/for_users/how_to_preauth_app)
+#' if the prompt does not appear.
+#'
+#' Set the account credentials in `EARTHDATA_USER` and `EARTHDATA_PASSWORD`.
+#' They are written to temporary private netrc and cookie files in geomarker's
+#' durable managed local copy directory while NASA's authenticated redirects
+#' are followed.
+#'
+#' Source concentrations are converted to micrograms per cubic meter and
+#' averaged across each day. Total PM2.5 is calculated as `DUSMASS25 +
+#' OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06`.
+#'
+#' @param x a s2_cell_dates vector (see `?s2cd`)
+#' @param ... passed to [stow::stow()] when an official release asset is
+#'   needed. The `package` and `subdir` arguments are fixed by geomarker.
+#' @return A named list with one data frame per input location and one row per
+#'   requested date. Columns are `merra_dust`, `merra_oc`, `merra_bc`,
+#'   `merra_ss`, `merra_so4`, and `merra_pm25`. Unavailable periods contain
+#'   missing values and produce one warning.
+#' @references
+#' <https://disc.gsfc.nasa.gov/datasets/M2T1NXAER_5.12.4/summary>
+#' @references
+#' <https://gmao.gsfc.nasa.gov/gmao-products/merra-2/faq_merra-2/>
+#' @export
+#' @examples
+#' withr::local_envvar(
+#'   R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+#'   R_GEOMARKER_NO_DOWNLOAD = "true"
+#' )
+#' get_merra_data(s2cd_example())
+get_merra_data <- function(x, ...) {
+  stopifnot("x must be a s2_cell_dates vector" = is_s2cd(x))
+  cells <- s2::as_s2_cell(x)
+  dates <- s2cd_dates(x)
+  out <- lapply(lengths(dates), function(n) {
+    as.data.frame(
+      matrix(
+        NA_real_,
+        n,
+        length(merra_columns),
+        dimnames = list(NULL, merra_columns)
+      )
+    )
+  })
+  names(out) <- as.character(cells)
+  if (length(cells) == 0 || sum(lengths(dates)) == 0) {
+    return(out)
+  }
+
+  coordinates <- as.data.frame(s2::s2_cell_to_lnglat(cells))
+  inside <- coordinates$x >= merra_bbox[[1]] &
+    coordinates$x <= merra_bbox[[3]] &
+    coordinates$y >= merra_bbox[[2]] &
+    coordinates$y <= merra_bbox[[4]]
+  if (any(!inside)) {
+    stop(
+      "All input locations must be inside the CONUS MERRA data bounds.",
+      call. = FALSE
+    )
+  }
+
+  requests <- do.call(
+    rbind,
+    lapply(seq_along(dates), function(i) {
+      if (length(dates[[i]]) == 0) {
+        return(NULL)
+      }
+      data.frame(location = i, row = seq_along(dates[[i]]), date = dates[[i]])
+    })
+  )
+  requests$month <- format(requests$date, "%Y-%m")
+  months <- unique(requests$month)
+  files <- stats::setNames(rep(NA_character_, length(months)), months)
+  local_data <- list()
+
+  for (month in months[as.integer(substr(months, 1, 4)) >= 2017]) {
+    path <- merra_local_file(month)
+    if (!file.exists(path)) {
+      next
+    }
+    dcf <- sub("[.]rds$", ".dcf", path)
+    if (
+      !file.exists(dcf) ||
+        nrow(record <- read.dcf(dcf)) != 1 ||
+        !"MERRA-Month" %in% colnames(record) ||
+        !identical(unname(record[1, "MERRA-Month"]), month)
+    ) {
+      stop(
+        "Local MERRA data need a matching one-record DCF manifest.",
+        call. = FALSE
+      )
+    }
+    expected <- merra_month_dates(month)
+    if (
+      !identical(
+        unname(record[1, "Coverage-Start"]),
+        as.character(min(expected))
+      ) ||
+        !identical(
+          unname(record[1, "Coverage-End"]),
+          as.character(max(expected))
+        )
+    ) {
+      stop(
+        "Local MERRA DCF does not describe a complete calendar month.",
+        call. = FALSE
+      )
+    }
+    local_data[[month]] <- merra_read_data(path, record[1, ])
+    files[[month]] <- path
+  }
+
+  release_months <- names(files)[
+    is.na(files) & as.integer(substr(names(files), 1, 4)) >= 2017
+  ]
+  if (length(release_months) > 0) {
+    files[release_months] <- suppressWarnings(
+      merra_release_files(release_months, ..., warn = FALSE)
+    )
+  }
+
+  loaded <- new.env(parent = emptyenv())
+  unavailable <- character()
+  for (month in months) {
+    which_requests <- which(requests$month == month)
+    if (is.na(files[[month]])) {
+      unavailable <- c(unavailable, month)
+      next
+    }
+    data <- local_data[[month]]
+    if (is.null(data)) {
+      if (!exists(files[[month]], loaded, inherits = FALSE)) {
+        assign(files[[month]], merra_read_data(files[[month]]), loaded)
+      }
+      data <- get(files[[month]], loaded, inherits = FALSE)
+    }
+    these <- requests[which_requests, , drop = FALSE]
+    locations <- unique(these$location)
+    grid <- unique(data$s2)
+    closest <- s2::s2_closest_feature(
+      s2::s2_cell_to_lnglat(cells[locations]),
+      s2::s2_cell_center(s2::as_s2_cell(grid))
+    )
+    selected <- stats::setNames(grid[closest], locations)
+    data_rows <- match(
+      paste(these$date, selected[as.character(these$location)]),
+      paste(data$date, data$s2)
+    )
+    if (anyNA(data_rows)) {
+      stop("MERRA data do not cover every requested date.", call. = FALSE)
+    }
+    values <- data[data_rows, merra_columns, drop = FALSE]
+    for (i in seq_len(nrow(these))) {
+      out[[these$location[[i]]]][these$row[[i]], ] <- values[i, ]
+    }
+  }
+  if (length(unavailable) > 0) {
+    warning(
+      "MERRA data are unavailable for ",
+      paste(sort(unique(unavailable)), collapse = ", "),
+      ". Returning missing values for those dates. Fully available months ",
+      "can be built with install_merra_data(source = \"earthdata\").",
+      call. = FALSE
+    )
+  }
+  out
+}
+
+
 merra_variables <- c(
   "DUSMASS25",
   "OCSMASS",
@@ -268,191 +454,6 @@ merra_release_files <- function(months, ..., warn = TRUE) {
     )
   }
   stats::setNames(unname(out[match(months, names(out))]), months)
-}
-
-#' MERRA-2 aerosol diagnostics data
-#'
-#' Links daily surface PM2.5 and its aerosol components from NASA's MERRA-2
-#' `M2T1NXAER` v5.12.4 product to each location and date in an `s2cd` vector.
-#'
-#' Each package release records one complete January--June and one complete
-#' July--December asset per available year. A fully available calendar month
-#' may instead be built locally with `install_merra_data(source =
-#' "earthdata")`. Local monthly data take precedence over a released half-year
-#' asset.
-#'
-#' Source builds require a free NASA Earthdata Login account. Follow NASA's
-#' [registration guide](https://urs.earthdata.nasa.gov/documentation/for_users/how_to_register)
-#' to create and activate an account. Before the first source build, sign in to
-#' the [Cloud OPeNDAP service](https://opendap.earthdata.nasa.gov/login) and
-#' authorize the `Hyrax in the cloud` application when prompted. NASA also
-#' documents how to
-#' [preauthorize an application](https://urs.earthdata.nasa.gov/documentation/for_users/how_to_preauth_app)
-#' if the prompt does not appear.
-#'
-#' Set the account credentials in `EARTHDATA_USER` and `EARTHDATA_PASSWORD`.
-#' They are written to temporary private netrc and cookie files in geomarker's
-#' durable managed local copy directory while NASA's authenticated redirects
-#' are followed.
-#'
-#' Source concentrations are converted to micrograms per cubic meter and
-#' averaged across each day. Total PM2.5 is calculated as `DUSMASS25 +
-#' OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06`.
-#'
-#' @param x a s2_cell_dates vector (see `?s2cd`)
-#' @param ... passed to [stow::stow()] when an official release asset is
-#'   needed. The `package` and `subdir` arguments are fixed by geomarker.
-#' @return A named list with one data frame per input location and one row per
-#'   requested date. Columns are `merra_dust`, `merra_oc`, `merra_bc`,
-#'   `merra_ss`, `merra_so4`, and `merra_pm25`. Unavailable periods contain
-#'   missing values and produce one warning.
-#' @references
-#' <https://disc.gsfc.nasa.gov/datasets/M2T1NXAER_5.12.4/summary>
-#' @references
-#' <https://gmao.gsfc.nasa.gov/gmao-products/merra-2/faq_merra-2/>
-#' @export
-#' @examples
-#' withr::local_envvar(
-#'   R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
-#'   R_GEOMARKER_NO_DOWNLOAD = "true"
-#' )
-#' get_merra_data(s2cd_example())
-get_merra_data <- function(x, ...) {
-  stopifnot("x must be a s2_cell_dates vector" = is_s2cd(x))
-  cells <- s2::as_s2_cell(x)
-  dates <- s2cd_dates(x)
-  out <- lapply(lengths(dates), function(n) {
-    as.data.frame(
-      matrix(
-        NA_real_,
-        n,
-        length(merra_columns),
-        dimnames = list(NULL, merra_columns)
-      )
-    )
-  })
-  names(out) <- as.character(cells)
-  if (length(cells) == 0 || sum(lengths(dates)) == 0) {
-    return(out)
-  }
-
-  coordinates <- as.data.frame(s2::s2_cell_to_lnglat(cells))
-  inside <- coordinates$x >= merra_bbox[[1]] &
-    coordinates$x <= merra_bbox[[3]] &
-    coordinates$y >= merra_bbox[[2]] &
-    coordinates$y <= merra_bbox[[4]]
-  if (any(!inside)) {
-    stop(
-      "All input locations must be inside the CONUS MERRA data bounds.",
-      call. = FALSE
-    )
-  }
-
-  requests <- do.call(
-    rbind,
-    lapply(seq_along(dates), function(i) {
-      if (length(dates[[i]]) == 0) {
-        return(NULL)
-      }
-      data.frame(location = i, row = seq_along(dates[[i]]), date = dates[[i]])
-    })
-  )
-  requests$month <- format(requests$date, "%Y-%m")
-  months <- unique(requests$month)
-  files <- stats::setNames(rep(NA_character_, length(months)), months)
-  local_data <- list()
-
-  for (month in months[as.integer(substr(months, 1, 4)) >= 2017]) {
-    path <- merra_local_file(month)
-    if (!file.exists(path)) {
-      next
-    }
-    dcf <- sub("[.]rds$", ".dcf", path)
-    if (
-      !file.exists(dcf) ||
-        nrow(record <- read.dcf(dcf)) != 1 ||
-        !"MERRA-Month" %in% colnames(record) ||
-        !identical(unname(record[1, "MERRA-Month"]), month)
-    ) {
-      stop(
-        "Local MERRA data need a matching one-record DCF manifest.",
-        call. = FALSE
-      )
-    }
-    expected <- merra_month_dates(month)
-    if (
-      !identical(
-        unname(record[1, "Coverage-Start"]),
-        as.character(min(expected))
-      ) ||
-        !identical(
-          unname(record[1, "Coverage-End"]),
-          as.character(max(expected))
-        )
-    ) {
-      stop(
-        "Local MERRA DCF does not describe a complete calendar month.",
-        call. = FALSE
-      )
-    }
-    local_data[[month]] <- merra_read_data(path, record[1, ])
-    files[[month]] <- path
-  }
-
-  release_months <- names(files)[
-    is.na(files) & as.integer(substr(names(files), 1, 4)) >= 2017
-  ]
-  if (length(release_months) > 0) {
-    files[release_months] <- suppressWarnings(
-      merra_release_files(release_months, ..., warn = FALSE)
-    )
-  }
-
-  loaded <- new.env(parent = emptyenv())
-  unavailable <- character()
-  for (month in months) {
-    which_requests <- which(requests$month == month)
-    if (is.na(files[[month]])) {
-      unavailable <- c(unavailable, month)
-      next
-    }
-    data <- local_data[[month]]
-    if (is.null(data)) {
-      if (!exists(files[[month]], loaded, inherits = FALSE)) {
-        assign(files[[month]], merra_read_data(files[[month]]), loaded)
-      }
-      data <- get(files[[month]], loaded, inherits = FALSE)
-    }
-    these <- requests[which_requests, , drop = FALSE]
-    locations <- unique(these$location)
-    grid <- unique(data$s2)
-    closest <- s2::s2_closest_feature(
-      s2::s2_cell_to_lnglat(cells[locations]),
-      s2::s2_cell_center(s2::as_s2_cell(grid))
-    )
-    selected <- stats::setNames(grid[closest], locations)
-    data_rows <- match(
-      paste(these$date, selected[as.character(these$location)]),
-      paste(data$date, data$s2)
-    )
-    if (anyNA(data_rows)) {
-      stop("MERRA data do not cover every requested date.", call. = FALSE)
-    }
-    values <- data[data_rows, merra_columns, drop = FALSE]
-    for (i in seq_len(nrow(these))) {
-      out[[these$location[[i]]]][these$row[[i]], ] <- values[i, ]
-    }
-  }
-  if (length(unavailable) > 0) {
-    warning(
-      "MERRA data are unavailable for ",
-      paste(sort(unique(unavailable)), collapse = ", "),
-      ". Returning missing values for those dates. Fully available months ",
-      "can be built with install_merra_data(source = \"earthdata\").",
-      call. = FALSE
-    )
-  }
-  out
 }
 
 #' @param merra_month character vector of calendar months in `YYYY-MM` format,

@@ -251,7 +251,7 @@ install_nei_point_geomarker_fixture <- function(
     names(source_urls)
   )
   output_dir <- geomarker_fixture_output_dir(output_dir)
-  fixture_dir <- geomarker_fixture_cache_dir(
+  fixture_dir <- geomarker_fixture_stow_dir(
     output_dir,
     "get_nei_point_summary"
   )

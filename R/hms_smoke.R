@@ -124,7 +124,7 @@ install_hms_smoke_geomarker_fixture <- function(cell, dates, output_dir) {
   cell <- geomarker_fixture_cell(cell)
   dates <- geomarker_fixture_dates(dates)
   output_dir <- geomarker_fixture_output_dir(output_dir)
-  hms_dir <- geomarker_fixture_cache_dir(
+  hms_dir <- geomarker_fixture_stow_dir(
     output_dir,
     "get_daily_smoke_data"
   )

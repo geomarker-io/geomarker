@@ -24,6 +24,7 @@ elevation_test_url <- function() {
 elevation_test_fixture <- function() {
   file.path(
     fs::path_package("geomarker", "gmrkr--8841", "R", "geomarker"),
+    "stow",
     "get_elevation_summary",
     geomarker_stow_filename(elevation_test_url())
   )
@@ -86,7 +87,7 @@ test_that("elevation extraction uses the first value column", {
   expect_type(get_elevation_summary(s2cd_example_cincy(2L)), "double")
 })
 
-test_that("elevation fixture uses the downloader cache filename", {
+test_that("elevation fixture uses the managed local copy filename", {
   source <- elevation_test_fixture()
   output_dir <- tempfile("elevation-fixture")
   withr::defer(unlink(output_dir, recursive = TRUE))
@@ -99,6 +100,7 @@ test_that("elevation fixture uses the downloader cache filename", {
 
   expect_true(file.exists(file.path(
     output_dir,
+    "stow",
     "get_elevation_summary",
     geomarker_stow_filename(elevation_test_url())
   )))

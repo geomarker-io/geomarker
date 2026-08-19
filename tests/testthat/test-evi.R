@@ -83,7 +83,7 @@ test_that("EVI item filter keeps tiles containing requested points", {
   expect_equal(out$id, c("hit", "unknown"))
 })
 
-test_that("EVI download helper reports batch cache progress", {
+test_that("EVI download helper reports staged-file progress", {
   withr::local_envvar(R_USER_DATA_DIR = tempdir())
   hrefs <- c(
     "https://example.com/evi/a.tif",
@@ -97,7 +97,7 @@ test_that("EVI download helper reports batch cache progress", {
 
   expect_message(
     out <- evi_download_assets(hrefs, quiet = FALSE),
-    "EVI rasters: 2 found, 2 cached, 0 to download.",
+    "EVI rasters: 2 found, 2 already staged, 0 to download.",
     fixed = TRUE
   )
   expect_equal(out, cached)
@@ -205,7 +205,7 @@ test_that("direct EVI network paths respect no-download mode", {
   )
 })
 
-test_that("EVI annual composite files use cached derived rasters", {
+test_that("EVI annual composite files use durable managed local copies", {
   withr::local_envvar(c(
     R_USER_DATA_DIR = tempdir(),
     R_GEOMARKER_NO_DOWNLOAD = "true"
@@ -231,7 +231,10 @@ test_that("EVI annual composite files use cached derived rasters", {
 
   expect_message(
     out <- evi_annual_composite_files(items, years = "2024", quiet = FALSE),
-    "Annual EVI composites: 1 required, 1 cached, 0 to build.",
+    paste0(
+      "Annual EVI composites: 1 required, 1 available as durable managed ",
+      "local copies, 0 to build."
+    ),
     fixed = TRUE
   )
   expect_equal(out$file, dest)
@@ -325,7 +328,7 @@ test_that("EVI annual composite reuses and cleans staged sources", {
   )
 })
 
-test_that("get_evi_data uses cached annual composites without downloads", {
+test_that("get_evi_data uses managed annual composites without downloads", {
   skip_if_not_installed("terra")
   withr::local_envvar(c(
     R_USER_DATA_DIR = tempdir(),

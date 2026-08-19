@@ -124,7 +124,7 @@ require_free_space <- function(path, required, context) {
 
 download_source <- function(dest) {
   if (file.exists(dest) && file.info(dest)$size == source_bytes) {
-    message("Using complete cached source ZIP: ", dest)
+    message("Using existing complete source ZIP: ", dest)
     return(invisible(dest))
   }
   require_free_space(

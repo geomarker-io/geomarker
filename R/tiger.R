@@ -76,7 +76,7 @@ install_tiger_geomarker_fixture <- function(cell, dates, output_dir) {
   cell <- geomarker_fixture_cell(cell)
   years <- geomarker_fixture_years(dates)
   output_dir <- geomarker_fixture_output_dir(output_dir)
-  fixture_dir <- geomarker_fixture_cache_dir(output_dir, "get_tiger_bg")
+  fixture_dir <- geomarker_fixture_stow_dir(output_dir, "get_tiger_bg")
   cell_geometry <- sf::st_as_sfc(s2::s2_cell_polygon(cell))
 
   lapply(years, \(year) {

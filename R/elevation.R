@@ -105,7 +105,7 @@ install_elevation_geomarker_fixture <- function(
       .etag = FALSE
     )
   }
-  fixture_dir <- geomarker_fixture_cache_dir(
+  fixture_dir <- geomarker_fixture_stow_dir(
     output_dir,
     "get_elevation_summary"
   )

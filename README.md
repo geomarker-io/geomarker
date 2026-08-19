@@ -46,22 +46,24 @@ Use the [S2 Cell Viewer](https://vesoyu.github.io/s2cell) to inspect individual 
 
 ### Geomarker Data
 
-Most data required for geomarker assessment does not come with the package, but is installed on first use by downloading (and pre-processing) source data to the geomarker package's user data directory (see [`tools::R_user_dir()`](https://search.r-project.org/R/refmans/tools/html/userdir.html)).
-This means it is available to use again across other R sessions and projects by the same user and will not need to be downloaded more than once.
+Most data required for geomarker assessment does not come with the package. On first use, geomarker downloads and, when needed, preprocesses source data into durable managed local copies that remain available across R sessions and projects for the same user.
 
-The [`stow`](https://github.com/cole-brokamp/stow) package provides the common download and cache layer for ordinary source files.
-Every cached file is stored with `package = "geomarker"` in a subdirectory named for the function that consumes it, such as `get_elevation_summary` or `get_tiger_bg`.
-EVI and authenticated MERRA source builds use the same function-named directory layout while retaining their specialized signed or query-based download transport.
-Use `stow::stow_path(package = "geomarker")` to locate the cache and `stow::stow_info(package = "geomarker")` to inspect its contents.
-This layout is a clean cutover: files in the previous flat, `hms`, `evi`, or `merra` locations are not moved or searched automatically.
-The same cache contract makes it possible to prepare data in advance for a specific level-6 S2 cell and date range.
-The source-specific `install_*_geomarker_fixture()` helpers download and spatially subset the required assets into an `inst/gmrkr--<cell>/R/geomarker` directory; see `inst/install_cincy_geomarker_fixture.R` for a complete example.
+The [`stow`](https://github.com/cole-brokamp/stow) package manages ordinary source-file downloads. Geomarker supplies `package = "geomarker"`, so its durable managed local copies live beneath the fixed `stow` directory inside the geomarker package's user data directory (see [`tools::R_user_dir()`](https://search.r-project.org/R/refmans/tools/html/userdir.html)):
+
+```r
+file.path(tools::R_user_dir("geomarker", "data"), "stow")
+```
+
+Within that directory, each durable managed local copy is organized under the name of the function that consumes it, such as `get_elevation_summary` or `get_tiger_bg`. EVI and authenticated MERRA source builds use the same function-named organization while retaining their specialized signed or query-based download transport.
+Use `stow::stow_path(package = "geomarker")` to locate the durable managed local copy directory and `stow::stow_info(package = "geomarker")` to inspect its contents.
+The same organization makes it possible to prepare data in advance for a specific level-6 S2 cell and date range.
+The source-specific `install_*_geomarker_fixture()` helpers download and spatially subset the required assets into an `inst/gmrkr--<cell>/R/geomarker/stow` directory; see `inst/install_cincy_geomarker_fixture.R` for a complete example.
 For assessments that summarize within a buffer, the corresponding fixture installer accepts a `buffer` in meters and includes that halo around the level-6 fixture cell.
 Set it to the largest buffer that the prepared fixture must support; each installer defaults to the assessment function's default buffer.
 A fixture for the Cincinnati-area cell `8841` is included with geomarker.
 This pattern can also be used to package data for another study region first and then run geomarker assessments from those prepared assets when source downloads are unavailable, restricted, slow, or otherwise not preferable.
 
-### Cache-only operation
+### Offline operation
 
 To use a prepared fixture without downloading from the original sources, set `R_USER_DATA_DIR` to the fixture directory and set `R_GEOMARKER_NO_DOWNLOAD=true`.
 For example, select the fixture included with geomarker for the current R session with:
@@ -73,10 +75,10 @@ Sys.setenv(
 )
 ```
 
-When `R_GEOMARKER_NO_DOWNLOAD` is set to any nonempty value, including `false`, geomarker assessment functions use only files already available in the selected cache; a required file that is not cached produces an error rather than an automatic download.
-Unset cache-only operation with `Sys.unsetenv("R_GEOMARKER_NO_DOWNLOAD")`.
+When `R_GEOMARKER_NO_DOWNLOAD` is set to any nonempty value, including `false`, geomarker assessment functions use only durable managed local copies already available in the selected directory. When a required copy is unavailable, geomarker produces an error rather than downloading it.
+Unset offline operation with `Sys.unsetenv("R_GEOMARKER_NO_DOWNLOAD")`.
 
-`R_GEOMARKER_NO_DOWNLOAD` is checked by geomarker's cache layer and by its known direct network paths, including Planetary Computer requests and remote raster reads, NASA Earthdata source builds, and release-preparation downloads.
+`R_GEOMARKER_NO_DOWNLOAD` is honored when geomarker requests durable managed local copies through stow and by its known direct network paths, including Planetary Computer requests and remote raster reads, NASA Earthdata source builds, and release-preparation downloads.
 It is a best-effort application control, not a network security boundary; use operating-system or container network controls when network isolation must be guaranteed.
 
 ### MERRA-2 data cadence
@@ -85,7 +87,7 @@ MERRA-2 PM2.5 release data are cataloged in `inst/merra-data.dcf` as complete ha
 Assets are added to the package's provisional `v0.0.1` GitHub release only after every expected daily granule has been discovered and validated.
 There is one fixed asset name for each year and half-year. It may be recreated from the latest NASA data while preparing a package release, but the checked-in DCF records exactly one published file and checksum. A later data correction is distributed with a new package and GitHub release.
 
-`get_merra_data()` first uses a complete monthly artifact built under the `get_merra_data` directory in the user's geomarker cache and then tries the matching official half-year release.
+`get_merra_data()` first uses a complete monthly artifact retained under the `get_merra_data` directory as a durable managed local copy and then tries the matching official half-year release.
 When neither is present, it returns aligned missing values with one warning rather than substituting an older period.
 
 A user with an [Earthdata Login](https://urs.earthdata.nasa.gov/) can build any fully elapsed and fully available month directly from NASA. Set the account username and password:
@@ -95,8 +97,8 @@ Sys.setenv(EARTHDATA_USER = "...", EARTHDATA_PASSWORD = "...")
 install_merra_data("2026-07", source = "earthdata")
 ```
 
-The source build discovers the exact daily `M2T1NXAER` v5.12.4 granules through NASA CMR, downloads authenticated variable-and-CONUS subsets, caches daily work for resumption, and writes an adjacent DCF with exact granule revisions and subset hashes.
-Set `overwrite = TRUE` to recreate a month from the latest CMR listing; daily caches whose source granule revision and hash still match are reused.
+The source build discovers the exact daily `M2T1NXAER` v5.12.4 granules through NASA CMR, downloads authenticated variable-and-CONUS subsets, stages daily source files for resumption, and writes an adjacent DCF with exact granule revisions and subset hashes.
+Set `overwrite = TRUE` to recreate a month from the latest CMR listing; staged daily source files whose granule revision and hash still match are reused.
 This is a manual, potentially large build intended for an HPC or similarly provisioned environment; ordinary package checks do not contact NASA.
 
 The bundled Cincinnati MERRA fixtures use deterministic synthetic concentrations solely to exercise the offline API and both half-year branches. They are not scientific data and must not be used for analysis.

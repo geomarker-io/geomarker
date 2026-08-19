@@ -19,8 +19,8 @@
 #'
 #' The processed traffic data are distributed separately from the R package as
 #' a GeoPackage asset attached to the geomarker package release. The file is
-#' downloaded to the `get_traffic_summary` directory in the geomarker cache
-#' the first time it is required and reused on subsequent calls.
+#' saved as a durable managed local copy in the `get_traffic_summary`
+#' directory the first time it is required and reused on subsequent calls.
 #'
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param buffer distance from s2 cell (in meters) to summarize data
@@ -197,7 +197,7 @@ install_traffic_geomarker_fixture <- function(
     "source_file must exist" = file.exists(source_file)
   )
 
-  fixture_dir <- geomarker_fixture_cache_dir(
+  fixture_dir <- geomarker_fixture_stow_dir(
     output_dir,
     "get_traffic_summary"
   )

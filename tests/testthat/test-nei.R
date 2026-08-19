@@ -237,7 +237,7 @@ test_that("calendar years request each NEI source once", {
   )
 })
 
-test_that("NEI source ZIP is the only persistent cached artifact", {
+test_that("NEI source ZIP is the only durable managed local copy", {
   zip_file <- nei_test_zip(nei_test_data())
   withr::defer(unlink(zip_file))
   data_root <- tempfile("geomarker-nei-cache-")
@@ -307,6 +307,7 @@ test_that("NEI fixtures retain point sources in the requested buffer halo", {
   read_fixture <- function(directory) {
     zip_file <- file.path(
       directory,
+      "stow",
       "get_nei_point_summary",
       geomarker_stow_filename(nei_test_2023_url())
     )

@@ -10,13 +10,13 @@ The \code{s2cd} vector class stores S2 cells together with the dates associated
 with each location. Geomarker assessment functions use this format to link
 environmental and sociodemographic data to locations and dates.
 }
-\section{Cache-only operation}{
+\section{Offline operation}{
 
 Set \code{R_GEOMARKER_NO_DOWNLOAD=true} to prevent geomarker assessment functions
 from automatically downloading missing source or release assets. Files
-already available in the selected geomarker cache continue to be used; a
-required file that is not cached produces an error rather than an automatic
-download.
+already available as durable managed local copies continue to be used; when
+a required copy is unavailable, geomarker produces an error rather than
+downloading it.
 
 To use a prepared fixture, set \code{R_USER_DATA_DIR} to the fixture directory
 before running an assessment. For example, select the fixture included with
@@ -28,15 +28,15 @@ geomarker for the current R session with:
 )
 }\if{html}{\out{</div>}}
 
-Any nonempty value enables cache-only operation, including \code{false}. Disable
-it with \code{Sys.unsetenv("R_GEOMARKER_NO_DOWNLOAD")}.
+Any nonempty value enables offline operation, including \code{false}. Disable it
+with \code{Sys.unsetenv("R_GEOMARKER_NO_DOWNLOAD")}.
 
-This setting is checked by geomarker's cache layer and by its known direct
-network paths, including Planetary Computer requests and remote raster reads,
-NASA Earthdata source builds, and release-preparation downloads. It is a
-best-effort application control, not a network security boundary; use
-operating-system or container network controls when network isolation must
-be guaranteed.
+This setting is honored when geomarker requests durable managed local copies
+through stow and by its known direct network paths, including Planetary
+Computer requests and remote raster reads, NASA Earthdata source builds, and
+release-preparation downloads. It is a best-effort application control, not
+a network security boundary; use operating-system or container network
+controls when network isolation must be guaranteed.
 }
 
 \author{

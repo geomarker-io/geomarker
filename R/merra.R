@@ -291,8 +291,9 @@ merra_release_files <- function(months, ..., warn = TRUE) {
 #' if the prompt does not appear.
 #'
 #' Set the account credentials in `EARTHDATA_USER` and `EARTHDATA_PASSWORD`.
-#' They are written to temporary private netrc and cookie files in the
-#' geomarker data cache while NASA's authenticated redirects are followed.
+#' They are written to temporary private netrc and cookie files in geomarker's
+#' durable managed local copy directory while NASA's authenticated redirects
+#' are followed.
 #'
 #' Source concentrations are converted to micrograms per cubic meter and
 #' averaged across each day. Total PM2.5 is calculated as `DUSMASS25 +
@@ -459,7 +460,7 @@ get_merra_data <- function(x, ...) {
 #' @param source either `"release"` to install the matching official half-year
 #'   asset or `"earthdata"` to build each complete month from NASA
 #' @param overwrite logical; recreate monthly data from the latest CMR listing?
-#'   Matching daily source caches are still reused.
+#'   Matching staged daily source files are still reused.
 #' @param quiet logical; suppress progress messages?
 #' @return `install_merra_data()` returns a named character vector of installed
 #'   paths. Months in the same released half-year may have the same path.
@@ -778,7 +779,13 @@ create_daily_merra_data <- function(
       !file.rename(partial, subset_file) &&
         !file.copy(partial, subset_file, overwrite = TRUE)
     ) {
-      stop("Could not move the MERRA subset into the cache.", call. = FALSE)
+      stop(
+        paste(
+          "Could not move the MERRA subset into the durable managed local",
+          "copy directory."
+        ),
+        call. = FALSE
+      )
     }
   }
 
@@ -965,6 +972,7 @@ install_merra_geomarker_fixture <- function(
   }
   source_files <- unique(source_files)
   source_data <- do.call(rbind, lapply(source_files, merra_read_data))
+  fixture_dir <- geomarker_fixture_stow_dir(output_dir, "get_merra_data")
   bbox <- geomarker_fixture_cell_bbox(cell)
   grid <- unique(source_data$s2)
   coordinates <- as.data.frame(s2::s2_cell_to_lnglat(s2::as_s2_cell(grid)))
@@ -990,8 +998,7 @@ install_merra_geomarker_fixture <- function(
       )
     }
     destination <- file.path(
-      output_dir,
-      "get_merra_data",
+      fixture_dir,
       "local",
       paste0("merra2_", month, "_pm25.rds")
     )

@@ -365,7 +365,7 @@ test_that("CMR discovery requires exactly one granule per day", {
   expect_error(merra_granules("2024-02"), "not complete")
 })
 
-test_that("daily caches resume only with matching hashes and revisions", {
+test_that("staged daily sources resume only with matching hashes and revisions", {
   source_dir <- tempfile("merra-daily-")
   granule <- data.frame(
     date = as.Date("2024-01-01"),

@@ -32,8 +32,8 @@ geomarker_stow_filename <- function(url) {
   )
 }
 
-geomarker_fixture_cache_dir <- function(output_dir, subdir) {
-  path <- file.path(output_dir, subdir)
+geomarker_fixture_stow_dir <- function(output_dir, subdir) {
+  path <- file.path(output_dir, "stow", subdir)
   dir.create(path, recursive = TRUE, showWarnings = FALSE)
   path
 }

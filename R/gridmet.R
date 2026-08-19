@@ -112,7 +112,7 @@ install_gridmet_geomarker_fixture <- function(
     gridmet_var,
     years
   )
-  fixture_dir <- geomarker_fixture_cache_dir(
+  fixture_dir <- geomarker_fixture_stow_dir(
     output_dir,
     "get_gridmet_data"
   )

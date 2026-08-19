@@ -5,7 +5,8 @@
 # usage:
 #   Rscript inst/make_merra_data_release.R YEAR HALF WORK_DIR [OUTPUT_FILE]
 #
-# the work directory retains the monthly and daily caches. this script writes
+# the work directory retains the monthly and staged daily source files. this
+# script writes
 # an RDS and candidate DCF only; it never uploads or edits the package catalog.
 
 script_arg <- grep("^--file=", commandArgs(FALSE), value = TRUE)

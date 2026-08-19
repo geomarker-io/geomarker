@@ -100,7 +100,7 @@ install_nlcd_geomarker_fixture <- function(
   buffer <- geomarker_fixture_buffer(buffer)
   years <- intersect(geomarker_fixture_years(dates), as.character(1985:2025))
   output_dir <- geomarker_fixture_output_dir(output_dir)
-  fixture_dir <- geomarker_fixture_cache_dir(
+  fixture_dir <- geomarker_fixture_stow_dir(
     output_dir,
     "get_nlcd_fct_imp_data"
   )

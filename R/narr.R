@@ -109,7 +109,7 @@ install_narr_geomarker_fixture <- function(
     narr_var,
     years
   )
-  fixture_dir <- geomarker_fixture_cache_dir(output_dir, "get_narr_data")
+  fixture_dir <- geomarker_fixture_stow_dir(output_dir, "get_narr_data")
 
   lapply(narr_urls, \(url) {
     geomarker_stow(

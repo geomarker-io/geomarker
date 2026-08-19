@@ -11,15 +11,16 @@
 #' mirror of NASA LP DAAC MOD13Q1/MYD13Q1 Version 6.1 Cloud Optimized GeoTIFFs.
 #' See <https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061>
 #' for collection details. Source 16-day EVI and pixel reliability rasters are
-#' staged under the `get_evi_data` directory in the geomarker cache only when
-#' an annual composite is
-#' missing; if a build fails, complete source downloads are reused on the next
-#' attempt and removed after the annual composite is successfully written.
+#' staged under the `get_evi_data` subdirectory of geomarker's durable managed
+#' local copy directory only when an annual composite is missing. If a build
+#' fails, complete source downloads are reused on the next attempt and removed
+#' after the annual composite is successfully written.
 #' EVI source rasters are downloaded by MODIS tile; 14 MODIS tiles intersect the
 #' contiguous United States. Planetary Computer assets are accessed with
 #' reusable container SAS tokens to reduce signing API calls.
-#' Annual composite rasters are cached in that same directory. EVI
-#' source raster values are scaled by 0.0001 while creating annual composites.
+#' Annual composite rasters are retained there as durable managed local copies.
+#' EVI source raster values are scaled by 0.0001 while creating annual
+#' composites.
 #' EVI is a greenness index designed to emphasize photosynthetically active
 #' vegetation while reducing atmospheric and soil background effects. In this
 #' MODIS product, scaled EVI values are expected to range from about -0.2 to
@@ -28,7 +29,8 @@
 #' water, snow, cloud, or other non-vegetated surfaces or artifacts.
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param buffer distance from s2 cell (in meters) to summarize data
-#' @param overwrite logical; overwrite cached annual EVI rasters?
+#' @param overwrite logical; replace existing annual EVI rasters stored as
+#'   durable managed local copies?
 #' @param quiet logical; show download progress messages?
 #' @return a list of numeric vectors of annual EVI values.
 #' @export
@@ -73,7 +75,7 @@ get_evi_data <- function(
   x_points <- evi_s2cd_points(x)
   years <- evi_requested_years(x_dates)
   if (geomarker_no_download()) {
-    annual_files <- evi_cached_annual_composite_files(years)
+    annual_files <- evi_managed_annual_composite_files(years)
     evi_values <- evi_extract_annual_values(x, annual_files, buffer = buffer)
     return(evi_summarize_annual_values(
       values = evi_values,
@@ -196,7 +198,7 @@ evi_download_assets <- function(
   n_download <- sum(needs_download)
   if (!quiet) {
     message(sprintf(
-      "%s: %s found, %s cached, %s to download.",
+      "%s: %s found, %s already staged, %s to download.",
       label,
       n_total,
       n_total - n_download,
@@ -432,7 +434,10 @@ evi_annual_composite_files <- function(
   n_build <- sum(needs_build)
   if (!quiet) {
     message(sprintf(
-      "Annual EVI composites: %s required, %s cached, %s to build.",
+      paste0(
+        "Annual EVI composites: %s required, %s available as durable managed ",
+        "local copies, %s to build."
+      ),
       n_total,
       n_total - n_build,
       n_build
@@ -490,7 +495,7 @@ evi_annual_composite_filename <- function(year, tile) {
   sprintf("modis-13Q1-061-%s-%s-annual-evi-median-q01.tif", year, tile)
 }
 
-evi_cached_annual_composite_files <- function(
+evi_managed_annual_composite_files <- function(
   years,
   subdir = "get_evi_data"
 ) {
@@ -515,8 +520,8 @@ evi_cached_annual_composite_files <- function(
   missing_years <- setdiff(years, unique(out$year))
   if (length(missing_years) > 0) {
     stop(
-      "The envvar R_GEOMARKER_NO_DOWNLOAD is set, but no cached annual ",
-      "EVI composite exists for year(s): ",
+      "The envvar R_GEOMARKER_NO_DOWNLOAD is set, but no annual EVI ",
+      "composite is available as a durable managed local copy for year(s): ",
       paste(missing_years, collapse = ", "),
       call. = FALSE
     )
@@ -994,8 +999,7 @@ install_evi_geomarker_fixture <- function(
   years <- evi_requested_years(list(dates))
   geomarker_require_download("build an EVI fixture from remote source data")
   output_dir <- geomarker_fixture_output_dir(output_dir)
-  evi_dir <- file.path(output_dir, subdir)
-  dir.create(evi_dir, showWarnings = FALSE, recursive = TRUE)
+  evi_dir <- geomarker_fixture_stow_dir(output_dir, subdir)
 
   items <- evi_planetary_computer_items(
     bbox = geomarker_fixture_cell_bbox(cell, buffer = buffer),
@@ -1043,7 +1047,7 @@ install_evi_geomarker_fixture <- function(
   needs_build <- overwrite | !file.exists(dests)
   if (!quiet) {
     message(sprintf(
-      "Annual EVI fixture composites: %s required, %s cached, %s to build.",
+      "Annual EVI fixture composites: %s required, %s already present, %s to build.",
       length(dests),
       length(dests) - sum(needs_build),
       sum(needs_build)

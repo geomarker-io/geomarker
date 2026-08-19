@@ -1,9 +1,9 @@
-test_that("geomarker stow fixes cache ownership and forwards arguments", {
+test_that("geomarker stow fixes managed local copy ownership and forwards arguments", {
   received <- NULL
   testthat::local_mocked_bindings(
     stow = function(...) {
       received <<- list(...)
-      "cached-file"
+      "managed-file"
     },
     .package = "stow"
   )
@@ -16,7 +16,7 @@ test_that("geomarker stow fixes cache ownership and forwards arguments", {
       overwrite = TRUE,
       quiet = TRUE
     ),
-    "cached-file"
+    "managed-file"
   )
   expect_identical(received$url, "https://example.com/data/file.zip")
   expect_identical(received$package, "geomarker")
@@ -25,7 +25,7 @@ test_that("geomarker stow fixes cache ownership and forwards arguments", {
   expect_identical(received$quiet, TRUE)
 })
 
-test_that("legacy cache helpers are not exported", {
+test_that("legacy data helpers are not exported", {
   exports <- getNamespaceExports("geomarker")
   expect_false(any(
     c(
@@ -54,7 +54,7 @@ test_that("R_GEOMARKER_NO_DOWNLOAD forces stow offline", {
   testthat::local_mocked_bindings(
     stow = function(...) {
       received <<- list(...)
-      "cached-file"
+      "managed-file"
     },
     .package = "stow"
   )
@@ -72,27 +72,56 @@ test_that("geomarker paths and fixture names match stow", {
   withr::local_envvar(R_USER_DATA_DIR = tempfile("geomarker-stow-data-"))
   path <- geomarker_stow_path("get_elevation_summary")
   expect_true(dir.exists(path))
-  expect_true(endsWith(path, "/R/geomarker/get_elevation_summary"))
+  expect_identical(
+    path,
+    normalizePath(
+      file.path(
+        tools::R_user_dir("geomarker", "data"),
+        "stow",
+        "get_elevation_summary"
+      ),
+      winslash = "/",
+      mustWork = TRUE
+    )
+  )
 
   url <- "https://example.com/data/file.zip"
   stow_filename <- getFromNamespace(".stow_url_to_filename", "stow")
   expect_identical(geomarker_stow_filename(url), stow_filename(url))
 })
 
-test_that("legacy flat cache entries are ignored", {
+test_that("fixture paths reproduce the stow 0.3.0 hierarchy", {
+  output_dir <- tempfile("geomarker-fixture-")
+  withr::defer(unlink(output_dir, recursive = TRUE))
+  path <- geomarker_fixture_stow_dir(output_dir, "get_evi_data")
+
+  expect_identical(
+    normalizePath(path, winslash = "/", mustWork = TRUE),
+    normalizePath(
+      file.path(output_dir, "stow", "get_evi_data"),
+      winslash = "/",
+      mustWork = TRUE
+    )
+  )
+  expect_false(dir.exists(file.path(output_dir, "get_evi_data")))
+})
+
+test_that("pre-0.3.0 stow paths are ignored", {
   withr::local_envvar(c(
     R_USER_DATA_DIR = tempfile("geomarker-stow-data-"),
     R_GEOMARKER_NO_DOWNLOAD = "true"
   ))
   url <- "https://example.com/data/file.zip"
   legacy <- file.path(
-    stow::stow_path(package = "geomarker"),
+    tools::R_user_dir("geomarker", "data"),
+    "get_example_data",
     geomarker_stow_filename(url)
   )
+  dir.create(dirname(legacy), recursive = TRUE)
   file.create(legacy)
 
   expect_error(
     geomarker_stow(url, "get_example_data", quiet = TRUE),
-    "No cached file"
+    "No managed local copy"
   )
 })

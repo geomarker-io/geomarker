@@ -56,6 +56,9 @@ file.path(tools::R_user_dir("geomarker", "data"), "stow")
 
 Within that directory, each durable managed local copy is organized under the name of the function that consumes it, such as `get_elevation_summary` or `get_tiger_bg`. EVI and authenticated MERRA source builds use the same function-named organization while retaining their specialized signed or query-based download transport.
 Use `stow::stow_path(package = "geomarker")` to locate the durable managed local copy directory and `stow::stow_info(package = "geomarker")` to inspect its contents.
+
+### Geomarker fixtures
+
 The same organization makes it possible to prepare data in advance for a specific level-6 S2 cell and date range.
 The source-specific `install_*_geomarker_fixture()` helpers download and spatially subset the required assets into an `inst/gmrkr--<cell>/R/geomarker/stow` directory; see `inst/install_cincy_geomarker_fixture.R` for a complete example.
 For assessments that summarize within a buffer, the corresponding fixture installer accepts a `buffer` in meters and includes that halo around the level-6 fixture cell.

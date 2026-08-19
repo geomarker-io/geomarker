@@ -24,8 +24,8 @@
 #' Dates in unavailable years return `NA_real_`.
 #' @export
 #' @examples
-#' get_nlcd_fct_imp_data(s2cd_example_cincy(2L))
-get_nlcd_fct_imp_data <- function(
+#' get_nlcd_fct_imp_summary(s2cd_example_cincy(2L))
+get_nlcd_fct_imp_summary <- function(
   x,
   fun = mean,
   buffer = 800,
@@ -60,7 +60,7 @@ get_nlcd_fct_imp_data <- function(
         year,
         "_CU_C1V2.zip"
       ),
-      "get_nlcd_fct_imp_data",
+      "get_nlcd_fct_imp_summary",
       ...
     )
     nlcd_raster <- terra::rast(paste0(
@@ -102,7 +102,7 @@ install_nlcd_geomarker_fixture <- function(
   output_dir <- geomarker_fixture_output_dir(output_dir)
   fixture_dir <- geomarker_fixture_stow_dir(
     output_dir,
-    "get_nlcd_fct_imp_data"
+    "get_nlcd_fct_imp_summary"
   )
 
   lapply(years, \(year) {
@@ -118,7 +118,7 @@ install_nlcd_geomarker_fixture <- function(
 
     geomarker_stow(
       url,
-      "get_nlcd_fct_imp_data",
+      "get_nlcd_fct_imp_summary",
       quiet = TRUE,
       .etag = FALSE
     ) |>

@@ -1,4 +1,4 @@
-test_that("get_nlcd_fct_imp_data works with fixture dir", {
+test_that("get_nlcd_fct_imp_summary works with fixture dir", {
   withr::local_envvar(
     R_USER_DATA_DIR = fs::path_package(
       "geomarker",
@@ -8,7 +8,7 @@ test_that("get_nlcd_fct_imp_data works with fixture dir", {
   )
   set.seed(11)
   x <- s2cd_example_cincy(n_locations = 20L)
-  expect_no_warning(out <- get_nlcd_fct_imp_data(x))
+  expect_no_warning(out <- get_nlcd_fct_imp_summary(x))
   expect_length(out, length(x))
   expect_type(out, "list")
   expect_type(out[[1]], "double")
@@ -20,7 +20,13 @@ test_that("get_nlcd_fct_imp_data works with fixture dir", {
   )
 })
 
-test_that("get_nlcd_fct_imp_data works with multiple years", {
+test_that("get_nlcd_fct_imp_summary is the only exported NLCD summary API", {
+  exports <- getNamespaceExports("geomarker")
+  expect_true("get_nlcd_fct_imp_summary" %in% exports)
+  expect_false("get_nlcd_fct_imp_data" %in% exports)
+})
+
+test_that("get_nlcd_fct_imp_summary works with multiple years", {
   set.seed(99)
   x <- s2cd_example_cincy(10L, 5L, "poisson+1")
   x_dates <- s2cd_dates(x)
@@ -41,7 +47,7 @@ test_that("get_nlcd_fct_imp_data works with multiple years", {
         try(
           geomarker_stow(
             url,
-            "get_nlcd_fct_imp_data",
+            "get_nlcd_fct_imp_summary",
             quiet = TRUE
           ),
           silent = TRUE
@@ -55,7 +61,7 @@ test_that("get_nlcd_fct_imp_data works with multiple years", {
     all(cached),
     "Annual NLCD durable managed local copies are unavailable"
   )
-  expect_no_warning(out <- get_nlcd_fct_imp_data(x, buffer = 400))
+  expect_no_warning(out <- get_nlcd_fct_imp_summary(x, buffer = 400))
   expect_length(out, length(x))
   expect_type(out, "list")
   expect_type(out[[1]], "double")
@@ -76,7 +82,7 @@ test_that("unavailable Annual NLCD years return missing values", {
   )
 
   expect_identical(
-    get_nlcd_fct_imp_data(x),
+    get_nlcd_fct_imp_summary(x),
     list(c(NA_real_, NA_real_), NA_real_)
   )
 })

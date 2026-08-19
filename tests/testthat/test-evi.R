@@ -1,4 +1,4 @@
-test_that("get_evi_data validates arguments before querying source data", {
+test_that("get_evi_summary validates arguments before querying source data", {
   x_bad <- s2cd(
     s2::as_s2_cell("8841b39a7c46e25f"),
     dates = list(as.Date("1999-01-01"))
@@ -9,13 +9,19 @@ test_that("get_evi_data validates arguments before querying source data", {
   )
 
   expect_error(
-    get_evi_data(x_bad),
+    get_evi_summary(x_bad),
     "on or after 2000-02-18"
   )
   expect_error(
-    get_evi_data(x_ok, buffer = c(400, 800)),
+    get_evi_summary(x_ok, buffer = c(400, 800)),
     "buffer must be length one"
   )
+})
+
+test_that("get_evi_summary is the only exported EVI summary API", {
+  exports <- getNamespaceExports("geomarker")
+  expect_true("get_evi_summary" %in% exports)
+  expect_false("get_evi_data" %in% exports)
 })
 
 test_that("EVI STAC parser extracts Terra and Aqua EVI assets", {
@@ -90,7 +96,7 @@ test_that("EVI download helper reports staged-file progress", {
     "https://example.com/evi/b.tif"
   )
   cached <- file.path(
-    geomarker_stow_path("get_evi_data"),
+    geomarker_stow_path("get_evi_summary"),
     vapply(hrefs, url_to_filename, character(1), etag = FALSE)
   )
   file.create(cached)
@@ -211,7 +217,7 @@ test_that("EVI annual composite files use durable managed local copies", {
     R_GEOMARKER_NO_DOWNLOAD = "true"
   ))
   dest <- file.path(
-    geomarker_stow_path("get_evi_data"),
+    geomarker_stow_path("get_evi_summary"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   file.create(dest)
@@ -248,7 +254,7 @@ test_that("EVI annual composite keeps staged sources after source errors", {
   href <- "https://example.com/evi/evi_2024_h11v05.tif"
   quality_href <- "https://example.com/evi/quality_2024_h11v05.tif"
   dest <- file.path(
-    geomarker_stow_path("get_evi_data"),
+    geomarker_stow_path("get_evi_summary"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   source_dir <- evi_source_staging_dir(dest)
@@ -287,7 +293,7 @@ test_that("EVI annual composite reuses and cleans staged sources", {
     ".tif"
   )
   dest <- file.path(
-    geomarker_stow_path("get_evi_data"),
+    geomarker_stow_path("get_evi_summary"),
     evi_annual_composite_filename("2024", "h11v05")
   )
   source_dir <- evi_source_staging_dir(dest)
@@ -328,7 +334,7 @@ test_that("EVI annual composite reuses and cleans staged sources", {
   )
 })
 
-test_that("get_evi_data uses managed annual composites without downloads", {
+test_that("get_evi_summary uses managed annual composites without downloads", {
   skip_if_not_installed("terra")
   withr::local_envvar(c(
     R_USER_DATA_DIR = tempdir(),
@@ -351,18 +357,18 @@ test_that("get_evi_data uses managed annual composites without downloads", {
   terra::writeRaster(
     r,
     file.path(
-      geomarker_stow_path("get_evi_data"),
+      geomarker_stow_path("get_evi_summary"),
       evi_annual_composite_filename("2024", "h11v05")
     ),
     overwrite = TRUE
   )
 
-  out <- get_evi_data(x, quiet = TRUE)
+  out <- get_evi_summary(x, quiet = TRUE)
   expect_equal(unname(out[[1]]), 0.42, tolerance = 1e-6)
   expect_equal(names(out[[1]]), "2024")
 })
 
-test_that("get_evi_data works with fixture data", {
+test_that("get_evi_summary works with fixture data", {
   withr::local_envvar(
     R_USER_DATA_DIR = fs::path_package(
       "geomarker",
@@ -372,7 +378,7 @@ test_that("get_evi_data works with fixture data", {
   )
   set.seed(923)
   xx <- s2cd_example_cincy(n_locations = 3L)
-  out <- get_evi_data(xx, quiet = TRUE)
+  out <- get_evi_summary(xx, quiet = TRUE)
   expect_type(out, "list")
   expect_length(out, 3)
   expect_named(out, as.character(xx))

@@ -93,17 +93,17 @@ test_that("geomarker paths and fixture names match stow", {
 test_that("fixture paths reproduce the stow 0.3.0 hierarchy", {
   output_dir <- tempfile("geomarker-fixture-")
   withr::defer(unlink(output_dir, recursive = TRUE))
-  path <- geomarker_fixture_stow_dir(output_dir, "get_evi_data")
+  path <- geomarker_fixture_stow_dir(output_dir, "get_evi_summary")
 
   expect_identical(
     normalizePath(path, winslash = "/", mustWork = TRUE),
     normalizePath(
-      file.path(output_dir, "stow", "get_evi_data"),
+      file.path(output_dir, "stow", "get_evi_summary"),
       winslash = "/",
       mustWork = TRUE
     )
   )
-  expect_false(dir.exists(file.path(output_dir, "get_evi_data")))
+  expect_false(dir.exists(file.path(output_dir, "get_evi_summary")))
 })
 
 test_that("pre-0.3.0 stow paths are ignored", {

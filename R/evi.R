@@ -1,4 +1,4 @@
-#' MODIS enhanced vegetation index data
+#' MODIS enhanced vegetation index summary
 #'
 #' Links annual enhanced vegetation index (EVI) based on the location of each
 #' s2 cell and dates. For each year, EVI is defined as the mean EVI within
@@ -11,7 +11,7 @@
 #' mirror of NASA LP DAAC MOD13Q1/MYD13Q1 Version 6.1 Cloud Optimized GeoTIFFs.
 #' See <https://planetarycomputer.microsoft.com/dataset/modis-13Q1-061>
 #' for collection details. Source 16-day EVI and pixel reliability rasters are
-#' staged under the `get_evi_data` subdirectory of geomarker's durable managed
+#' staged under the `get_evi_summary` subdirectory of geomarker's durable managed
 #' local copy directory only when an annual composite is missing. If a build
 #' fails, complete source downloads are reused on the next attempt and removed
 #' after the annual composite is successfully written.
@@ -32,7 +32,7 @@
 #' @param overwrite logical; replace existing annual EVI rasters stored as
 #'   durable managed local copies?
 #' @param quiet logical; show download progress messages?
-#' @return a list of numeric vectors of annual EVI values.
+#' @return a list of numeric vectors of annual EVI summaries.
 #' @export
 #' @examples
 #'  withr::local_envvar(
@@ -42,9 +42,9 @@
 #'    ),
 #'    R_GEOMARKER_NO_DOWNLOAD = "true"
 #'  )
-#' get_evi_data(s2cd_example_cincy(2L))
-#' get_evi_data(s2cd_example_cincy(2L), buffer = 1200, quiet = TRUE)
-get_evi_data <- function(
+#' get_evi_summary(s2cd_example_cincy(2L))
+#' get_evi_summary(s2cd_example_cincy(2L), buffer = 1200, quiet = TRUE)
+get_evi_summary <- function(
   x,
   buffer = 400,
   overwrite = FALSE,
@@ -181,7 +181,7 @@ evi_download_assets <- function(
   label = "EVI rasters",
   overwrite = FALSE,
   quiet = FALSE,
-  subdir = "get_evi_data",
+  subdir = "get_evi_summary",
   dest_dir = NULL
 ) {
   if (is.null(dest_dir)) {
@@ -408,7 +408,7 @@ evi_annual_composite_files <- function(
   years,
   overwrite = FALSE,
   quiet = FALSE,
-  subdir = "get_evi_data"
+  subdir = "get_evi_summary"
 ) {
   items$year <- format(items$start_date, "%Y")
   items <- items[items$year %in% years, , drop = FALSE]
@@ -497,7 +497,7 @@ evi_annual_composite_filename <- function(year, tile) {
 
 evi_managed_annual_composite_files <- function(
   years,
-  subdir = "get_evi_data"
+  subdir = "get_evi_summary"
 ) {
   evi_dir <- geomarker_stow_path(subdir)
   files <- list.files(
@@ -989,7 +989,7 @@ install_evi_geomarker_fixture <- function(
   output_dir,
   overwrite = FALSE,
   quiet = FALSE,
-  subdir = "get_evi_data",
+  subdir = "get_evi_summary",
   buffer = 400
 ) {
   check_installed("terra", "to create EVI fixture data.")

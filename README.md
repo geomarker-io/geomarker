@@ -32,17 +32,18 @@ Use the [S2 Cell Viewer](https://vesoyu.github.io/s2cell) to inspect individual 
 
 ### Available geomarkers
 
-| geomarker | geomarker function |
+| geomarker | geomarker function
 |---|---|
+| 🗺️ census block group linkage | `get_tiger_bg()`|
 | 🌦️ weather and atmospheric conditions | `get_gridmet_data()`, `get_narr_data()` |
-| 🔥 wildfire smoke | `get_daily_smoke_data()`, `get_smoke_summary()` |
-| 🌿 satellite-based vegetation and greenness | `get_evi_data()` |
+| 🔥 wildfire smoke | `get_smoke_summary()`  |
+| 🌿 satellite-based enhanced vegetation index| `get_evi_summary()` |
 | ⛰️ elevation | `get_elevation_summary()` |
-| 🏙️ land cover and imperviousness | `get_nlcd_fct_imp_data()` |
+| 🏙️ land cover and imperviousness | `get_nlcd_fct_imp_summary()` |
 | 🚦 traffic | `get_traffic_summary()` |
 | 🏭 point-source emissions | `get_nei_point_summary()` |
 | 🌫️ MERRA-2 surface PM2.5 | `get_merra_data()` |
-| 🗺️ Census block group linkage | `get_tiger_bg()` |
+ |
 
 ### Geomarker Data
 

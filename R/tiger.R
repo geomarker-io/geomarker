@@ -1,56 +1,3 @@
-tiger_block_group_url <- function(state, year) {
-  sprintf(
-    "https://www2.census.gov/geo/tiger/TIGER%s/BG/tl_%s_%s_bg.zip",
-    year,
-    year,
-    state
-  )
-}
-
-tiger_state_url <- function(year) {
-  sprintf(
-    "https://www2.census.gov/geo/tiger/TIGER%s/STATE/tl_%s_us_state.zip",
-    year,
-    year
-  )
-}
-
-tiger_block_groups <- function(state, year, ...) {
-  dest <- geomarker_stow(
-    tiger_block_group_url(state, year),
-    "get_tiger_bg",
-    ...
-  )
-  out <-
-    sf::st_read(
-      paste0("/vsizip/", dest),
-      as_tibble = TRUE,
-      quiet = TRUE,
-      query = sprintf("SELECT GEOID FROM tl_%s_%s_bg", year, state)
-    )
-  out$s2_geography <- s2::as_s2_geography(out$geometry)
-  out <- sf::st_drop_geometry(out)
-  return(out)
-}
-
-tiger_states <- function(year, ...) {
-  dest <- geomarker_stow(
-    tiger_state_url(year),
-    "get_tiger_bg",
-    ...
-  )
-  out <-
-    sf::st_read(
-      paste0("/vsizip/", dest),
-      as_tibble = TRUE,
-      quiet = TRUE,
-      query = sprintf("SELECT GEOID FROM tl_%s_us_state", year)
-    )
-  out$s2_geography <- s2::as_s2_geography(out$geometry)
-  out <- sf::st_drop_geometry(out)
-  return(out)
-}
-
 #' Census Block Group Linkage
 #'
 #' Link an object coercible to an s2_cell vector with the closest census block
@@ -218,4 +165,57 @@ install_tiger_geomarker_fixture <- function(cell, dates, output_dir) {
   }) |>
     invisible()
   invisible(output_dir)
+}
+
+tiger_block_group_url <- function(state, year) {
+  sprintf(
+    "https://www2.census.gov/geo/tiger/TIGER%s/BG/tl_%s_%s_bg.zip",
+    year,
+    year,
+    state
+  )
+}
+
+tiger_state_url <- function(year) {
+  sprintf(
+    "https://www2.census.gov/geo/tiger/TIGER%s/STATE/tl_%s_us_state.zip",
+    year,
+    year
+  )
+}
+
+tiger_block_groups <- function(state, year, ...) {
+  dest <- geomarker_stow(
+    tiger_block_group_url(state, year),
+    "get_tiger_bg",
+    ...
+  )
+  out <-
+    sf::st_read(
+      paste0("/vsizip/", dest),
+      as_tibble = TRUE,
+      quiet = TRUE,
+      query = sprintf("SELECT GEOID FROM tl_%s_%s_bg", year, state)
+    )
+  out$s2_geography <- s2::as_s2_geography(out$geometry)
+  out <- sf::st_drop_geometry(out)
+  return(out)
+}
+
+tiger_states <- function(year, ...) {
+  dest <- geomarker_stow(
+    tiger_state_url(year),
+    "get_tiger_bg",
+    ...
+  )
+  out <-
+    sf::st_read(
+      paste0("/vsizip/", dest),
+      as_tibble = TRUE,
+      quiet = TRUE,
+      query = sprintf("SELECT GEOID FROM tl_%s_us_state", year)
+    )
+  out$s2_geography <- s2::as_s2_geography(out$geometry)
+  out <- sf::st_drop_geometry(out)
+  return(out)
 }

@@ -37,9 +37,13 @@ get_daily_smoke_data <- function(x, ...) {
   # if (cloud) {
   #   smoke_file <- paste0("/vsizip//vsicurl/", smoke_url)
   # } else {
-  smoke_file <- vapply(smoke_url, function(url) {
-    geomarker_stow(url, "get_daily_smoke_data", ...)
-  }, character(1)) |>
+  smoke_file <- vapply(
+    smoke_url,
+    function(url) {
+      geomarker_stow(url, "get_daily_smoke_data", ...)
+    },
+    character(1)
+  ) |>
     paste0("/vsizip/", the_files = _)
   # }
   out <- lapply(smoke_file, \(.) {

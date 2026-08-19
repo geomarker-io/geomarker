@@ -55,9 +55,13 @@ get_gridmet_data <- function(
     s2cd_years(x)
   )
 
-  gridmet_files <- vapply(gridmet_urls, function(url) {
-    geomarker_stow(url, "get_gridmet_data", ...)
-  }, character(1))
+  gridmet_files <- vapply(
+    gridmet_urls,
+    function(url) {
+      geomarker_stow(url, "get_gridmet_data", ...)
+    },
+    character(1)
+  )
   gridmet_rasters <- suppressWarnings(lapply(gridmet_files, terra::rast))
   gridmet_rasters <- mapply(
     function(.x, .y) {

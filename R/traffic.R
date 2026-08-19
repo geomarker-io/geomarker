@@ -1,112 +1,3 @@
-traffic_data_manifest <- function() {
-  manifest_path <- system.file("traffic-data.dcf", package = "geomarker")
-  if (!nzchar(manifest_path)) {
-    manifest_path <- file.path("inst", "traffic-data.dcf")
-  }
-  as.list(read.dcf(manifest_path)[1, ])
-}
-
-traffic_data_url <- function() {
-  url <- traffic_data_manifest()[["Asset-URL"]]
-  if (is.null(url) || length(url) != 1 || !nzchar(url)) {
-    stop("Traffic metadata does not provide an asset URL.", call. = FALSE)
-  }
-  url
-}
-
-traffic_data_file <- function(...) {
-  geomarker_stow(
-    traffic_data_url(),
-    "get_traffic_summary",
-    ...
-  )
-}
-
-traffic_data_source <- function(path) {
-  required_fields <- c("AADT", "AADT_SINGLE_UNIT", "AADT_COMBINATION")
-  layers <- sf::st_layers(path, do_count = FALSE)$name
-  preferred_layer <- traffic_data_manifest()[["Asset-Layer"]]
-  if (!is.null(preferred_layer) && preferred_layer %in% layers) {
-    layers <- c(preferred_layer, setdiff(layers, preferred_layer))
-  }
-
-  for (layer in layers) {
-    escaped_layer <- gsub('"', '""', layer, fixed = TRUE)
-    sample <- tryCatch(
-      sf::st_read(
-        path,
-        query = paste0('SELECT * FROM "', escaped_layer, '" LIMIT 1'),
-        quiet = TRUE
-      ),
-      error = function(err) NULL
-    )
-    if (is.null(sample)) {
-      next
-    }
-    field_indices <- match(tolower(required_fields), tolower(names(sample)))
-    if (!anyNA(field_indices)) {
-      return(list(
-        layer = layer,
-        fields = stats::setNames(names(sample)[field_indices], required_fields),
-        crs = sf::st_crs(sample)
-      ))
-    }
-  }
-
-  stop(
-    "Traffic data must contain a spatial layer with the fields ",
-    paste(required_fields, collapse = ", "),
-    ".",
-    call. = FALSE
-  )
-}
-
-traffic_region_filter_wkt <- function(parent, buffer, crs = sf::st_crs(4326)) {
-  region <- parent |>
-    s2::s2_cell_polygon() |>
-    s2::s2_buffer_cells(
-      distance = buffer,
-      max_cells = 1000,
-      min_level = -1
-    ) |>
-    sf::st_as_sfc() |>
-    sf::st_bbox() |>
-    sf::st_as_sfc()
-  if (!is.na(crs)) {
-    region <- sf::st_transform(region, crs)
-  }
-  sf::st_as_text(region)
-}
-
-traffic_read_region <- function(path, source, parent, buffer) {
-  hpms <- sf::read_sf(
-    path,
-    layer = source$layer,
-    wkt_filter = traffic_region_filter_wkt(parent, buffer, source$crs),
-    quiet = TRUE
-  )
-  names(hpms)[match(unname(source$fields), names(hpms))] <- names(source$fields)
-  if (is.na(sf::st_crs(hpms))) {
-    hpms <- sf::st_set_crs(hpms, 4326)
-  } else {
-    hpms <- sf::st_transform(hpms, 4326)
-  }
-  for (field in names(source$fields)) {
-    hpms[[field]] <- suppressWarnings(as.numeric(hpms[[field]]))
-  }
-  hpms[
-    stats::complete.cases(sf::st_drop_geometry(hpms)[names(source$fields)]),
-  ]
-}
-
-traffic_zero_summary <- function() {
-  c(
-    aadtm_trucks_buses = 0,
-    aadtm_tractor_trailer = 0,
-    aadtm_passenger = 0
-  )
-}
-
 #' Summarize nearby traffic
 #'
 #' Summarizes average annual daily traffic meters (`aadtm`) traveled
@@ -327,4 +218,113 @@ install_traffic_geomarker_fixture <- function(
       quiet = TRUE
     )
   invisible(output_dir)
+}
+
+traffic_data_manifest <- function() {
+  manifest_path <- system.file("traffic-data.dcf", package = "geomarker")
+  if (!nzchar(manifest_path)) {
+    manifest_path <- file.path("inst", "traffic-data.dcf")
+  }
+  as.list(read.dcf(manifest_path)[1, ])
+}
+
+traffic_data_url <- function() {
+  url <- traffic_data_manifest()[["Asset-URL"]]
+  if (is.null(url) || length(url) != 1 || !nzchar(url)) {
+    stop("Traffic metadata does not provide an asset URL.", call. = FALSE)
+  }
+  url
+}
+
+traffic_data_file <- function(...) {
+  geomarker_stow(
+    traffic_data_url(),
+    "get_traffic_summary",
+    ...
+  )
+}
+
+traffic_data_source <- function(path) {
+  required_fields <- c("AADT", "AADT_SINGLE_UNIT", "AADT_COMBINATION")
+  layers <- sf::st_layers(path, do_count = FALSE)$name
+  preferred_layer <- traffic_data_manifest()[["Asset-Layer"]]
+  if (!is.null(preferred_layer) && preferred_layer %in% layers) {
+    layers <- c(preferred_layer, setdiff(layers, preferred_layer))
+  }
+
+  for (layer in layers) {
+    escaped_layer <- gsub('"', '""', layer, fixed = TRUE)
+    sample <- tryCatch(
+      sf::st_read(
+        path,
+        query = paste0('SELECT * FROM "', escaped_layer, '" LIMIT 1'),
+        quiet = TRUE
+      ),
+      error = function(err) NULL
+    )
+    if (is.null(sample)) {
+      next
+    }
+    field_indices <- match(tolower(required_fields), tolower(names(sample)))
+    if (!anyNA(field_indices)) {
+      return(list(
+        layer = layer,
+        fields = stats::setNames(names(sample)[field_indices], required_fields),
+        crs = sf::st_crs(sample)
+      ))
+    }
+  }
+
+  stop(
+    "Traffic data must contain a spatial layer with the fields ",
+    paste(required_fields, collapse = ", "),
+    ".",
+    call. = FALSE
+  )
+}
+
+traffic_region_filter_wkt <- function(parent, buffer, crs = sf::st_crs(4326)) {
+  region <- parent |>
+    s2::s2_cell_polygon() |>
+    s2::s2_buffer_cells(
+      distance = buffer,
+      max_cells = 1000,
+      min_level = -1
+    ) |>
+    sf::st_as_sfc() |>
+    sf::st_bbox() |>
+    sf::st_as_sfc()
+  if (!is.na(crs)) {
+    region <- sf::st_transform(region, crs)
+  }
+  sf::st_as_text(region)
+}
+
+traffic_read_region <- function(path, source, parent, buffer) {
+  hpms <- sf::read_sf(
+    path,
+    layer = source$layer,
+    wkt_filter = traffic_region_filter_wkt(parent, buffer, source$crs),
+    quiet = TRUE
+  )
+  names(hpms)[match(unname(source$fields), names(hpms))] <- names(source$fields)
+  if (is.na(sf::st_crs(hpms))) {
+    hpms <- sf::st_set_crs(hpms, 4326)
+  } else {
+    hpms <- sf::st_transform(hpms, 4326)
+  }
+  for (field in names(source$fields)) {
+    hpms[[field]] <- suppressWarnings(as.numeric(hpms[[field]]))
+  }
+  hpms[
+    stats::complete.cases(sf::st_drop_geometry(hpms)[names(source$fields)]),
+  ]
+}
+
+traffic_zero_summary <- function() {
+  c(
+    aadtm_trucks_buses = 0,
+    aadtm_tractor_trailer = 0,
+    aadtm_passenger = 0
+  )
 }

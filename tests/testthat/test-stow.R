@@ -27,11 +27,14 @@ test_that("geomarker stow fixes cache ownership and forwards arguments", {
 
 test_that("legacy cache helpers are not exported", {
   exports <- getNamespaceExports("geomarker")
-  expect_false(any(c(
-    "geomarker_download_file",
-    "geomarker_data_dir",
-    "geomarker_data_dir_info"
-  ) %in% exports))
+  expect_false(any(
+    c(
+      "geomarker_download_file",
+      "geomarker_data_dir",
+      "geomarker_data_dir_info"
+    ) %in%
+      exports
+  ))
 })
 
 test_that("geomarker stow reserves package and subdir", {

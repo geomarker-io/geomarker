@@ -52,9 +52,13 @@ get_narr_data <- function(
     s2cd_years(x)
   )
 
-  narr_files <- vapply(narr_urls, function(url) {
-    geomarker_stow(url, "get_narr_data", ...)
-  }, character(1))
+  narr_files <- vapply(
+    narr_urls,
+    function(url) {
+      geomarker_stow(url, "get_narr_data", ...)
+    },
+    character(1)
+  )
   narr_rasters <- suppressWarnings(lapply(narr_files, terra::rast))
   narr_rasters <- mapply(
     function(.x, .y) {

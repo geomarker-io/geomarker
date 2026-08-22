@@ -25,10 +25,10 @@ devtools::install_github("geomarker-io/geomarker")
 The `s2cd` vector class extends `s2::s2_cell` to include a list of Date vectors, one for each s2 cell.
 This vector is meant to store locations and dates of observations and is used as the input to all geomarker assessment functions.
 
-[S2](https://s2geometry.io/devguide/) is a spherical hierarchical cell index: specifically, a quad-based discrete global grid system (DGGS) on the sphere, while the S2 cell ID system is the 64-bit naming scheme that identifies each cell and its resolution within that grid. BigQuery exposes this system through its [S2 geography functions](https://cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#s2_functions).
+[S2](https://s2geometry.io/devguide/) is a spherical hierarchical cell index: specifically, a quad-based discrete global grid system (DGGS) on the sphere, while the S2 cell ID system is the 64-bit naming scheme that identifies each cell and its resolution within that grid. BigQuery exposes this system through its [S2 geography functions](https://docs.cloud.google.com/bigquery/docs/reference/standard-sql/geography_functions#s2_functions).
 For geomarker, a full-resolution (level 30) `s2_cell` can be treated as a point with an approximate spatial resolution of 1 centimeter, although coarser cells can represent regions—for example, when installing a fixture for a level-6 S2 cell.
 Traditional longitude and latitude coordinates can be converted to full-resolution S2 cells with `s2::as_s2_cell(s2::s2_lnglat(lon, lat))`.
-Use the [S2 Cell Viewer](https://vesoyu.github.io/s2cell) to inspect individual cells and the [S2 Region Coverer](https://igorgatis.github.io/ws2/) to explore coarser cells and regional coverings.
+Use the [S2 Cell Viewer](https://vesoyu.github.io/s2cell/) to inspect individual cells and the [S2 Region Coverer](https://igorgatis.github.io/ws2/) to explore coarser cells and regional coverings.
 
 ### Available geomarkers
 
@@ -87,7 +87,7 @@ It is a best-effort application control, not a network security boundary; use op
 ### MERRA-2 data cadence
 
 MERRA-2 PM2.5 release data are cataloged in `inst/merra-data.dcf` as complete half-year assets: January through June (`H1`) and July through December (`H2`).
-Assets are added to the package's provisional `v0.0.1` GitHub release only after every expected daily granule has been discovered and validated.
+The currently cataloged assets were published with the package's `v0.0.1` GitHub release only after every expected daily granule had been discovered and validated.
 There is one fixed asset name for each year and half-year. It may be recreated from the latest NASA data while preparing a package release, but the checked-in DCF records exactly one published file and checksum. A later data correction is distributed with a new package and GitHub release.
 
 `get_merra_data()` first uses a complete monthly artifact retained under the `get_merra_data` directory as a durable managed local copy and then tries the matching official half-year release.

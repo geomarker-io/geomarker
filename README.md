@@ -3,6 +3,7 @@
 <!-- badges: start -->
 
 [![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
+[![geomarker status badge](https://geomarker-io.r-universe.dev/geomarker/badges/version)](https://geomarker-io.r-universe.dev/geomarker)
 [![CRAN status](https://www.r-pkg.org/badges/version/geomarker)](https://CRAN.R-project.org/package=geomarker)
 [![R-CMD-check](https://github.com/geomarker-io/geomarker/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/geomarker-io/geomarker/actions/workflows/R-CMD-check.yaml)
 
@@ -12,10 +13,22 @@ The goal of geomarker is to facilitate geomarker assessment, or the linkage of e
 
 ## Installation
 
-You can install the development version of geomarker from GitHub:
+You can install the latest release of geomarker from R-universe:
 
 ```r
-devtools::install_github("geomarker-io/geomarker")
+install.packages(
+  "geomarker",
+  repos = c(
+    "https://geomarker-io.r-universe.dev",
+    "https://cloud.r-project.org"
+  )
+)
+```
+
+You can install the development version of geomarker from GitHub with pak:
+
+```r
+pak::pak("geomarker-io/geomarker")
 ```
 
 ## Using

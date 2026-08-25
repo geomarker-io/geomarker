@@ -7,7 +7,9 @@
 #' @param year vintage of TIGER/Line block group geography files
 #' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
 #'   are fixed by geomarker.
-#' @returns character vector of matched census block group identifiers
+#' @returns An unnamed character vector of matched census block group
+#'   identifiers, with one element per input cell in the same order. Duplicate
+#'   and missing input cells retain their original positions.
 #' @export
 #' @examples
 #'  withr::local_envvar(
@@ -28,7 +30,8 @@ get_tiger_bg <- function(x, year = as.character(2024:2013), ...) {
       stop("x must be coercible to a s2_cell vector", call. = FALSE)
     }
   )
-  non_missing_x <- stats::na.omit(x)
+  cell_keys <- as.character(x)
+  non_missing_x <- x[!is.na(cell_keys)]
   if (length(non_missing_x) > 0L) {
     if (!all(s2::s2_cell_is_valid(non_missing_x))) {
       stop("x must contain valid s2 cells", call. = FALSE)
@@ -41,10 +44,13 @@ get_tiger_bg <- function(x, year = as.character(2024:2013), ...) {
     }
   }
   year <- match.arg(year)
-  x_s2_geo <-
-    unique(stats::na.omit(x)) |>
-    s2::s2_cell_center()
-  names(x_s2_geo) <- as.character(unique(stats::na.omit(x)))
+  unique_positions <- which(!is.na(cell_keys) & !duplicated(cell_keys))
+  if (length(unique_positions) == 0L) {
+    return(rep(NA_character_, length(x)))
+  }
+  unique_cells <- x[unique_positions]
+  unique_cell_keys <- cell_keys[unique_positions]
+  x_s2_geo <- s2::s2_cell_center(unique_cells)
   states <- tiger_states(year, ...)
   the_states <- states[
     s2::s2_closest_feature(x_s2_geo, states$s2_geography),
@@ -54,21 +60,19 @@ get_tiger_bg <- function(x, year = as.character(2024:2013), ...) {
   state_bgs <-
     lapply(unique(the_states), tiger_block_groups, year = year, ...) |>
     stats::setNames(unique(the_states))
-  the_s2s <- split(x_s2_geo, the_states)
+  state_indices <- split(seq_along(unique_cells), the_states)
+  bg_lookup <- rep(NA_character_, length(unique_cells))
+  for (stt in names(state_indices)) {
+    indices <- state_indices[[stt]]
+    sbg <- state_bgs[[stt]]
+    bg_lookup[indices] <- sbg[
+      s2::s2_closest_feature(x_s2_geo[indices], sbg$s2_geography),
+      "GEOID",
+      drop = TRUE
+    ]
+  }
 
-  bg_lookup <-
-    lapply(names(the_s2s), \(stt) {
-      sbg <- state_bgs[[stt]]
-      sbg[
-        s2::s2_closest_feature(the_s2s[[stt]], sbg$s2_geography),
-        "GEOID",
-        drop = TRUE
-      ]
-    }) |>
-    unlist() |>
-    stats::setNames(names(x_s2_geo))
-
-  return(stats::setNames(bg_lookup[as.character(x)], NULL))
+  return(unname(bg_lookup[match(cell_keys, unique_cell_keys)]))
 }
 
 install_tiger_geomarker_fixture <- function(cell, dates, output_dir) {

@@ -16,7 +16,9 @@ full-resolution (level 30) cells}
 are fixed by geomarker.}
 }
 \value{
-character vector of matched census block group identifiers
+An unnamed character vector of matched census block group
+identifiers, with one element per input cell in the same order. Duplicate
+and missing input cells retain their original positions.
 }
 \description{
 Link an object coercible to an s2_cell vector with the closest census block

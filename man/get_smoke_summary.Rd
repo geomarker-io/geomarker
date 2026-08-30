@@ -4,22 +4,32 @@
 \alias{get_smoke_summary}
 \title{Summarize wildfire smoke plume exposures}
 \usage{
-get_smoke_summary(x, ...)
+get_smoke_summary(x, summary = c("max", "sum", "none"), ...)
 }
 \arguments{
 \item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 
+\item{summary}{how to summarize intersecting smoke plumes. \code{"max"} returns
+the maximum density, \code{"sum"} adds density scores, and \code{"none"} returns
+every intersecting density.}
+
 \item{...}{passed to \code{get_daily_smoke_data()} and then \code{\link[stow:stow]{stow::stow()}}.}
 }
 \value{
-a list of ordered factors (Levels: None > Light > Medium > Heavy)
+For \code{summary = "max"}, a list of ordered factors with one value per
+location-date. For \code{summary = "sum"}, a list of numeric vectors with one
+score per location-date. For \code{summary = "none"}, a list per location of
+lists per date containing one ordered factor value per intersecting plume.
+Dates without intersecting plumes return \code{"None"}, \code{0}, or an empty ordered
+factor, respectively.
 }
 \description{
 For each s2_cell location and Date vector, the intersections with
-NOAA's HMS daily smoke polygons (see \code{?get_daily_smoke_data}) are calculated
-and summarized as the maximum intensity ("Light", "Medium", "Heavy").
-If no smoke polygons are intersected, "None" is used to summarize the maximum
-intensity.
+NOAA's HMS daily smoke polygons (see \code{?get_daily_smoke_data}) are calculated.
+By default, intersecting plumes are summarized as the maximum intensity
+("Light", "Medium", "Heavy"). They can instead be summed using scores of
+0 for "None", 1 for "Light", 2 for "Medium", and 3 for "Heavy", or returned
+without summarization.
 }
 \examples{
  withr::local_envvar(
@@ -29,9 +39,11 @@ intensity.
    ),
    R_GEOMARKER_NO_DOWNLOAD = "true"
  )
-s2cd(s2::as_s2_cell(c("8841b39a7c46e25f","8841a45555555555")),
+x <- s2cd(s2::as_s2_cell(c("8841b39a7c46e25f","8841a45555555555")),
   dates = list(as.Date(c("2024-05-18", "2024-11-06")),
                as.Date(c("2024-06-22", "2024-08-15", "2024-12-30")))
-) |>
-  get_smoke_summary()
+)
+get_smoke_summary(x)
+get_smoke_summary(x, summary = "sum")
+get_smoke_summary(x, summary = "none")
 }

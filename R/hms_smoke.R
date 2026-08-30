@@ -64,13 +64,22 @@ get_daily_smoke_data <- function(x, ...) {
 #' Summarize wildfire smoke plume exposures
 #'
 #' For each s2_cell location and Date vector, the intersections with
-#' NOAA's HMS daily smoke polygons (see `?get_daily_smoke_data`) are calculated
-#' and summarized as the maximum intensity ("Light", "Medium", "Heavy").
-#' If no smoke polygons are intersected, "None" is used to summarize the maximum
-#' intensity.
+#' NOAA's HMS daily smoke polygons (see `?get_daily_smoke_data`) are calculated.
+#' By default, intersecting plumes are summarized as the maximum intensity
+#' ("Light", "Medium", "Heavy"). They can instead be summed using scores of
+#' 0 for "None", 1 for "Light", 2 for "Medium", and 3 for "Heavy", or returned
+#' without summarization.
 #' @param x a s2_cell_dates vector (see `?s2cd`)
+#' @param summary how to summarize intersecting smoke plumes. `"max"` returns
+#'   the maximum density, `"sum"` adds density scores, and `"none"` returns
+#'   every intersecting density.
 #' @param ... passed to `get_daily_smoke_data()` and then [stow::stow()].
-#' @returns a list of ordered factors (Levels: None > Light > Medium > Heavy)
+#' @returns For `summary = "max"`, a list of ordered factors with one value per
+#'   location-date. For `summary = "sum"`, a list of numeric vectors with one
+#'   score per location-date. For `summary = "none"`, a list per location of
+#'   lists per date containing one ordered factor value per intersecting plume.
+#'   Dates without intersecting plumes return `"None"`, `0`, or an empty ordered
+#'   factor, respectively.
 #' @export
 #' @examples
 #'  withr::local_envvar(
@@ -80,30 +89,46 @@ get_daily_smoke_data <- function(x, ...) {
 #'    ),
 #'    R_GEOMARKER_NO_DOWNLOAD = "true"
 #'  )
-#' s2cd(s2::as_s2_cell(c("8841b39a7c46e25f","8841a45555555555")),
+#' x <- s2cd(s2::as_s2_cell(c("8841b39a7c46e25f","8841a45555555555")),
 #'   dates = list(as.Date(c("2024-05-18", "2024-11-06")),
 #'                as.Date(c("2024-06-22", "2024-08-15", "2024-12-30")))
-#' ) |>
-#'   get_smoke_summary()
-get_smoke_summary <- function(x, ...) {
+#' )
+#' get_smoke_summary(x)
+#' get_smoke_summary(x, summary = "sum")
+#' get_smoke_summary(x, summary = "none")
+get_smoke_summary <- function(
+  x,
+  summary = c("max", "sum", "none"),
+  ...
+) {
   stopifnot("x must be a s2_cell_dates vector" = is_s2cd(x))
+  summary <- match.arg(summary)
   x_dates <- s2cd_dates(x)
   dsd <- get_daily_smoke_data(as.Date(unique(unlist(x_dates))), ...)
-  lapply(seq_along(x), \(i) {
+  intersections <- lapply(seq_along(x), \(i) {
     lapply(dsd[as.character(x_dates[[i]])], \(.) {
-      safe_max_factor(
-        .[
-          s2::s2_intersects(
-            s2::s2_cell_center(s2::as_s2_cell(x[i])),
-            .$geometry
-          ),
-          "density",
-          drop = TRUE
-        ]
-      )
-    }) |>
-      do.call(c, args = _)
+      .[
+        s2::s2_intersects(
+          s2::s2_cell_center(s2::as_s2_cell(x[i])),
+          .$geometry
+        ),
+        "density",
+        drop = TRUE
+      ]
+    })
   })
+
+  switch(
+    summary,
+    max = lapply(intersections, \(.) {
+      lapply(., safe_max_factor) |>
+        do.call(c, args = _)
+    }),
+    sum = lapply(intersections, \(.) {
+      vapply(., safe_sum_smoke_density, numeric(1))
+    }),
+    none = intersections
+  )
 }
 
 
@@ -116,6 +141,11 @@ safe_max_factor <- function(x) {
     ))
   }
   max(x, na.rm = TRUE)
+}
+
+safe_sum_smoke_density <- function(x) {
+  scores <- c(None = 0, Light = 1, Medium = 2, Heavy = 3)
+  sum(unname(scores[as.character(x)]), na.rm = TRUE)
 }
 
 install_hms_smoke_geomarker_fixture <- function(cell, dates, output_dir) {

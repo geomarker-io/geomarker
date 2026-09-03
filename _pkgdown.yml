@@ -30,6 +30,7 @@ reference:
       - get_elevation_summary
       - get_nlcd_fct_imp_summary
       - get_merra_data
+      - install_merra_data
       - get_nei_point_summary
       - get_evi_summary
       - get_traffic_summary
@@ -39,7 +40,6 @@ reference:
       - get_smoke_summary
   - title: Utilities and examples
     contents:
-      - install_merra_data
       - impute_date_ranges
       - s2cd_example
       - s2cd_example_cincy

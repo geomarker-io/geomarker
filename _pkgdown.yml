@@ -1,0 +1,45 @@
+url: https://geomarker.io/geomarker/
+llm-docs: false
+
+template:
+  bootstrap: 5
+  bslib:
+    bg: "#FFFFFF"
+    fg: "#396175"
+    primary: "#C28273"
+    info: "#EACEC5"
+    warning: "#E49865"
+    grid-gutter-width: 0.1rem
+    border-radius: 0.2rem
+    btn-border-radius: 0.2rem
+    code_font:
+      google: Source Code Pro
+
+reference:
+  - title: Location and date vectors
+    contents:
+      - s2cd
+      - as_s2cd
+      - is_s2cd
+      - s2cd_dates
+      - s2cd_years
+      - s2cd_within
+  - title: Geomarker assessments
+    contents:
+      - get_tiger_bg
+      - get_elevation_summary
+      - get_nlcd_fct_imp_summary
+      - get_merra_data
+      - get_nei_point_summary
+      - get_evi_summary
+      - get_traffic_summary
+      - get_gridmet_data
+      - get_narr_data
+      - get_daily_smoke_data
+      - get_smoke_summary
+  - title: Utilities and examples
+    contents:
+      - install_merra_data
+      - impute_date_ranges
+      - s2cd_example
+      - s2cd_example_cincy

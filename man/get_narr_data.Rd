@@ -28,7 +28,7 @@ based on the location of each s2_cell and dates.
 }
 \details{
 Data is downloaded from the
-\href{https://downloads.psl.noaa.gov/Datasets/NARR/Dailies/monolevel/}{NCEP North American Regional Reanalysis}
+\href{https://www.psl.noaa.gov/thredds/catalog/Datasets/NARR/Dailies/monolevel/catalog.html}{NCEP North American Regional Reanalysis}
 project page and is available for the entire US from 1979 - near present.
 Data is updated monthly.
 }

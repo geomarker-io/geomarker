@@ -4,9 +4,10 @@
 #' based on the location of each s2_cell and dates.
 #'
 #' Data is downloaded from the
-#' [NCEP North American Regional Reanalysis](https://downloads.psl.noaa.gov/Datasets/NARR/Dailies/monolevel/)
+#' [NCEP North American Regional Reanalysis](https://www.psl.noaa.gov/thredds/catalog/Datasets/NARR/Dailies/monolevel/catalog.html)
 #' project page and is available for the entire US from 1979 - near present.
 #' Data is updated monthly.
+#' Files are retrieved through NOAA PSL's anonymous FTP server.
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param narr_var character; name of NARR variable
 #' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
@@ -47,7 +48,7 @@ get_narr_data <- function(
   check_installed("terra", "to read data from NARR rasters")
 
   narr_urls <- sprintf(
-    "https://downloads.psl.noaa.gov/Datasets/NARR/Dailies/monolevel/%s.%s.nc",
+    "ftp://ftp2.psl.noaa.gov/Datasets/NARR/Dailies/monolevel/%s.%s.nc",
     narr_var,
     s2cd_years(x)
   )
@@ -105,7 +106,7 @@ install_narr_geomarker_fixture <- function(
   years <- geomarker_fixture_years(dates)
   output_dir <- geomarker_fixture_output_dir(output_dir)
   narr_urls <- sprintf(
-    "https://downloads.psl.noaa.gov/Datasets/NARR/Dailies/monolevel/%s.%s.nc",
+    "ftp://ftp2.psl.noaa.gov/Datasets/NARR/Dailies/monolevel/%s.%s.nc",
     narr_var,
     years
   )

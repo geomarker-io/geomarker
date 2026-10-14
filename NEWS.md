@@ -2,6 +2,8 @@
 
 - NARR downloads now use NOAA PSL's THREDDS file server. Existing downloads
   from the previous URL are not reused because cache filenames include the URL.
+  NARR skips ETag header requests and retries HTTP 429 responses up to four
+  times with increasing waits.
 
 - `get_smoke_summary()` can now return every intersecting smoke-plume density
   or add density scores across intersecting plumes, while retaining the maximum

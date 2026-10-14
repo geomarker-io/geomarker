@@ -7,6 +7,8 @@
 #' [NCEP North American Regional Reanalysis](https://www.psl.noaa.gov/thredds/catalog/Datasets/NARR/Dailies/monolevel/catalog.html)
 #' project page and is available for the entire US from 1979 - near present.
 #' Data is updated monthly.
+#' HTTP 429 responses are retried up to four times, waiting 5, 10, 20, and
+#' 40 seconds between attempts. Downloads skip ETag header requests.
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param narr_var character; name of NARR variable
 #' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
@@ -55,7 +57,7 @@ get_narr_data <- function(
   narr_files <- vapply(
     narr_urls,
     function(url) {
-      geomarker_stow(url, "get_narr_data", ...)
+      narr_stow(url, ...)
     },
     character(1)
   )
@@ -112,12 +114,7 @@ install_narr_geomarker_fixture <- function(
   fixture_dir <- geomarker_fixture_stow_dir(output_dir, "get_narr_data")
 
   lapply(narr_urls, \(url) {
-    geomarker_stow(
-      url,
-      "get_narr_data",
-      quiet = TRUE,
-      .etag = FALSE
-    ) |>
+    narr_stow(url, quiet = TRUE) |>
       terra::rast() |>
       geomarker_fixture_crop_to_cell(cell = cell) |>
       terra::writeCDF(
@@ -127,4 +124,35 @@ install_narr_geomarker_fixture <- function(
   }) |>
     invisible()
   invisible(output_dir)
+}
+
+# NOAA may temporarily rate-limit downloads. Skip the ETag HEAD request and
+# retry only HTTP 429 failures, with bounded waits between attempts.
+narr_stow <- function(url, ...) {
+  quiet <- isTRUE(list(...)$quiet)
+  for (attempt in seq_len(5L)) {
+    result <- tryCatch(
+      geomarker_stow(url, "get_narr_data", ..., .etag = FALSE),
+      error = identity
+    )
+    if (!inherits(result, "error")) {
+      return(result)
+    }
+    rate_limited <- grepl(
+      "requested URL returned error: 429",
+      conditionMessage(result),
+      fixed = TRUE
+    )
+    if (!rate_limited || attempt == 5L) {
+      stop(result)
+    }
+    delay <- 5 * 2^(attempt - 1L)
+    if (!quiet) {
+      message(
+        "NOAA rate-limited the NARR download; retrying in ",
+        delay, " seconds."
+      )
+    }
+    Sys.sleep(delay)
+  }
 }

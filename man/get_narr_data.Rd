@@ -31,8 +31,7 @@ Data is downloaded from the
 \href{https://www.psl.noaa.gov/thredds/catalog/Datasets/NARR/Dailies/monolevel/catalog.html}{NCEP North American Regional Reanalysis}
 project page and is available for the entire US from 1979 - near present.
 Data is updated monthly.
-HTTP 429 responses are retried up to four times, waiting 5, 10, 20, and
-40 seconds between attempts. Downloads skip ETag header requests.
+Files are retrieved through NOAA PSL's anonymous FTP server.
 }
 \examples{
  withr::local_envvar(

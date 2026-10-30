@@ -16,6 +16,8 @@ test_that("get_evi_summary validates arguments before querying source data", {
     get_evi_summary(x_ok, buffer = c(400, 800)),
     "buffer must be length one"
   )
+  expect_error(get_evi_summary(x_ok, buffer = -1), "buffer must not be negative")
+  expect_error(get_evi_summary(x_ok, buffer = Inf), "buffer must be finite")
 })
 
 test_that("EVI accepts its first supported day and rejects the previous day", {
@@ -95,7 +97,7 @@ test_that("EVI STAC parser extracts Terra and Aqua EVI assets", {
   expect_equal(evi_parse_next_href(json), "https://example.com/next?x=1&y=2")
 })
 
-test_that("EVI item filter keeps tiles containing requested points", {
+test_that("EVI item filter keeps tiles intersecting requested buffers", {
   items <- data.frame(
     id = c("hit", "miss", "unknown"),
     xmin = c(0, 10, NA),
@@ -103,9 +105,12 @@ test_that("EVI item filter keeps tiles containing requested points", {
     xmax = c(1, 11, NA),
     ymax = c(1, 11, NA)
   )
-  points <- data.frame(x = c(0.5, 20), y = c(0.5, 20))
+  buffer_bboxes <- data.frame(
+    xmin = c(0.4, 19.9), ymin = c(0.4, 19.9),
+    xmax = c(0.6, 20.1), ymax = c(0.6, 20.1)
+  )
 
-  out <- evi_filter_items_to_points(items, points)
+  out <- evi_filter_items_to_buffers(items, buffer_bboxes)
   expect_equal(out$id, c("hit", "unknown"))
 })
 

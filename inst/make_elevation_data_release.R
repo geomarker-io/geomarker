@@ -163,11 +163,13 @@ script_file <- sub(
 )
 script_dir <- dirname(normalizePath(script_file, mustWork = TRUE))
 
-args <- commandArgs(trailingOnly = TRUE)
+source(file.path(dirname(script_dir), "scripts", "data-release-helpers.R"))
+parsed <- data_release_args(commandArgs(trailingOnly = TRUE))
+args <- parsed$args
 if (length(args) < 1 || length(args) > 2) {
   elevation_release_stop(
     "Usage: Rscript inst/make_elevation_data_release.R ",
-    "OUTPUT_FILE [MANIFEST]"
+    "OUTPUT_FILE [MANIFEST] [--revision N]"
   )
 }
 output_file <- normalizePath(args[[1]], winslash = "/", mustWork = FALSE)
@@ -176,7 +178,10 @@ manifest_file <- if (length(args) == 2) {
 } else {
   file.path(script_dir, "elevation-data.dcf")
 }
-manifest <- elevation_release_manifest(manifest_file)
+manifest <- data_release_pin(
+  elevation_release_manifest(manifest_file),
+  parsed$revision
+)
 if (!identical(basename(output_file), manifest[["Asset-Name"]])) {
   elevation_release_stop(
     "OUTPUT_FILE must end with ",
@@ -188,6 +193,7 @@ dir.create(dirname(output_file), recursive = TRUE, showWarnings = FALSE)
 
 if (file.exists(output_file)) {
   elevation_validate_release_asset(output_file, manifest)
+  data_release_write(manifest, paste0(output_file, ".dcf"))
   message("Existing pinned elevation asset is valid; no network request made.")
   quit(save = "no", status = 0)
 }
@@ -237,4 +243,5 @@ if (!file.rename(partial_file, output_file)) {
     )
   }
 }
+data_release_write(manifest, paste0(output_file, ".dcf"))
 message("Pinned elevation release asset: ", output_file)

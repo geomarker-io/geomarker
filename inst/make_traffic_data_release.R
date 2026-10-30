@@ -3,7 +3,7 @@
 # Build geomarker's versioned HPMS 2024 F1/F2 AADT GeoPackage.
 #
 # Usage:
-#   Rscript inst/make_traffic_data_release.R WORK_DIR [OUTPUT_FILE]
+#   Rscript inst/make_traffic_data_release.R WORK_DIR [OUTPUT_FILE] [--revision N]
 #
 # WORK_DIR must be a dedicated `geomarker-hpms-2024.*` directory directly
 # under /private/tmp. A failed build removes it; a successful build removes
@@ -20,7 +20,7 @@ source_modified_utc <- "2026-07-15T17:38:09Z"
 source_item_id <- "5e6a977c2d7c4ec1bdc82e684d3384f2"
 asset_name <- "hpms_2024_f12_aadt.gpkg"
 asset_layer <- "hpms_2024_f12_aadt"
-package_release <- "v0.0.1"
+
 transformation_id <- "f12-aadt-v1"
 required_fields <- c(
   "F_SYSTEM",
@@ -445,11 +445,11 @@ write_build_manifest <- function(path, source_zip, asset_path, rows) {
     ),
     `HPMS-Source-SHA256` = source_sha256,
     `Transformation-ID` = transformation_id,
-    `Package-Release` = package_release,
+    `Data-Release` = data_release,
     `Asset-Name` = basename(asset_path),
     `Asset-URL` = paste0(
       "https://github.com/geomarker-io/geomarker/releases/download/",
-      package_release,
+      data_release,
       "/",
       basename(asset_path)
     ),
@@ -469,14 +469,24 @@ write_build_manifest <- function(path, source_zip, asset_path, rows) {
     ),
     `Built-UTC` = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
   )
-  write.dcf(values, file = path)
+  values <- data_release_pin(as.list(values[1, ]), parsed$revision)
+  data_release_write(values, path)
   invisible(path)
 }
 
-args <- commandArgs(trailingOnly = TRUE)
+script_file <- sub(
+  "^--file=",
+  "",
+  grep("^--file=", commandArgs(FALSE), value = TRUE)[1]
+)
+repo_dir <- dirname(dirname(normalizePath(script_file)))
+source(file.path(repo_dir, "scripts", "data-release-helpers.R"))
+parsed <- data_release_args(commandArgs(trailingOnly = TRUE))
+args <- parsed$args
+data_release <- data_release_tag(list(`HPMS-Year` = "2024"), parsed$revision)
 if (length(args) < 1 || length(args) > 2) {
   stop_build(
-    "Usage: Rscript inst/make_traffic_data_release.R WORK_DIR [OUTPUT_FILE]"
+    "Usage: Rscript inst/make_traffic_data_release.R WORK_DIR [OUTPUT_FILE] [--revision N]"
   )
 }
 check_package("sf")

@@ -46,6 +46,11 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      - name: Check data release tooling
+        if: runner.os == 'Linux' && matrix.config.r == 'release'
+        shell: Rscript {0}
+        run: testthat::test_file("scripts/tests/test-release-data.R", stop_on_failure = TRUE)
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true

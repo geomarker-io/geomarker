@@ -1,8 +1,12 @@
 name: pkgdown
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published stable R package tag to deploy
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -22,9 +26,16 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_GEOMARKER_NO_DOWNLOAD: "true"
+      RELEASE_TAG: ${{ inputs.tag }}
     steps:
+      - name: Require a stable package tag
+        shell: bash
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]'
+
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.tag }}
 
       - name: Setup Pandoc
         uses: r-lib/actions/setup-pandoc@v2
@@ -33,6 +44,14 @@ jobs:
         uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
+
+      - name: Verify published package release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          test "$(gh release view "$RELEASE_TAG" --json isDraft --jq .isDraft)" = "false"
+          test "$RELEASE_TAG" = "v$(Rscript -e 'cat(read.dcf("DESCRIPTION")[1, "Version"])')"
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2

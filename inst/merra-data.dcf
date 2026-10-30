@@ -6,18 +6,14 @@ Asset-Days: 181
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2017_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2017_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2017-h1-r1/merra2_2017_h1_pm25.rds
 Asset-Bytes: 32446148
-Asset-SHA256:
-        2962be4f92a12b05287e6f906829bd9436cf85c8326158f7fd14dd11937d8dc5
+Asset-SHA256: 2962be4f92a12b05287e6f906829bd9436cf85c8326158f7fd14dd11937d8dc5
 Asset-Rows: 868800
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -25,9 +21,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2017_h1_pm25.rds
+Fixture-Name: 464b93362551ab5b--merra2_2017_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T15:47:32Z
+Data-Release: data-merra2-2017-h1-r1
 
 MERRA-Year: 2017
 MERRA-Half: H2
@@ -37,18 +34,14 @@ Asset-Days: 184
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2017_h2_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2017_h2_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2017-h2-r1/merra2_2017_h2_pm25.rds
 Asset-Bytes: 32988364
-Asset-SHA256:
-        446f636cb26fab537f7fcaa733d7804aec93c5fb1b4c3a37e4dee67a1873ba03
+Asset-SHA256: 446f636cb26fab537f7fcaa733d7804aec93c5fb1b4c3a37e4dee67a1873ba03
 Asset-Rows: 883200
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -56,9 +49,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2017_h2_pm25.rds
+Fixture-Name: 67b82db8e578a235--merra2_2017_h2_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T15:48:17Z
+Data-Release: data-merra2-2017-h2-r1
 
 MERRA-Year: 2018
 MERRA-Half: H1
@@ -68,18 +62,14 @@ Asset-Days: 181
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2018_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2018_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2018-h1-r1/merra2_2018_h1_pm25.rds
 Asset-Bytes: 32532060
-Asset-SHA256:
-        6807ebb82eaf09403b76474b42697bb07b2bd2a7feb2603a3549b71e883b6a05
+Asset-SHA256: 6807ebb82eaf09403b76474b42697bb07b2bd2a7feb2603a3549b71e883b6a05
 Asset-Rows: 868800
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -87,9 +77,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2018_h1_pm25.rds
+Fixture-Name: 487d04c1290481bc--merra2_2018_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T15:47:37Z
+Data-Release: data-merra2-2018-h1-r1
 
 MERRA-Year: 2018
 MERRA-Half: H2
@@ -99,18 +90,14 @@ Asset-Days: 184
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2018_h2_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2018_h2_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2018-h2-r1/merra2_2018_h2_pm25.rds
 Asset-Bytes: 33326016
-Asset-SHA256:
-        0103264ecf85d7feed17dafafce7fb6f6e47b55bb25f5e17df2bcbcaaf462cf2
+Asset-SHA256: 0103264ecf85d7feed17dafafce7fb6f6e47b55bb25f5e17df2bcbcaaf462cf2
 Asset-Rows: 883200
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -118,9 +105,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2018_h2_pm25.rds
+Fixture-Name: b67c5a8d7611a2ec--merra2_2018_h2_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T15:48:24Z
+Data-Release: data-merra2-2018-h2-r1
 
 MERRA-Year: 2019
 MERRA-Half: H1
@@ -130,18 +118,14 @@ Asset-Days: 181
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2019_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2019_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2019-h1-r1/merra2_2019_h1_pm25.rds
 Asset-Bytes: 32564732
-Asset-SHA256:
-        d469f79de49be4e158486058c94fa2bfe53c328602eb4704797ad8642f82d5a8
+Asset-SHA256: d469f79de49be4e158486058c94fa2bfe53c328602eb4704797ad8642f82d5a8
 Asset-Rows: 868800
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -149,9 +133,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2019_h1_pm25.rds
+Fixture-Name: b57c26da12fcdb11--merra2_2019_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T15:47:17Z
+Data-Release: data-merra2-2019-h1-r1
 
 MERRA-Year: 2019
 MERRA-Half: H2
@@ -161,18 +146,14 @@ Asset-Days: 184
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2019_h2_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2019_h2_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2019-h2-r1/merra2_2019_h2_pm25.rds
 Asset-Bytes: 32995348
-Asset-SHA256:
-        74eea679105f237183423678b5e0cf32a15bf39c2a8e799a55b5dcaa82fa0b35
+Asset-SHA256: 74eea679105f237183423678b5e0cf32a15bf39c2a8e799a55b5dcaa82fa0b35
 Asset-Rows: 883200
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -180,9 +161,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2019_h2_pm25.rds
+Fixture-Name: 9c85d037b3e588a1--merra2_2019_h2_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T15:48:15Z
+Data-Release: data-merra2-2019-h2-r1
 
 MERRA-Year: 2020
 MERRA-Half: H1
@@ -192,18 +174,14 @@ Asset-Days: 182
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2020_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2020_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2020-h1-r1/merra2_2020_h1_pm25.rds
 Asset-Bytes: 32899036
-Asset-SHA256:
-        fba1858f96aaf71994faef159354b256140b29cb907ba3781e7f0839466290f9
+Asset-SHA256: fba1858f96aaf71994faef159354b256140b29cb907ba3781e7f0839466290f9
 Asset-Rows: 873600
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -211,9 +189,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2020_h1_pm25.rds
+Fixture-Name: b528735857dcfa71--merra2_2020_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:23:50Z
+Data-Release: data-merra2-2020-h1-r1
 
 MERRA-Year: 2020
 MERRA-Half: H2
@@ -223,18 +202,14 @@ Asset-Days: 184
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2020_h2_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2020_h2_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2020-h2-r1/merra2_2020_h2_pm25.rds
 Asset-Bytes: 33135072
-Asset-SHA256:
-        e890db7bbf5eb64fc11203a30de8a98b0eb91a2ae8fdc65756af071bc62951dd
+Asset-SHA256: e890db7bbf5eb64fc11203a30de8a98b0eb91a2ae8fdc65756af071bc62951dd
 Asset-Rows: 883200
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -242,9 +217,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2020_h2_pm25.rds
+Fixture-Name: 89f17726141699a8--merra2_2020_h2_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:21:48Z
+Data-Release: data-merra2-2020-h2-r1
 
 MERRA-Year: 2021
 MERRA-Half: H1
@@ -254,18 +230,14 @@ Asset-Days: 181
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2021_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2021_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2021-h1-r1/merra2_2021_h1_pm25.rds
 Asset-Bytes: 32278552
-Asset-SHA256:
-        b4f8dae657da7f50dc2aabb4dc33512d9dfc60fea5823718268ab229a735d01f
+Asset-SHA256: b4f8dae657da7f50dc2aabb4dc33512d9dfc60fea5823718268ab229a735d01f
 Asset-Rows: 868800
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -273,9 +245,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2021_h1_pm25.rds
+Fixture-Name: 5479901dd71f4b95--merra2_2021_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:22:41Z
+Data-Release: data-merra2-2021-h1-r1
 
 MERRA-Year: 2021
 MERRA-Half: H2
@@ -285,18 +258,14 @@ Asset-Days: 184
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2021_h2_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2021_h2_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2021-h2-r1/merra2_2021_h2_pm25.rds
 Asset-Bytes: 33018172
-Asset-SHA256:
-        b1ab5eaf27da9d8ab81628832cf3d4451b59d1d34befce7147c8daeef7b877c7
+Asset-SHA256: b1ab5eaf27da9d8ab81628832cf3d4451b59d1d34befce7147c8daeef7b877c7
 Asset-Rows: 883200
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -304,9 +273,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2021_h2_pm25.rds
+Fixture-Name: 9454102afebb6246--merra2_2021_h2_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:23:06Z
+Data-Release: data-merra2-2021-h2-r1
 
 MERRA-Year: 2022
 MERRA-Half: H1
@@ -316,18 +286,14 @@ Asset-Days: 181
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2022_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2022_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2022-h1-r1/merra2_2022_h1_pm25.rds
 Asset-Bytes: 32461352
-Asset-SHA256:
-        8fd7943e3a950f0a5b3e5f47e450684ba8f8bb7cab8f7f636ee1046ac011f1dd
+Asset-SHA256: 8fd7943e3a950f0a5b3e5f47e450684ba8f8bb7cab8f7f636ee1046ac011f1dd
 Asset-Rows: 868800
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -335,9 +301,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2022_h1_pm25.rds
+Fixture-Name: 8b2e7c1bcbb4331c--merra2_2022_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:22:56Z
+Data-Release: data-merra2-2022-h1-r1
 
 MERRA-Year: 2022
 MERRA-Half: H2
@@ -347,18 +314,14 @@ Asset-Days: 184
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2022_h2_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2022_h2_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2022-h2-r1/merra2_2022_h2_pm25.rds
 Asset-Bytes: 33050720
-Asset-SHA256:
-        8c244ae917feef066df4fa9c2dd1167588f535bba659bb603666d2068887d811
+Asset-SHA256: 8c244ae917feef066df4fa9c2dd1167588f535bba659bb603666d2068887d811
 Asset-Rows: 883200
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -366,9 +329,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2022_h2_pm25.rds
+Fixture-Name: 5425d90c937f682a--merra2_2022_h2_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:23:21Z
+Data-Release: data-merra2-2022-h2-r1
 
 MERRA-Year: 2023
 MERRA-Half: H1
@@ -378,18 +342,14 @@ Asset-Days: 181
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2023_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2023_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2023-h1-r1/merra2_2023_h1_pm25.rds
 Asset-Bytes: 32568904
-Asset-SHA256:
-        a07d43e0bc8fc23ffdbfead00f9b8722fa7e67e227839b46012e7cdf26533e60
+Asset-SHA256: a07d43e0bc8fc23ffdbfead00f9b8722fa7e67e227839b46012e7cdf26533e60
 Asset-Rows: 868800
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -397,9 +357,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2023_h1_pm25.rds
+Fixture-Name: ccee173bafc373fe--merra2_2023_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:22:20Z
+Data-Release: data-merra2-2023-h1-r1
 
 MERRA-Year: 2023
 MERRA-Half: H2
@@ -409,18 +370,14 @@ Asset-Days: 184
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2023_h2_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2023_h2_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2023-h2-r1/merra2_2023_h2_pm25.rds
 Asset-Bytes: 32810216
-Asset-SHA256:
-        f0bb466fccac3c235b4029a12ab6cec5f992ed7f41f28e524ad93f3bf6f8d962
+Asset-SHA256: f0bb466fccac3c235b4029a12ab6cec5f992ed7f41f28e524ad93f3bf6f8d962
 Asset-Rows: 883200
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -428,9 +385,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2023_h2_pm25.rds
+Fixture-Name: ba4354b8181401b9--merra2_2023_h2_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:22:56Z
+Data-Release: data-merra2-2023-h2-r1
 
 MERRA-Year: 2024
 MERRA-Half: H1
@@ -440,18 +398,14 @@ Asset-Days: 182
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2024_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2024_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2024-h1-r1/merra2_2024_h1_pm25.rds
 Asset-Bytes: 32578960
-Asset-SHA256:
-        86f54e656ff64ff7a445ed6171c308efe600f316080917fe96d127f2d2872df9
+Asset-SHA256: 86f54e656ff64ff7a445ed6171c308efe600f316080917fe96d127f2d2872df9
 Asset-Rows: 873600
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -459,9 +413,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2024_h1_pm25.rds
+Fixture-Name: 7800bb59a36ab9de--merra2_2024_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:23:18Z
+Data-Release: data-merra2-2024-h1-r1
 
 MERRA-Year: 2024
 MERRA-Half: H2
@@ -471,18 +426,14 @@ Asset-Days: 184
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2024_h2_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2024_h2_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2024-h2-r1/merra2_2024_h2_pm25.rds
 Asset-Bytes: 32640424
-Asset-SHA256:
-        579816b809cb49361f242dc0dc4628f444951c2dec6c6d44ea35504a971db161
+Asset-SHA256: 579816b809cb49361f242dc0dc4628f444951c2dec6c6d44ea35504a971db161
 Asset-Rows: 883200
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -490,9 +441,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2024_h2_pm25.rds
+Fixture-Name: 13ce496cff9d65d9--merra2_2024_h2_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:23:34Z
+Data-Release: data-merra2-2024-h2-r1
 
 MERRA-Year: 2025
 MERRA-Half: H1
@@ -502,18 +454,14 @@ Asset-Days: 181
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2025_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2025_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2025-h1-r1/merra2_2025_h1_pm25.rds
 Asset-Bytes: 32335324
-Asset-SHA256:
-        4e1e45f43b04948cf565b9b8abf061dcd31664a5d9c2422550a3e4a8f24cfa77
+Asset-SHA256: 4e1e45f43b04948cf565b9b8abf061dcd31664a5d9c2422550a3e4a8f24cfa77
 Asset-Rows: 868800
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -521,9 +469,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2025_h1_pm25.rds
+Fixture-Name: a695442d7c2a1894--merra2_2025_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T14:49:24Z
+Data-Release: data-merra2-2025-h1-r1
 
 MERRA-Year: 2025
 MERRA-Half: H2
@@ -533,18 +482,14 @@ Asset-Days: 184
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2025_h2_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2025_h2_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2025-h2-r1/merra2_2025_h2_pm25.rds
 Asset-Bytes: 32590760
-Asset-SHA256:
-        954243e1d2794dec49cee6aa2753ad727f6e46d1b9668a7add69dfc95b7d15bb
+Asset-SHA256: 954243e1d2794dec49cee6aa2753ad727f6e46d1b9668a7add69dfc95b7d15bb
 Asset-Rows: 883200
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -552,9 +497,10 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2025_h2_pm25.rds
+Fixture-Name: c82fabed874c4da9--merra2_2025_h2_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:23:34Z
+Data-Release: data-merra2-2025-h2-r1
 
 MERRA-Year: 2026
 MERRA-Half: H1
@@ -564,18 +510,14 @@ Asset-Days: 181
 Source-Collection-ID: C1276812830-GES_DISC
 Source-Collection: M2T1NXAER 5.12.4
 Source-Variables: DUSMASS25,OCSMASS,BCSMASS,SSSMASS25,SO4SMASS
-Source-BBox-West-South-East-North:
-        -126.474609,24.766785,-66.445313,49.894634
+Source-BBox-West-South-East-North: -126.474609,24.766785,-66.445313,49.894634
 Transformation-ID: m2t1nxaer-daily-pm25-v1
-PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS *
-        132.14 / 96.06
-Package-Release: v0.0.1
+PM25-Formula: DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06
 Asset-Name: merra2_2026_h1_pm25.rds
 Asset-URL:
-        https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/merra2_2026_h1_pm25.rds
+        https://github.com/geomarker-io/geomarker/releases/download/data-merra2-2026-h1-r1/merra2_2026_h1_pm25.rds
 Asset-Bytes: 32379196
-Asset-SHA256:
-        d3fbf12ae8a3d5905a482ddfe650615cb0a8c2941032446c9dc6eb408da98ef1
+Asset-SHA256: d3fbf12ae8a3d5905a482ddfe650615cb0a8c2941032446c9dc6eb408da98ef1
 Asset-Rows: 868800
 Asset-Grid-Cells: 4800
 Asset-Schema:
@@ -583,6 +525,7 @@ Asset-Schema:
 Asset-Compression: RDS-XZ
 Grid-Longitude-Resolution-Degrees: 0.625
 Grid-Latitude-Resolution-Degrees: 0.5
-Fixture-Name: 40376751--merra2_2026_h1_pm25.rds
+Fixture-Name: 6d114dba6022e657--merra2_2026_h1_pm25.rds
 Attribution: NASA Global Modeling and Assimilation Office MERRA-2
 Built-UTC: 2026-08-05T16:23:43Z
+Data-Release: data-merra2-2026-h1-r1

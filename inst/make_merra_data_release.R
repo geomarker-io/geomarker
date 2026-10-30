@@ -3,7 +3,7 @@
 # build one complete half-year MERRA-2 release asset
 #
 # usage:
-#   Rscript inst/make_merra_data_release.R YEAR HALF WORK_DIR [OUTPUT_FILE]
+#   Rscript inst/make_merra_data_release.R YEAR HALF WORK_DIR [OUTPUT_FILE] [--revision N]
 #
 # the work directory retains the monthly and staged daily source files. this
 # script writes
@@ -18,10 +18,12 @@ source(file.path(repo_dir, "R", "helper.R"))
 source(file.path(repo_dir, "R", "stow.R"))
 source(file.path(repo_dir, "R", "merra.R"))
 
-args <- commandArgs(trailingOnly = TRUE)
+source(file.path(repo_dir, "scripts", "data-release-helpers.R"))
+parsed <- data_release_args(commandArgs(trailingOnly = TRUE))
+args <- parsed$args
 if (length(args) < 3 || length(args) > 4) {
   stop(
-    "Usage: Rscript inst/make_merra_data_release.R YEAR HALF WORK_DIR [OUTPUT_FILE]",
+    "Usage: Rscript inst/make_merra_data_release.R YEAR HALF WORK_DIR [OUTPUT_FILE] [--revision N]",
     call. = FALSE
   )
 }
@@ -94,12 +96,7 @@ record <- list(
     "DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 +",
     "SO4SMASS * 132.14 / 96.06"
   ),
-  `Package-Release` = "v0.0.1",
   `Asset-Name` = output_name,
-  `Asset-URL` = paste0(
-    "https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/",
-    output_name
-  ),
   `Asset-Bytes` = as.character(file.info(output_file)$size),
   `Asset-SHA256` = digest::digest(output_file, algo = "sha256", file = TRUE),
   `Asset-Rows` = as.character(nrow(data)),
@@ -108,17 +105,11 @@ record <- list(
   `Asset-Compression` = "RDS-XZ",
   `Grid-Longitude-Resolution-Degrees` = "0.625",
   `Grid-Latitude-Resolution-Degrees` = "0.5",
-  `Fixture-Name` = url_to_filename(
-    paste0(
-      "https://github.com/geomarker-io/geomarker/releases/download/v0.0.1/",
-      output_name
-    ),
-    etag = FALSE
-  ),
   Attribution = "NASA Global Modeling and Assimilation Office MERRA-2",
   `Built-UTC` = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 )
-write.dcf(as.data.frame(record, check.names = FALSE), dcf_file)
+record <- data_release_pin(record, parsed$revision)
+data_release_write(record, dcf_file)
 invisible(merra_read_data(output_file, record))
 message("Validated MERRA release asset: ", output_file)
 message("Candidate DCF record: ", dcf_file)

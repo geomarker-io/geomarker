@@ -17,7 +17,7 @@ test_that("get_elevation_summary validates inputs", {
 elevation_test_url <- function() {
   paste0(
     "https://github.com/geomarker-io/geomarker/releases/download/",
-    "v0.0.1/usgs_3dep_conus_800m.tif"
+    "data-elevation-2026-07-20-r1/usgs_3dep_conus_800m.tif"
   )
 }
 
@@ -50,7 +50,7 @@ test_that("get_elevation_summary uses the versioned asset downloader", {
     etag = TRUE
   )
   expect_type(out, "double")
-  expect_match(received$url, "/releases/download/v0[.]0[.]1/")
+  expect_match(received$url, "/releases/download/data-elevation-2026-07-20-r1/")
   expect_match(received$url, "usgs_3dep_conus_800m[.]tif$")
   expect_identical(received$subdir, "get_elevation_summary")
   expect_identical(received$quiet, TRUE)

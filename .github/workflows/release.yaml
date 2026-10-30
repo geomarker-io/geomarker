@@ -10,6 +10,7 @@ name: release
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   build-and-publish:
@@ -50,3 +51,7 @@ jobs:
         shell: bash
         run: |
           gh release edit "$RELEASE_TAG" --draft=false --latest
+
+      - name: Deploy the released package documentation
+        shell: bash
+        run: gh workflow run pkgdown.yaml --ref main -f "tag=$RELEASE_TAG"

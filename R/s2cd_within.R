@@ -48,8 +48,8 @@ s2cd_within_dates <- function(x, date_range) {
   )
   x_dates <- s2cd_dates(x)
   if (
-    any(sapply(x_dates, \(.) any(. <= date_range[1]))) ||
-      any(sapply(x_dates, \(.) any(. >= date_range[2])))
+    any(sapply(x_dates, \(.) any(. < date_range[1]))) ||
+      any(sapply(x_dates, \(.) any(. > date_range[2])))
   ) {
     return(FALSE)
   }

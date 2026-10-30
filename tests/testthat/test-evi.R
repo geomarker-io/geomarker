@@ -18,6 +18,26 @@ test_that("get_evi_summary validates arguments before querying source data", {
   )
 })
 
+test_that("EVI accepts its first supported day and rejects the previous day", {
+  withr::local_envvar(R_GEOMARKER_NO_DOWNLOAD = "true")
+  local_mocked_bindings(
+    evi_managed_annual_composite_files = function(...) {
+      stop("reached EVI data lookup")
+    }
+  )
+  x <- s2cd(
+    s2::as_s2_cell("8841b39a7c46e25f"),
+    dates = list(as.Date("2000-02-18"))
+  )
+  previous_day <- s2cd(
+    s2::as_s2_cell(x),
+    dates = list(as.Date("2000-02-17"))
+  )
+
+  expect_error(get_evi_summary(x), "reached EVI data lookup")
+  expect_error(get_evi_summary(previous_day), "on or after 2000-02-18")
+})
+
 test_that("get_evi_summary is the only exported EVI summary API", {
   exports <- getNamespaceExports("geomarker")
   expect_true("get_evi_summary" %in% exports)

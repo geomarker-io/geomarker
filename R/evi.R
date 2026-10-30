@@ -53,7 +53,7 @@ get_evi_summary <- function(
     "x must be a s2_cell_dates vector" = is_s2cd(x),
     "all dates in x must be on or after 2000-02-18" = s2cd_within(
       x,
-      date_range = c(as.Date("2000-02-17"), as.Date("9999-01-01"))
+      date_range = c(as.Date("2000-02-18"), as.Date("9999-01-01"))
     ),
     "buffer must be numeric" = is.numeric(buffer),
     "buffer must be length one" = length(buffer) == 1,

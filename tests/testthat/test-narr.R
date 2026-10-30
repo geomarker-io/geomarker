@@ -6,7 +6,7 @@ test_that("get_narr_data validates date range", {
 
   expect_error(
     get_narr_data(x_bad, "air.2m"),
-    "after 1979-01-01"
+    "on or after 1979-01-01"
   )
 })
 

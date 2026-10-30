@@ -3,6 +3,9 @@
 - gridMET and NARR return aligned missing values for locations outside the
   raster extent instead of attempting to extract invalid raster cells.
 
+- `s2cd_within()` includes both date-range endpoints as documented. gridMET
+  and NARR now accept January 1, 1979; EVI retains its February 18, 2000 cutoff.
+
 # geomarker 0.2.0
 
 - `get_smoke_summary()` now supports `summary = "sum"` to add density scores

@@ -39,7 +39,7 @@ get_narr_data <- function(
 ) {
   stopifnot(
     "x must be a s2_cell_dates vector" = is_s2cd(x),
-    "all dates in x must be after 1979-01-01" = s2cd_within(
+    "all dates in x must be on or after 1979-01-01" = s2cd_within(
       x,
       date_range = c(as.Date("1979-01-01"), as.Date("9999-01-01"))
     )

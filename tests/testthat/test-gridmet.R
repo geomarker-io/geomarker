@@ -6,7 +6,7 @@ test_that("get_gridmet_data validates date range", {
 
   expect_error(
     get_gridmet_data(x_bad, "tmmx"),
-    "after 1979-01-01"
+    "on or after 1979-01-01"
   )
 })
 

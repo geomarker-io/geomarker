@@ -33,6 +33,26 @@ test_that("can check s2cd vector for a date interval", {
     expect_error("date_range must be chronologically sorted")
 })
 
+test_that("date intervals include both endpoints and single-day ranges", {
+  dates <- as.Date(c("2024-02-28", "2024-02-29"))
+  x <- s2cd(
+    s2::as_s2_cell("8841b39a7c46e25f"),
+    dates = list(dates)
+  )
+
+  expect_true(s2cd_within(x, date_range = dates))
+  expect_true(s2cd_within(
+    x,
+    date_range = dates,
+    s2_cell = s2::s2_cell_parent(s2::as_s2_cell(x), level = 6)
+  ))
+  expect_false(s2cd_within(x, date_range = dates + 1))
+  expect_false(s2cd_within(x, date_range = dates - 1))
+
+  single_day <- s2cd(s2::as_s2_cell(x), dates = list(dates[1]))
+  expect_true(s2cd_within(single_day, date_range = rep(dates[1], 2)))
+})
+
 test_that("can check s2cd vector for s2 cell union", {
   d <- s2cd(
     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),

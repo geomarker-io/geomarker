@@ -40,14 +40,16 @@
 #' )
 #'
 #' # use within a data.frame with multiple individuals
-#' tibble::tibble(
+#' encounters <- tibble::tibble(
 #'   id = rep(c("A", "B"), each = 3),
 #'   encounter = rep(1:3, 2),
 #'   date = as.Date(c(
 #'     "2024-01-01", "2024-03-17", "2024-09-21",
 #'     "2023-11-29", "2024-09-22", "2024-09-29"
 #'   ))
-#' ) |>
+#' )
+#'
+#' encounters |>
 #'   dplyr::arrange(id, date) |>
 #'   dplyr::mutate(
 #'     imputed_start_date = impute_date_ranges(date)$start,
@@ -55,14 +57,13 @@
 #'     .by = "id"
 #'   )
 #'
-#' # expand to daily dates for use with s2cd()
-#' s2cd(
-#'   s2::as_s2_cell(rep("8841b39a7c46e25f", 3)),
-#'   dates = impute_date_ranges(
-#'     as.Date(c("2024-01-01", "2024-03-17", "2024-09-21")),
-#'     expand = TRUE
+#' # add a list-column of daily dates for each individual's encounters
+#' encounters |>
+#'   dplyr::arrange(id, date) |>
+#'   dplyr::mutate(
+#'     dates = impute_date_ranges(date, expand = TRUE),
+#'     .by = "id"
 #'   )
-#' )
 impute_date_ranges <- function(
   x,
   start_early = 0L,

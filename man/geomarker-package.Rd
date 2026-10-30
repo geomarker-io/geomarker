@@ -39,6 +39,15 @@ a network security boundary; use operating-system or container network
 controls when network isolation must be guaranteed.
 }
 
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://geomarker.io/geomarker/}
+  \item \url{https://github.com/geomarker-io/geomarker}
+  \item Report bugs at \url{https://github.com/geomarker-io/geomarker/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Cole Brokamp \email{cole@colebrokamp.com} (\href{https://orcid.org/0000-0002-0289-3151}{ORCID})
 

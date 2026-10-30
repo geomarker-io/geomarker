@@ -13,7 +13,8 @@
 #' @param gridmet_var character; name of gridMET variable
 #' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
 #'   are fixed by geomarker.
-#' @return a list of numeric vectors of gridMET values
+#' @return a list of numeric vectors of gridMET values. Locations outside the
+#'   raster extent return `NA_real_` for each requested date.
 #' @export
 #' @examples
 #' local({
@@ -83,10 +84,20 @@ get_gridmet_data <- function(
     s2_cell_to_vect(x) |>
     terra::project(gridmet_raster)
   gridmet_cells <- terra::cells(gridmet_raster[[1]], x_vect)[, "cell"]
-  xx <- as.data.frame(t(suppressWarnings(terra::extract(
-    gridmet_raster,
-    gridmet_cells
-  ))))
+  xx <- matrix(
+    NA_real_,
+    nrow = terra::nlyr(gridmet_raster),
+    ncol = length(x),
+    dimnames = list(names(gridmet_raster), NULL)
+  )
+  valid_cells <- is.finite(gridmet_cells)
+  if (any(valid_cells)) {
+    xx[, valid_cells] <- t(terra::extract(
+      gridmet_raster,
+      gridmet_cells[valid_cells]
+    ))
+  }
+  xx <- as.data.frame(xx)
   out <- mapply(
     function(.x, .y) xx[as.character(.y), .x],
     seq_len(ncol(xx)),

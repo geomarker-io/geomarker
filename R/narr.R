@@ -12,7 +12,8 @@
 #' @param narr_var character; name of NARR variable
 #' @param ... passed to [stow::stow()]. The `package` and `subdir` arguments
 #'   are fixed by geomarker.
-#' @return a list of numeric vectors of NARR values
+#' @return a list of numeric vectors of NARR values. Locations outside the
+#'   raster extent return `NA_real_` for each requested date.
 #' @export
 #' @examples
 #' local({
@@ -81,10 +82,20 @@ get_narr_data <- function(
     s2_cell_to_vect(x) |>
     terra::project(narr_raster)
   narr_cells <- terra::cells(narr_raster[[1]], x_vect)[, "cell"]
-  xx <- as.data.frame(t(suppressWarnings(terra::extract(
-    narr_raster,
-    narr_cells
-  ))))
+  xx <- matrix(
+    NA_real_,
+    nrow = terra::nlyr(narr_raster),
+    ncol = length(x),
+    dimnames = list(names(narr_raster), NULL)
+  )
+  valid_cells <- is.finite(narr_cells)
+  if (any(valid_cells)) {
+    xx[, valid_cells] <- t(terra::extract(
+      narr_raster,
+      narr_cells[valid_cells]
+    ))
+  }
+  xx <- as.data.frame(xx)
   out <- mapply(
     function(.x, .y) xx[as.character(.y), .x],
     seq_len(ncol(xx)),

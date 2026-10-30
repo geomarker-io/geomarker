@@ -1,5 +1,11 @@
 # geomarker (development version)
 
+- EVI requires completed years and a complete source schedule for new builds.
+  Annual composites carry coverage and checksum manifests; legacy composites
+  rebuild online and cannot be used offline without verification. Validated
+  completed composites remain fixed until explicitly overwritten.
+  The bundled EVI fixture is now explicitly synthetic and for examples only.
+
 - gridMET and NARR return aligned missing values for locations outside the
   raster extent instead of attempting to extract invalid raster cells.
 

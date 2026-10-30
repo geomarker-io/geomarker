@@ -189,6 +189,49 @@ test_that("an interrupted draft resumes only the missing upload before publicati
   expect_false(any(vapply(calls, function(x) "--clobber" %in% x, logical(1))))
 })
 
+test_that("a new release is drafted at the explicit commit and fully uploaded before publication", {
+  env <- new_release_env()
+  x <- staged_test_record(env)
+  withr::defer(unlink(x$work, recursive = TRUE))
+  commit <- strrep("a", 40)
+  remote <- NULL
+  calls <- list()
+  env$release_api <- function(endpoint, ...) {
+    if (startsWith(endpoint, "commits/")) {
+      return(list(sha = commit))
+    }
+    remote
+  }
+  env$release_tag_sha <- function(tag) {
+    if (!is.null(remote) && !remote$draft) commit else NULL
+  }
+  env$release_gh <- function(args, ...) {
+    calls[[length(calls) + 1L]] <<- args
+    if (args[2] == "create") {
+      remote <<- list(draft = TRUE, target_commitish = commit, assets = list())
+    } else if (args[2] == "upload") {
+      name <- basename(args[4])
+      asset <- Filter(function(asset) asset$name == name, x$assets)
+      remote$assets <<- c(remote$assets, asset)
+    } else if (args[2] == "edit") {
+      expect_length(remote$assets, 2)
+      remote$draft <<- FALSE
+      remote$immutable <<- TRUE
+    }
+    ""
+  }
+  expect_message(
+    env$release_publish(x$record, x$work, commit),
+    "Published and verified"
+  )
+  expect_identical(
+    vapply(calls, `[`, "", 2),
+    c("create", "upload", "upload", "edit")
+  )
+  expect_identical(calls[[1]][match("--target", calls[[1]]) + 1L], commit)
+  expect_true(all(c("--draft", "--latest=false") %in% calls[[1]]))
+})
+
 test_that("fresh verification checks manifest contents and refuses reused directories", {
   env <- new_release_env()
   x <- staged_test_record(env)

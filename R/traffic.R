@@ -35,14 +35,13 @@
 #' <https://github.com/FHWA/HPMS/blob/2024-HPMS/README_2024_HPMS_All.md>
 #' @export
 #' @examples
-#' withr::local_envvar(
-#'   R_USER_DATA_DIR = fs::path_package(
-#'     "geomarker",
-#'     "gmrkr--8841"
-#'   ),
-#'   R_GEOMARKER_NO_DOWNLOAD = "true"
-#' )
-#' get_traffic_summary(s2cd_example_cincy(), buffer = 1500)
+#' local({
+#'   withr::local_envvar(
+#'     R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+#'     R_GEOMARKER_NO_DOWNLOAD = "true"
+#'   )
+#'   print(get_traffic_summary(s2cd_example_cincy(), buffer = 1500))
+#' })
 get_traffic_summary <- function(
   x,
   buffer = 400,

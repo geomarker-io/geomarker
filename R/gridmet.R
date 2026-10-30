@@ -16,14 +16,13 @@
 #' @return a list of numeric vectors of gridMET values
 #' @export
 #' @examples
-#'  withr::local_envvar(
-#'    R_USER_DATA_DIR = fs::path_package(
-#'      "geomarker",
-#'      "gmrkr--8841"
-#'    ),
-#'    R_GEOMARKER_NO_DOWNLOAD = "true"
-#'  )
-#' get_gridmet_data(s2cd_example_cincy(2L), "tmmx")
+#' local({
+#'   withr::local_envvar(
+#'     R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+#'     R_GEOMARKER_NO_DOWNLOAD = "true"
+#'   )
+#'   print(get_gridmet_data(s2cd_example_cincy(2L), "tmmx"))
+#' })
 get_gridmet_data <- function(
   x,
   gridmet_var = c(

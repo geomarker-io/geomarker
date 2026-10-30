@@ -54,16 +54,15 @@ the buffer and must return one numeric value. With the default \code{sum}, a
 location with no nearby facilities returns zero.
 }
 \examples{
-withr::local_envvar(
-  R_USER_DATA_DIR = fs::path_package(
-    "geomarker",
-    "gmrkr--8841"
-  ),
-  R_GEOMARKER_NO_DOWNLOAD = "true"
-)
-get_nei_point_summary(s2cd_example())
-get_nei_point_summary(s2cd_example(), "PMFINE", buffer = 1600)
-get_nei_point_summary(s2cd_example_cincy(5L), "PMFINE", buffer = 10000)
+local({
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  print(get_nei_point_summary(s2cd_example()))
+  print(get_nei_point_summary(s2cd_example(), "PMFINE", buffer = 1600))
+  print(get_nei_point_summary(s2cd_example_cincy(5L), "PMFINE", buffer = 10000))
+})
 }
 \references{
 \url{https://www.epa.gov/air-emissions-inventories/national-emissions-inventory-nei}

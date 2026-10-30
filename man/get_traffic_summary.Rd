@@ -44,14 +44,13 @@ saved as a durable managed local copy in the \code{get_traffic_summary}
 directory the first time it is required and reused on subsequent calls.
 }
 \examples{
-withr::local_envvar(
-  R_USER_DATA_DIR = fs::path_package(
-    "geomarker",
-    "gmrkr--8841"
-  ),
-  R_GEOMARKER_NO_DOWNLOAD = "true"
-)
-get_traffic_summary(s2cd_example_cincy(), buffer = 1500)
+local({
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  print(get_traffic_summary(s2cd_example_cincy(), buffer = 1500))
+})
 }
 \references{
 \url{https://www.arcgis.com/home/item.html?id=5e6a977c2d7c4ec1bdc82e684d3384f2}

@@ -35,15 +35,14 @@
 #' @return a list of numeric vectors of annual EVI summaries.
 #' @export
 #' @examples
-#'  withr::local_envvar(
-#'    R_USER_DATA_DIR = fs::path_package(
-#'      "geomarker",
-#'      "gmrkr--8841"
-#'    ),
-#'    R_GEOMARKER_NO_DOWNLOAD = "true"
-#'  )
-#' get_evi_summary(s2cd_example_cincy(2L))
-#' get_evi_summary(s2cd_example_cincy(2L), buffer = 1200, quiet = TRUE)
+#' local({
+#'   withr::local_envvar(
+#'     R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+#'     R_GEOMARKER_NO_DOWNLOAD = "true"
+#'   )
+#'   print(get_evi_summary(s2cd_example_cincy(2L)))
+#'   print(get_evi_summary(s2cd_example_cincy(2L), buffer = 1200, quiet = TRUE))
+#' })
 get_evi_summary <- function(
   x,
   buffer = 400,

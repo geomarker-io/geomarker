@@ -40,11 +40,13 @@
 #' <https://gmao.gsfc.nasa.gov/gmao-products/merra-2/faq_merra-2/>
 #' @export
 #' @examples
-#' withr::local_envvar(
-#'   R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
-#'   R_GEOMARKER_NO_DOWNLOAD = "true"
-#' )
-#' get_merra_data(s2cd_example())
+#' local({
+#'   withr::local_envvar(
+#'     R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+#'     R_GEOMARKER_NO_DOWNLOAD = "true"
+#'   )
+#'   print(get_merra_data(s2cd_example()))
+#' })
 get_merra_data <- function(x, ...) {
   stopifnot("x must be a s2_cell_dates vector" = is_s2cd(x))
   cells <- s2::as_s2_cell(x)

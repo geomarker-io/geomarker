@@ -22,15 +22,14 @@
 #' @return numeric vector of elevation summaries
 #' @export
 #' @examples
-#'  withr::local_envvar(
-#'    R_USER_DATA_DIR = fs::path_package(
-#'      "geomarker",
-#'      "gmrkr--8841"
-#'    ),
-#'    R_GEOMARKER_NO_DOWNLOAD = "true"
-#'  )
-#' get_elevation_summary(s2cd_example())
-#' get_elevation_summary(s2cd_example(), stats::sd, 1400)
+#' local({
+#'   withr::local_envvar(
+#'     R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+#'     R_GEOMARKER_NO_DOWNLOAD = "true"
+#'   )
+#'   print(get_elevation_summary(s2cd_example()))
+#'   print(get_elevation_summary(s2cd_example(), stats::sd, 1400))
+#' })
 get_elevation_summary <- function(
   x,
   fun = stats::median,

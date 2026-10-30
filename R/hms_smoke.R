@@ -12,14 +12,14 @@
 #' available. For more details, see <https://www.ospo.noaa.gov/products/land/hms.html#about>.
 #' @export
 #' @examples
-#'  withr::local_envvar(
-#'    R_USER_DATA_DIR = fs::path_package(
-#'      "geomarker",
-#'      "gmrkr--8841"
-#'    ),
-#'    R_GEOMARKER_NO_DOWNLOAD = "true"
-#'  )
-#' get_daily_smoke_data(as.Date(c("2024-02-09", "2024-06-10", "2024-06-11", "2024-06-12")))
+#' local({
+#'   withr::local_envvar(
+#'     R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+#'     R_GEOMARKER_NO_DOWNLOAD = "true"
+#'   )
+#'   dates <- as.Date(c("2024-02-09", "2024-06-10", "2024-06-11", "2024-06-12"))
+#'   print(get_daily_smoke_data(dates))
+#' })
 get_daily_smoke_data <- function(x, ...) {
   stopifnot("x must be a Date vector" = inherits(x, "Date"))
   if (length(x) == 0) {
@@ -82,20 +82,22 @@ get_daily_smoke_data <- function(x, ...) {
 #'   factor, respectively.
 #' @export
 #' @examples
-#'  withr::local_envvar(
-#'    R_USER_DATA_DIR = fs::path_package(
-#'      "geomarker",
-#'      "gmrkr--8841"
-#'    ),
-#'    R_GEOMARKER_NO_DOWNLOAD = "true"
-#'  )
-#' x <- s2cd(s2::as_s2_cell(c("8841b39a7c46e25f","8841a45555555555")),
-#'   dates = list(as.Date(c("2024-05-18", "2024-11-06")),
-#'                as.Date(c("2024-06-22", "2024-08-15", "2024-12-30")))
-#' )
-#' get_smoke_summary(x)
-#' get_smoke_summary(x, summary = "sum")
-#' get_smoke_summary(x, summary = "none")
+#' local({
+#'   withr::local_envvar(
+#'     R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+#'     R_GEOMARKER_NO_DOWNLOAD = "true"
+#'   )
+#'   x <- s2cd(
+#'     s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+#'     dates = list(
+#'       as.Date(c("2024-05-18", "2024-11-06")),
+#'       as.Date(c("2024-06-22", "2024-08-15", "2024-12-30"))
+#'     )
+#'   )
+#'   print(get_smoke_summary(x))
+#'   print(get_smoke_summary(x, summary = "sum"))
+#'   print(get_smoke_summary(x, summary = "none"))
+#' })
 get_smoke_summary <- function(
   x,
   summary = c("max", "sum", "none"),

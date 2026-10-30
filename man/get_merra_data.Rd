@@ -68,11 +68,13 @@ Source concentrations are converted to micrograms per cubic meter and
 averaged across each day. Total PM2.5 is calculated as \code{DUSMASS25 + OCSMASS + BCSMASS + SSSMASS25 + SO4SMASS * 132.14 / 96.06}.
 }
 \examples{
-withr::local_envvar(
-  R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
-  R_GEOMARKER_NO_DOWNLOAD = "true"
-)
-get_merra_data(s2cd_example())
+local({
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  print(get_merra_data(s2cd_example()))
+})
 }
 \references{
 \url{https://disc.gsfc.nasa.gov/datasets/M2T1NXAER_5.12.4/summary}

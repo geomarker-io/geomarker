@@ -50,13 +50,12 @@ near 0 indicate little green vegetation, and negative values usually indicate
 water, snow, cloud, or other non-vegetated surfaces or artifacts.
 }
 \examples{
- withr::local_envvar(
-   R_USER_DATA_DIR = fs::path_package(
-     "geomarker",
-     "gmrkr--8841"
-   ),
-   R_GEOMARKER_NO_DOWNLOAD = "true"
- )
-get_evi_summary(s2cd_example_cincy(2L))
-get_evi_summary(s2cd_example_cincy(2L), buffer = 1200, quiet = TRUE)
+local({
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  print(get_evi_summary(s2cd_example_cincy(2L)))
+  print(get_evi_summary(s2cd_example_cincy(2L), buffer = 1200, quiet = TRUE))
+})
 }

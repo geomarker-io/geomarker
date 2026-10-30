@@ -34,12 +34,11 @@ Data for dates within the last 60 days are considered
 preliminary and subject to change.
 }
 \examples{
- withr::local_envvar(
-   R_USER_DATA_DIR = fs::path_package(
-     "geomarker",
-     "gmrkr--8841"
-   ),
-   R_GEOMARKER_NO_DOWNLOAD = "true"
- )
-get_gridmet_data(s2cd_example_cincy(2L), "tmmx")
+local({
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  print(get_gridmet_data(s2cd_example_cincy(2L), "tmmx"))
+})
 }

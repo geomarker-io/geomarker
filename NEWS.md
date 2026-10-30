@@ -6,6 +6,9 @@
 - `s2cd_within()` includes both date-range endpoints as documented. gridMET
   and NARR now accept January 1, 1979; EVI retains its February 18, 2000 cutoff.
 
+- EVI summaries include pixels from all MODIS tiles crossed by the requested
+  buffer, using one mean across the combined annual rasters.
+
 # geomarker 0.2.0
 
 - `get_smoke_summary()` now supports `summary = "sum"` to add density scores

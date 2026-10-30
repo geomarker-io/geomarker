@@ -25,6 +25,8 @@ s2 cell and dates. For each year, EVI is defined as the mean EVI within
 \code{buffer} meters of the location, extracted from a 250 m annual MODIS
 Terra/Aqua EVI composite whose pixels are the median of all good or
 marginal-quality 16-day EVI observations in that year.
+Buffers that cross MODIS tile boundaries include pixels from all
+intersecting tiles in one mean.
 }
 \details{
 Data are downloaded from the

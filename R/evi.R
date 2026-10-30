@@ -5,6 +5,8 @@
 #' `buffer` meters of the location, extracted from a 250 m annual MODIS
 #' Terra/Aqua EVI composite whose pixels are the median of all good or
 #' marginal-quality 16-day EVI observations in that year.
+#' Buffers that cross MODIS tile boundaries include pixels from all
+#' intersecting tiles in one mean.
 #'
 #' Data are downloaded from the
 #' [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/)
@@ -57,7 +59,8 @@ get_evi_summary <- function(
     ),
     "buffer must be numeric" = is.numeric(buffer),
     "buffer must be length one" = length(buffer) == 1,
-    "buffer must be non-missing" = !is.na(buffer),
+    "buffer must be finite" = is.finite(buffer),
+    "buffer must not be negative" = buffer >= 0,
     "overwrite must be logical" = is.logical(overwrite),
     "overwrite must be length one" = length(overwrite) == 1,
     "quiet must be logical" = is.logical(quiet),
@@ -71,7 +74,6 @@ get_evi_summary <- function(
     return(stats::setNames(out, as.character(x)))
   }
 
-  x_points <- evi_s2cd_points(x)
   years <- evi_requested_years(x_dates)
   if (geomarker_no_download()) {
     annual_files <- evi_managed_annual_composite_files(years)
@@ -83,12 +85,16 @@ get_evi_summary <- function(
     ))
   }
 
+  buffer_bboxes <- evi_buffer_bboxes(x, buffer)
   date_range <- evi_search_date_range(x_dates)
   evi_items <- evi_planetary_computer_items(
-    bbox = evi_points_bbox(x_points),
+    bbox = c(
+      min(buffer_bboxes$xmin), min(buffer_bboxes$ymin),
+      max(buffer_bboxes$xmax), max(buffer_bboxes$ymax)
+    ),
     date_range = date_range
   )
-  evi_items <- evi_filter_items_to_points(evi_items, x_points)
+  evi_items <- evi_filter_items_to_buffers(evi_items, buffer_bboxes)
   if (nrow(evi_items) == 0) {
     stop(
       "No EVI rasters were found for the requested locations and dates.",
@@ -826,7 +832,6 @@ evi_extract_annual_values <- function(x, annual_files, buffer) {
   unique_cell_index <- match(cell_ids, unique_cell_ids)
 
   x_vect <- s2_cell_to_vect(s2::as_s2_cell(unique_cell_ids))
-  x_points <- evi_cell_points(unique_cell_ids)
   years <- unique(annual_files$year)
   values <- matrix(
     NA_real_,
@@ -834,30 +839,31 @@ evi_extract_annual_values <- function(x, annual_files, buffer) {
     ncol = length(unique_cell_ids),
     dimnames = list(years, unique_cell_ids)
   )
-  for (i in seq_len(nrow(annual_files))) {
-    point_index <- evi_points_in_bbox(
-      points = x_points,
-      bbox = as.numeric(annual_files[i, c("xmin", "ymin", "xmax", "ymax")])
-    )
-    if (length(point_index) == 0) {
-      next
+  vrt_files <- character()
+  on.exit(unlink(vrt_files), add = TRUE)
+  for (year in years) {
+    files <- sort(unique(annual_files$file[annual_files$year == year]))
+    if (length(files) == 1L) {
+      r <- terra::rast(files)
+    } else {
+      vrt_file <- tempfile("geomarker-evi-", fileext = ".vrt")
+      vrt_files <- c(vrt_files, vrt_file)
+      r <- terra::vrt(
+        files,
+        filename = vrt_file,
+        options = c("-vrtnodata", "nan")
+      )
     }
-    r <- terra::rast(annual_files$file[[i]])
-    x_buffer <-
-      terra::project(x_vect[point_index, ], r) |>
-      terra::buffer(width = buffer)
-    extracted <- suppressWarnings(terra::extract(
+    x_buffer <- terra::project(x_vect, r)
+    if (buffer > 0) {
+      x_buffer <- terra::buffer(x_buffer, width = buffer)
+    }
+    values[year, ] <- as.numeric(terra::extract(
       r,
       x_buffer,
       fun = evi_mean,
       ID = FALSE
-    ))[[1]]
-    extracted <- as.numeric(extracted)
-    year_index <- match(annual_files$year[[i]], years)
-    current <- values[year_index, point_index]
-    fill <- is.na(current)
-    current[fill] <- extracted[fill]
-    values[year_index, point_index] <- current
+    )[[1]])
   }
   values[, unique_cell_index, drop = FALSE]
 }
@@ -903,39 +909,30 @@ evi_requested_years <- function(x_dates) {
   unique(format(evi_all_dates(x_dates), "%Y"))
 }
 
-evi_s2cd_points <- function(x) {
-  evi_cell_points(s2::as_s2_cell(x))
-}
-
-evi_cell_points <- function(x) {
-  lnglat <- s2::s2_cell_to_lnglat(s2::as_s2_cell(x)) |>
-    as.data.frame()
-  data.frame(x = lnglat$x, y = lnglat$y)
-}
-
-evi_points_bbox <- function(points, expand = 1e-6) {
-  c(
-    min(points$x) - expand,
-    min(points$y) - expand,
-    max(points$x) + expand,
-    max(points$y) + expand
+evi_buffer_bboxes <- function(x, buffer) {
+  # Use the source MODIS sinusoidal grid so tile discovery covers the same
+  # projected buffers used for extraction, including its projection distortion.
+  modis_crs <- paste(
+    "+proj=sinu +lon_0=0 +x_0=0 +y_0=0",
+    "+R=6371007.181 +units=m +no_defs"
   )
-}
-
-evi_s2cd_bbox <- function(x, expand = 1e-6) {
-  evi_points_bbox(evi_s2cd_points(x), expand = expand)
-}
-
-evi_points_in_bbox <- function(points, bbox) {
-  if (anyNA(bbox)) {
-    return(seq_len(nrow(points)))
+  regions <- s2_cell_to_vect(unique(s2::as_s2_cell(x))) |>
+    terra::project(modis_crs)
+  if (buffer > 0) {
+    regions <- terra::buffer(regions, width = buffer)
   }
-  which(
-    points$x >= bbox[[1]] &
-      points$y >= bbox[[2]] &
-      points$x <= bbox[[3]] &
-      points$y <= bbox[[4]]
-  )
+  regions <- terra::project(regions, "EPSG:4326")
+  bounds <- lapply(seq_len(nrow(regions)), function(i) {
+    extent <- terra::ext(regions[i, ])
+    # Keep a small margin for coordinate transformation roundoff.
+    data.frame(
+      xmin = terra::xmin(extent) - 1e-6,
+      ymin = terra::ymin(extent) - 1e-6,
+      xmax = terra::xmax(extent) + 1e-6,
+      ymax = terra::ymax(extent) + 1e-6
+    )
+  })
+  do.call(rbind, bounds)
 }
 
 evi_bbox_value <- function(x, fun) {
@@ -945,7 +942,7 @@ evi_bbox_value <- function(x, fun) {
   fun(x, na.rm = TRUE)
 }
 
-evi_filter_items_to_points <- function(items, points) {
+evi_filter_items_to_buffers <- function(items, buffer_bboxes) {
   if (nrow(items) == 0) {
     return(items)
   }
@@ -957,10 +954,10 @@ evi_filter_items_to_points <- function(items, points) {
         return(TRUE)
       }
       any(
-        points$x >= item_bbox[[1]] &
-          points$y >= item_bbox[[2]] &
-          points$x <= item_bbox[[3]] &
-          points$y <= item_bbox[[4]]
+        buffer_bboxes$xmax >= item_bbox[[1]] &
+          buffer_bboxes$ymax >= item_bbox[[2]] &
+          buffer_bboxes$xmin <= item_bbox[[3]] &
+          buffer_bboxes$ymin <= item_bbox[[4]]
       )
     },
     FUN.VALUE = logical(1)

@@ -1,4 +1,9 @@
-# geomarker 0.1.1.9000
+# geomarker 0.2.0
+
+- `get_smoke_summary()` now supports `summary = "sum"` to add density scores
+  across overlapping plumes and `summary = "none"` to return every intersecting
+  plume density. Scores are 0 for None, 1 for Light, 2 for Medium, and 3 for
+  Heavy. The default, `summary = "max"`, continues to return the maximum density.
 
 - Elevation, traffic, and MERRA-2 assets now have independent, immutable data
   releases. Package versions pin exact data revisions. The files are unchanged,
@@ -8,9 +13,10 @@
 - NARR downloads now use NOAA PSL's anonymous FTP server. Existing downloads
   from the previous URL are not reused because cache filenames include the URL.
 
-- `get_smoke_summary()` can now return every intersecting smoke-plume density
-  or add density scores across intersecting plumes, while retaining the maximum
-  density as its default summary.
+- Installation now uses `stow` (>= 0.3.0) from CRAN.
+
+- Package documentation is available at <https://geomarker.io/geomarker/> and
+  is deployed for published package releases.
 
 # geomarker 0.1.1
 

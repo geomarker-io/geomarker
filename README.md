@@ -159,6 +159,32 @@ Run the maintainer-tool tests separately from the package tests:
 Rscript -e 'testthat::test_file("scripts/tests/test-release-data.R", stop_on_failure = TRUE)'
 ```
 
+### EVI annual composites
+
+`get_evi_summary()` supports completed calendar years. A new tile-year composite
+requires every expected Terra and Aqua acquisition, rather than treating a year
+as complete merely because December has passed. Missing source periods produce
+an error before an annual raster is written. For the instruments' first years,
+the expected schedule begins when the product became available.
+
+An adjacent DCF manifest records the selected source item IDs, dates, unsigned
+asset URLs, processing version, spatial scope, and raster SHA-256. If the catalog
+lists multiple processing revisions of one acquisition, a new build selects the
+latest revision. Validated completed composites remain fixed until
+`overwrite = TRUE`, which validates the latest source listing and downloads the
+source files again. No provisional annual composites are built.
+
+Older annual composites without valid manifests are rebuilt on online use.
+Offline use gives an error explaining that they must first be rebuilt online;
+it does not infer completeness from the old filename. Fixture installers write
+the same provenance plus their S2 cell and supported buffer.
+
+The bundled Cincinnati EVI fixture is deterministic synthetic data for offline
+API examples only and must not be used for analysis. Its manifest explicitly
+identifies it as synthetic; it is never treated as a validated scientific cache
+when building from source. Recreate it with
+`Rscript scripts/make-evi-example-fixture.R`.
+
 ### MERRA-2 data cadence
 
 MERRA-2 PM2.5 release data are cataloged in `inst/merra-data.dcf` as complete half-year assets: January through June (`H1`) and July through December (`H2`).

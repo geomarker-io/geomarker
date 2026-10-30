@@ -23,6 +23,7 @@ evi_tile_test_data <- function(directory) {
   ))
   for (i in seq_along(tiles)) {
     terra::writeRaster(tiles[[i]], files[[i]])
+    evi_write_manifest(files[[i]], evi_test_items(tile = c("h17v08", "h18v08")[[i]]))
   }
   bounds <- lapply(tiles, function(tile) {
     footprint <- terra::as.polygons(terra::ext(tile), crs = terra::crs(tile)) |>

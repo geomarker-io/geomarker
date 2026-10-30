@@ -1,0 +1,17 @@
+Manifest-Version: 1
+EVI-Year: 2024
+MODIS-Tile: h11v05
+Collection: synthetic
+Transformation: synthetic-evi-example-v1
+Coverage-Status: synthetic-example
+Spatial-Scope: fixture
+Fixture-Cell: 8841
+Fixture-Buffer-M: 10000
+Purpose: Offline API examples only; not scientific data or a MODIS
+        annual composite.
+Generator: scripts/make-evi-example-fixture.R
+Formula: 0.3 + 0.1 * sin(x / 4000) + 0.1 * cos(y / 7000); MODIS
+        sinusoidal coordinates
+Asset-Bytes: 1945262
+Asset-SHA256:
+        a2a6430b211f6157c66a9e9bacef89d1e2a98d113b5b1d0e93a9f66d6620c371

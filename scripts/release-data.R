@@ -40,6 +40,32 @@ release_api <- function(endpoint, optional = FALSE) {
   jsonlite::fromJSON(out, simplifyVector = FALSE)
 }
 
+release_get <- function(tag, optional = FALSE) {
+  release <- release_api(paste0("releases/tags/", tag), optional = TRUE)
+  if (!is.null(release)) {
+    return(release)
+  }
+  # Drafts whose tag has not been created are absent from the by-tag endpoint.
+  # List authenticated releases and retrieve the draft by its numeric ID.
+  ids <- release_gh(c(
+    "api",
+    paste0("repos/", release_repo, "/releases?per_page=100"),
+    "--paginate",
+    "--jq",
+    paste0('.[] | select(.tag_name == "', tag, '") | .id')
+  ))
+  if (!nzchar(ids)) {
+    if (optional) {
+      return(NULL)
+    }
+    release_stop("Data release not found: ", tag)
+  }
+  if (!grepl("^[0-9]+$", ids)) {
+    release_stop("Ambiguous release lookup: ", tag)
+  }
+  release_api(paste0("releases/", ids))
+}
+
 release_hash <- function(path) {
   digest::digest(path, algo = "sha256", file = TRUE)
 }
@@ -267,7 +293,7 @@ release_publish <- function(record, work_dir, commit) {
     c(data, manifest),
     c(record[["Asset-Name"]], "manifest.dcf")
   )
-  release <- release_api(paste0("releases/tags/", tag), optional = TRUE)
+  release <- release_get(tag, optional = TRUE)
   if (is.null(release)) {
     target <- release_tag_sha(tag)
     if (!is.null(target) && !identical(target, commit)) {
@@ -304,7 +330,7 @@ release_publish <- function(record, work_dir, commit) {
       "--notes-file",
       notes
     ))
-    release <- release_api(paste0("releases/tags/", tag))
+    release <- release_get(tag)
   }
   release_check_target(release, tag, commit)
   present <- release_check_assets(
@@ -329,7 +355,7 @@ release_publish <- function(record, work_dir, commit) {
       release_repo
     ))
   }
-  release <- release_api(paste0("releases/tags/", tag))
+  release <- release_get(tag)
   release_check_target(release, tag, commit)
   release_check_assets(release, files)
   release_gh(c(
@@ -341,7 +367,7 @@ release_publish <- function(record, work_dir, commit) {
     "--draft=false",
     "--latest=false"
   ))
-  release <- release_api(paste0("releases/tags/", tag))
+  release <- release_get(tag)
   release_check_target(release, tag, commit)
   release_check_assets(release, files)
   if (isTRUE(release$draft) || !isTRUE(release$immutable)) {
@@ -352,7 +378,7 @@ release_publish <- function(record, work_dir, commit) {
 
 release_verify <- function(record, work_dir, commit = NULL) {
   tag <- record[["Data-Release"]]
-  release <- release_api(paste0("releases/tags/", tag))
+  release <- release_get(tag)
   if (isTRUE(release$draft) || !isTRUE(release$immutable)) {
     release_stop("Release is not published immutably: ", tag)
   }

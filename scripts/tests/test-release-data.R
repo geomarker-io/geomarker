@@ -132,6 +132,27 @@ test_that("preview does not call GitHub or create a work directory", {
   )
 })
 
+test_that("unpublished tags are found through authenticated draft release IDs", {
+  env <- new_release_env()
+  remote <- list(id = 123L, draft = TRUE, target_commitish = strrep("a", 40))
+  env$release_api <- function(endpoint, optional = FALSE) {
+    if (startsWith(endpoint, "releases/tags/")) {
+      expect_true(optional)
+      return(NULL)
+    }
+    expect_identical(endpoint, "releases/123")
+    remote
+  }
+  env$release_gh <- function(args, ...) {
+    expect_true("--paginate" %in% args)
+    "123"
+  }
+  expect_identical(env$release_get("data-hpms-2024-r1"), remote)
+  env$release_gh <- function(...) ""
+  expect_null(env$release_get("data-hpms-2024-r1", optional = TRUE))
+  expect_error(env$release_get("data-hpms-2024-r1"), "not found")
+})
+
 test_that("matching published releases are skipped and conflicting releases fail", {
   env <- new_release_env()
   x <- staged_test_record(env)
@@ -224,6 +245,7 @@ test_that("a new release is drafted at the explicit commit and fully uploaded be
     env$release_publish(x$record, x$work, commit),
     "Published and verified"
   )
+  calls <- Filter(function(args) args[1] == "release", calls)
   expect_identical(
     vapply(calls, `[`, "", 2),
     c("create", "upload", "upload", "edit")

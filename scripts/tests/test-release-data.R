@@ -184,74 +184,137 @@ test_that("an interrupted draft resumes only the missing upload before publicati
   x <- staged_test_record(env)
   withr::defer(unlink(x$work, recursive = TRUE))
   commit <- strrep("a", 40)
-  remote <- list(draft = TRUE, immutable = FALSE, assets = x$assets[1])
+  remote <- list(
+    id = 123L,
+    draft = TRUE,
+    immutable = FALSE,
+    assets = x$assets[1]
+  )
   calls <- list()
   env$release_api <- function(...) remote
   env$release_tag_sha <- function(tag) commit
-  env$release_gh <- function(args, ...) {
-    calls[[length(calls) + 1L]] <<- args
-    if (args[2] == "upload") {
-      remote$assets <<- x$assets
+  env$release_write <- function(endpoint, method, body = NULL, file = NULL) {
+    calls[[length(calls) + 1L]] <<- list(
+      endpoint = endpoint,
+      method = method,
+      body = body,
+      file = file
+    )
+    if (method == "POST") {
+      asset <- Filter(function(asset) asset$name == basename(file), x$assets)[[
+        1
+      ]]
+      remote$assets <<- c(remote$assets, list(asset))
+      return(asset)
     }
-    if (args[2] == "edit") {
-      remote$draft <<- FALSE
-      remote$immutable <<- TRUE
-    }
-    ""
+    remote$draft <<- FALSE
+    remote$immutable <<- TRUE
+    remote
   }
   expect_message(
     env$release_publish(x$record, x$work, commit),
     "Published and verified"
   )
   expect_length(calls, 2)
-  expect_identical(calls[[1]][2], "upload")
-  expect_identical(basename(calls[[1]][4]), "manifest.dcf")
-  expect_true("--latest=false" %in% calls[[2]])
-  expect_false(any(vapply(calls, function(x) "--clobber" %in% x, logical(1))))
+  expect_identical(calls[[1]]$method, "POST")
+  expect_identical(basename(calls[[1]]$file), "manifest.dcf")
+  expect_match(
+    calls[[1]]$endpoint,
+    "/releases/123/assets[?]name=manifest[.]dcf$"
+  )
+  expect_identical(calls[[2]]$body, list(draft = FALSE, make_latest = "false"))
 })
 
-test_that("a new release is drafted at the explicit commit and fully uploaded before publication", {
+test_that("new publication uses returned release IDs despite stale tag lookups", {
   env <- new_release_env()
   x <- staged_test_record(env)
   withr::defer(unlink(x$work, recursive = TRUE))
   commit <- strrep("a", 40)
   remote <- NULL
+  reads <- 0L
   calls <- list()
+  env$release_get <- function(...) {
+    reads <<- reads + 1L
+    NULL
+  }
   env$release_api <- function(endpoint, ...) {
     if (startsWith(endpoint, "commits/")) {
       return(list(sha = commit))
     }
-    remote
+    stop("Unexpected follow-up lookup")
   }
   env$release_tag_sha <- function(tag) {
     if (!is.null(remote) && !remote$draft) commit else NULL
   }
-  env$release_gh <- function(args, ...) {
-    calls[[length(calls) + 1L]] <<- args
-    if (args[2] == "create") {
-      remote <<- list(draft = TRUE, target_commitish = commit, assets = list())
-    } else if (args[2] == "upload") {
-      name <- basename(args[4])
-      asset <- Filter(function(asset) asset$name == name, x$assets)
-      remote$assets <<- c(remote$assets, asset)
-    } else if (args[2] == "edit") {
+  env$release_write <- function(endpoint, method, body = NULL, file = NULL) {
+    calls[[length(calls) + 1L]] <<- list(
+      endpoint = endpoint,
+      method = method,
+      body = body,
+      file = file
+    )
+    if (identical(endpoint, "releases")) {
+      remote <<- list(
+        id = 123L,
+        draft = TRUE,
+        target_commitish = body$target_commitish,
+        assets = list()
+      )
+    } else if (method == "POST") {
+      asset <- Filter(function(asset) asset$name == basename(file), x$assets)[[
+        1
+      ]]
+      remote$assets <<- c(remote$assets, list(asset))
+      return(asset)
+    } else if (method == "PATCH") {
       expect_length(remote$assets, 2)
       remote$draft <<- FALSE
       remote$immutable <<- TRUE
     }
-    ""
+    remote
   }
   expect_message(
     env$release_publish(x$record, x$work, commit),
     "Published and verified"
   )
-  calls <- Filter(function(args) args[1] == "release", calls)
+  expect_identical(reads, 1L)
   expect_identical(
-    vapply(calls, `[`, "", 2),
-    c("create", "upload", "upload", "edit")
+    vapply(calls, `[[`, "", "method"),
+    c("POST", "POST", "POST", "PATCH")
   )
-  expect_identical(calls[[1]][match("--target", calls[[1]]) + 1L], commit)
-  expect_true(all(c("--draft", "--latest=false") %in% calls[[1]]))
+  expect_identical(calls[[1]]$body$target_commitish, commit)
+  expect_identical(calls[[1]]$body$make_latest, "false")
+  expect_true(calls[[1]]$body$draft)
+  expect_identical(calls[[4]]$endpoint, "releases/123")
+})
+
+test_that("release writes preserve JSON types and send binary files unchanged", {
+  env <- new_release_env()
+  captured <- NULL
+  payload <- NULL
+  env$release_gh <- function(args, ...) {
+    captured <<- args
+    input <- args[match("--input", args) + 1L]
+    if ("Content-Type: application/json" %in% args) {
+      payload <<- jsonlite::read_json(input)
+    }
+    '{"id":123}'
+  }
+  out <- env$release_write(
+    "releases",
+    "POST",
+    body = list(draft = TRUE, make_latest = "false")
+  )
+  expect_identical(out$id, 123L)
+  expect_identical(payload, list(draft = TRUE, make_latest = "false"))
+  expect_true("repos/geomarker-io/geomarker/releases" %in% captured)
+  file <- tempfile()
+  writeBin(as.raw(c(0, 255, 1)), file)
+  withr::defer(unlink(file))
+  env$release_write("https://uploads.github.com/test", "POST", file = file)
+  expect_true("Content-Type: application/octet-stream" %in% captured)
+  expect_identical(captured[match("--input", captured) + 1L], file)
+  expect_identical(readBin(file, "raw", n = 3), as.raw(c(0, 255, 1)))
 })
 
 test_that("fresh verification checks manifest contents and refuses reused directories", {

@@ -66,6 +66,30 @@ release_get <- function(tag, optional = FALSE) {
   release_api(paste0("releases/", ids))
 }
 
+release_write <- function(endpoint, method, body = NULL, file = NULL) {
+  if (!startsWith(endpoint, "https://")) {
+    endpoint <- paste0("repos/", release_repo, "/", endpoint)
+  }
+  args <- c(
+    "api",
+    endpoint,
+    "--method",
+    method,
+    "-H",
+    "X-GitHub-Api-Version: 2026-03-10"
+  )
+  if (!is.null(body)) {
+    file <- tempfile("release-request-", fileext = ".json")
+    on.exit(unlink(file))
+    jsonlite::write_json(body, file, auto_unbox = TRUE)
+    args <- c(args, "-H", "Content-Type: application/json")
+  } else {
+    args <- c(args, "-H", "Content-Type: application/octet-stream")
+  }
+  args <- c(args, "--input", file)
+  jsonlite::fromJSON(release_gh(args), simplifyVector = FALSE)
+}
+
 release_hash <- function(path) {
   digest::digest(path, algo = "sha256", file = TRUE)
 }
@@ -299,38 +323,29 @@ release_publish <- function(record, work_dir, commit) {
     if (!is.null(target) && !identical(target, commit)) {
       release_stop("Conflicting tag target: ", tag)
     }
-    notes <- tempfile("release-notes-")
-    on.exit(unlink(notes), add = TRUE)
-    writeLines(
-      c(
-        paste0(
-          "- data release `",
-          tag,
-          "`; independent of the R package version"
-        ),
-        paste0("- file: `", record[["Asset-Name"]], "`"),
-        paste0("- SHA-256: `", record[["Asset-SHA256"]], "`"),
-        "- provenance and coverage are recorded in the attached manifest.dcf",
-        "- published data are immutable; corrections require a new revision"
+    notes <- c(
+      paste0(
+        "- data release `",
+        tag,
+        "`; independent of the R package version"
       ),
-      notes
+      paste0("- file: `", record[["Asset-Name"]], "`"),
+      paste0("- SHA-256: `", record[["Asset-SHA256"]], "`"),
+      "- provenance and coverage are recorded in the attached manifest.dcf",
+      "- published data are immutable; corrections require a new revision"
     )
-    release_gh(c(
-      "release",
-      "create",
-      tag,
-      "--repo",
-      release_repo,
-      "--target",
-      commit,
-      "--draft",
-      "--latest=false",
-      "--title",
-      tag,
-      "--notes-file",
-      notes
-    ))
-    release <- release_get(tag)
+    release <- release_write(
+      "releases",
+      "POST",
+      body = list(
+        tag_name = tag,
+        target_commitish = commit,
+        draft = TRUE,
+        make_latest = "false",
+        name = tag,
+        body = paste(notes, collapse = "\n")
+      )
+    )
   }
   release_check_target(release, tag, commit)
   present <- release_check_assets(
@@ -346,28 +361,27 @@ release_publish <- function(record, work_dir, commit) {
     return(invisible(NULL))
   }
   for (name in setdiff(names(files), present)) {
-    release_gh(c(
-      "release",
-      "upload",
-      tag,
-      files[[name]],
-      "--repo",
-      release_repo
-    ))
+    asset <- release_write(
+      paste0(
+        "https://uploads.github.com/repos/",
+        release_repo,
+        "/releases/",
+        release$id,
+        "/assets?name=",
+        name
+      ),
+      "POST",
+      file = files[[name]]
+    )
+    release$assets <- c(release$assets, list(asset))
   }
-  release <- release_get(tag)
   release_check_target(release, tag, commit)
   release_check_assets(release, files)
-  release_gh(c(
-    "release",
-    "edit",
-    tag,
-    "--repo",
-    release_repo,
-    "--draft=false",
-    "--latest=false"
-  ))
-  release <- release_get(tag)
+  release <- release_write(
+    paste0("releases/", release$id),
+    "PATCH",
+    body = list(draft = FALSE, make_latest = "false")
+  )
   release_check_target(release, tag, commit)
   release_check_assets(release, files)
   if (isTRUE(release$draft) || !isTRUE(release$immutable)) {

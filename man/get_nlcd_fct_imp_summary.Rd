@@ -39,12 +39,11 @@ data-access details and
 for product details.
 }
 \examples{
-withr::local_envvar(
-  R_USER_DATA_DIR = fs::path_package(
-    "geomarker",
-    "gmrkr--8841"
-  ),
-  R_GEOMARKER_NO_DOWNLOAD = "true"
-)
-get_nlcd_fct_imp_summary(s2cd_example_cincy(2L))
+local({
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  print(get_nlcd_fct_imp_summary(s2cd_example_cincy(2L)))
+})
 }

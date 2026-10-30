@@ -32,18 +32,20 @@ By default, intersecting plumes are summarized as the maximum intensity
 without summarization.
 }
 \examples{
- withr::local_envvar(
-   R_USER_DATA_DIR = fs::path_package(
-     "geomarker",
-     "gmrkr--8841"
-   ),
-   R_GEOMARKER_NO_DOWNLOAD = "true"
- )
-x <- s2cd(s2::as_s2_cell(c("8841b39a7c46e25f","8841a45555555555")),
-  dates = list(as.Date(c("2024-05-18", "2024-11-06")),
-               as.Date(c("2024-06-22", "2024-08-15", "2024-12-30")))
-)
-get_smoke_summary(x)
-get_smoke_summary(x, summary = "sum")
-get_smoke_summary(x, summary = "none")
+local({
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  x <- s2cd(
+    s2::as_s2_cell(c("8841b39a7c46e25f", "8841a45555555555")),
+    dates = list(
+      as.Date(c("2024-05-18", "2024-11-06")),
+      as.Date(c("2024-06-22", "2024-08-15", "2024-12-30"))
+    )
+  )
+  print(get_smoke_summary(x))
+  print(get_smoke_summary(x, summary = "sum"))
+  print(get_smoke_summary(x, summary = "none"))
+})
 }

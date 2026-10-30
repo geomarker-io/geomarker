@@ -34,12 +34,11 @@ Data is updated monthly.
 Files are retrieved through NOAA PSL's anonymous FTP server.
 }
 \examples{
- withr::local_envvar(
-   R_USER_DATA_DIR = fs::path_package(
-     "geomarker",
-     "gmrkr--8841"
-   ),
-   R_GEOMARKER_NO_DOWNLOAD = "true"
- )
-get_narr_data(s2cd_example_cincy(2L), "air.2m")
+local({
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  print(get_narr_data(s2cd_example_cincy(2L), "air.2m"))
+})
 }

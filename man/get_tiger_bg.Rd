@@ -25,13 +25,12 @@ Link an object coercible to an s2_cell vector with the closest census block
 group using the US Census TIGER/Line shapefiles from a specific year.
 }
 \examples{
- withr::local_envvar(
-   R_USER_DATA_DIR = fs::path_package(
-     "geomarker",
-     "gmrkr--8841"
-   ),
-   R_GEOMARKER_NO_DOWNLOAD = "true"
- )
-set.seed(123)
-get_tiger_bg(s2cd_example_cincy(8L))
+local({
+  withr::local_envvar(
+    R_USER_DATA_DIR = fs::path_package("geomarker", "gmrkr--8841"),
+    R_GEOMARKER_NO_DOWNLOAD = "true"
+  )
+  set.seed(123)
+  print(get_tiger_bg(s2cd_example_cincy(8L)))
+})
 }

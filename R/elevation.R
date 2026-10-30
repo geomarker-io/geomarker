@@ -48,7 +48,7 @@ get_elevation_summary <- function(
   check_installed("sf", "to buffer s2 cells.")
   elevation_url <- paste0(
     "https://github.com/geomarker-io/geomarker/releases/download/",
-    "v0.0.1/usgs_3dep_conus_800m.tif"
+    "data-elevation-2026-07-20-r1/usgs_3dep_conus_800m.tif"
   )
   elevation_raster <- geomarker_stow(
     elevation_url,
@@ -96,7 +96,7 @@ install_elevation_geomarker_fixture <- function(
   output_dir <- geomarker_fixture_output_dir(output_dir)
   elevation_url <- paste0(
     "https://github.com/geomarker-io/geomarker/releases/download/",
-    "v0.0.1/usgs_3dep_conus_800m.tif"
+    "data-elevation-2026-07-20-r1/usgs_3dep_conus_800m.tif"
   )
   if (is.null(source_file)) {
     source_file <- geomarker_stow(

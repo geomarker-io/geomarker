@@ -97,11 +97,77 @@ Unset offline operation with `Sys.unsetenv("R_GEOMARKER_NO_DOWNLOAD")`.
 `R_GEOMARKER_NO_DOWNLOAD` is honored when geomarker requests durable managed local copies through stow and by its known direct network paths, including Planetary Computer requests and remote raster reads, NASA Earthdata source builds, and release-preparation downloads.
 It is a best-effort application control, not a network security boundary; use operating-system or container network controls when network isolation must be guaranteed.
 
+### Versioned data releases
+
+Elevation, HPMS traffic, and processed MERRA-2 data are hosted as separate GitHub
+data releases in this repository. R package releases use `vMAJOR.MINOR.PATCH`;
+data releases use a dataset vintage and a positive revision:
+
+| Data | Release tag | Current coverage |
+|---|---|---|
+| Elevation | `data-elevation-2026-07-20-r1` | USGS 3DEP snapshot dated July 20, 2026 |
+| Traffic | `data-hpms-2024-r1` | HPMS 2024 F1/F2 roadways |
+| MERRA-2 | `data-merra2-YYYY-h1-r1` or `data-merra2-YYYY-h2-r1` | 2017 H1 through 2026 H1 |
+
+Each vintage starts at `r1`. Changed data bytes require a new revision such as
+`data-merra2-2024-h1-r2`; a new vintage starts again at `r1`. Unchanged data are
+reused across package releases. Published data files and tags are immutable.
+Each data release includes its data file and a one-record `manifest.dcf` with
+the source provenance, coverage, file size, and SHA-256 hash.
+
+The catalogs shipped with each package version pin exact data-release URLs.
+Publishing a correction does not change data used by an already installed
+package version. Files attached to the legacy `v0.0.1` release remain available
+for older versions. The new URLs have different stow cache keys, so upgrading
+to this layout requires one fresh download of each national data file used;
+existing caches are not moved automatically.
+
+For maintainers, run these commands from the checkout:
+
+```sh
+Rscript scripts/release-data.R preview
+Rscript scripts/release-data.R stage --work-dir /private/tmp/geomarker-data --source-release v0.0.1
+Rscript scripts/release-data.R publish --work-dir /private/tmp/geomarker-data --commit FULL_COMMIT_SHA
+Rscript scripts/release-data.R verify --work-dir /private/tmp/geomarker-data --commit FULL_COMMIT_SHA
+```
+
+The source-release option is for copying the existing published files during
+this migration. For a new revision, use the corresponding builder with
+`--revision N`, review and update the checked-in catalog, and put the file at
+`WORK_DIR/stage/DATA_TAG/ASSET_NAME` before running `stage` without
+`--source-release`. The builders write candidate DCF metadata alongside their
+output; they do not upload data or edit the package catalogs. Existing builder
+positional arguments are unchanged; `--revision` defaults to `1`.
+
+All four modes accept `--tag DATA_TAG` to select one catalog record. Preview
+does not contact GitHub or create files. Stage verifies complete local files.
+Publish requires a clean checkout at the supplied commit, that commit on
+GitHub, and repository release immutability enabled. It resumes matching drafts
+and refuses conflicting files or tags. Data releases are published with
+`--latest=false`, preserving the latest R package release used by R-universe.
+Verify downloads all assets afresh under `WORK_DIR/verify`; use a new work
+directory for a repeated verification. Ordinary package tests remain offline.
+
+The migration creates 21 independent releases using the existing files without
+rebuilding them. Publish and verify every data release before merging the
+package catalog cutover. Keep older releases available. If validation fails,
+leave any published data releases in place and postpone the package cutover.
+
+Run the maintainer-tool tests separately from the package tests:
+
+```sh
+Rscript -e 'testthat::test_file("scripts/tests/test-release-data.R", stop_on_failure = TRUE)'
+```
+
 ### MERRA-2 data cadence
 
 MERRA-2 PM2.5 release data are cataloged in `inst/merra-data.dcf` as complete half-year assets: January through June (`H1`) and July through December (`H2`).
-The currently cataloged assets were published with the package's `v0.0.1` GitHub release only after every expected daily granule had been discovered and validated.
-There is one fixed asset name for each year and half-year. It may be recreated from the latest NASA data while preparing a package release, but the checked-in DCF records exactly one published file and checksum. A later data correction is distributed with a new package and GitHub release.
+The currently cataloged assets were originally published with the package's
+`v0.0.1` release after every expected daily granule had been discovered and
+validated. They are now pinned through the independent data releases described
+above. Each year and half-year has one fixed asset name. Rebuilding it from
+revised NASA data requires a new data revision; the checked-in DCF selects
+exactly one published revision and checksum for each half-year.
 
 `get_merra_data()` first uses a complete monthly artifact retained under the `get_merra_data` directory as a durable managed local copy and then tries the matching official half-year release.
 When neither is present, it returns aligned missing values with one warning rather than substituting an older period.

@@ -39,7 +39,7 @@ subtraction is preserved for those source records rather than silently
 modifying them.
 
 The processed traffic data are distributed separately from the R package as
-a GeoPackage asset attached to the geomarker package release. The file is
+a GeoPackage asset attached to a versioned geomarker data release. The file is
 saved as a durable managed local copy in the \code{get_traffic_summary}
 directory the first time it is required and reused on subsequent calls.
 }

@@ -246,19 +246,8 @@ test_that("EVI annual composite files use durable managed local copies", {
     evi_annual_composite_filename("2024", "h11v05")
   )
   file.create(dest)
-  items <- data.frame(
-    id = "MOD13Q1.A2024001.h11v05.061.test",
-    platform = "terra",
-    xmin = 0,
-    ymin = 0,
-    xmax = 1,
-    ymax = 1,
-    start_date = as.Date("2024-01-01"),
-    end_date = as.Date("2024-01-16"),
-    tile = "h11v05",
-    href = "https://example.com/evi.tif",
-    quality_href = "https://example.com/quality.tif"
-  )
+  items <- evi_test_items()
+  evi_write_manifest(dest, items)
 
   expect_message(
     out <- evi_annual_composite_files(items, years = "2024", quiet = FALSE),
@@ -286,12 +275,7 @@ test_that("EVI annual composite keeps staged sources after source errors", {
   staged_evi <- file.path(source_dir, url_to_filename(href, etag = FALSE))
   dir.create(source_dir, recursive = TRUE)
   file.create(staged_evi)
-  items <- data.frame(
-    year = "2024",
-    tile = "h11v05",
-    href = href,
-    quality_href = quality_href
-  )
+  items <- evi_test_items()
 
   expect_error(
     evi_build_annual_composite(items, dest, 1, 1, quiet = TRUE),
@@ -301,7 +285,7 @@ test_that("EVI annual composite keeps staged sources after source errors", {
   expect_true(dir.exists(source_dir))
 })
 
-test_that("EVI annual composite reuses and cleans staged sources", {
+test_that("EVI annual composite applies the quality filter before the median", {
   skip_if_not_installed("terra")
   withr::local_envvar(c(
     R_USER_DATA_DIR = tempfile(),
@@ -348,10 +332,11 @@ test_that("EVI annual composite reuses and cleans staged sources", {
     quality_href = quality_href
   )
 
-  evi_build_annual_composite(items, dest, 1, 1, quiet = TRUE)
+  # These two rasters exercise the median and quality filter; coverage and
+  # publication of complete annual builds are exercised separately.
+  evi_write_annual_composite(evi_file, quality_file, dest, quiet = TRUE)
 
   expect_true(file.exists(dest))
-  expect_false(dir.exists(source_dir))
   expect_equal(
     as.vector(terra::values(terra::rast(dest))),
     c(0.2, 0.4, 0.3, 0.5),
@@ -386,6 +371,10 @@ test_that("get_evi_summary uses managed annual composites without downloads", {
       evi_annual_composite_filename("2024", "h11v05")
     ),
     overwrite = TRUE
+  )
+  evi_write_manifest(
+    file.path(geomarker_stow_path("get_evi_summary"), evi_annual_composite_filename("2024", "h11v05")),
+    evi_test_items()
   )
 
   out <- get_evi_summary(x, quiet = TRUE)

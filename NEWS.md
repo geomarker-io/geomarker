@@ -1,3 +1,8 @@
+# geomarker (development version)
+
+- gridMET and NARR return aligned missing values for locations outside the
+  raster extent instead of attempting to extract invalid raster cells.
+
 # geomarker 0.2.0
 
 - `get_smoke_summary()` now supports `summary = "sum"` to add density scores

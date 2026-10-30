@@ -20,7 +20,8 @@ get_narr_data(
 are fixed by geomarker.}
 }
 \value{
-a list of numeric vectors of NARR values
+a list of numeric vectors of NARR values. Locations outside the
+raster extent return \code{NA_real_} for each requested date.
 }
 \description{
 Links daily, 0.3 degrees gridded (~ 32 sq km) meteorological monolevel data

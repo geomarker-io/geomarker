@@ -19,7 +19,8 @@ get_gridmet_data(
 are fixed by geomarker.}
 }
 \value{
-a list of numeric vectors of gridMET values
+a list of numeric vectors of gridMET values. Locations outside the
+raster extent return \code{NA_real_} for each requested date.
 }
 \description{
 Links daily, high spatial resolution (~4-km)

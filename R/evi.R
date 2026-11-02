@@ -83,7 +83,8 @@ get_evi_summary <- function(
     "quiet must be length one" = length(quiet) == 1,
     "quiet must not be missing" = !is.na(quiet),
     "require_complete must be TRUE or FALSE" = is.logical(require_complete) &&
-      length(require_complete) == 1L && !is.na(require_complete)
+      length(require_complete) == 1L &&
+      !is.na(require_complete)
   )
   check_installed("terra", "to read EVI raster data.")
 
@@ -96,7 +97,10 @@ get_evi_summary <- function(
   years <- evi_requested_years(x_dates)
   evi_require_complete_years(years)
   if (geomarker_no_download()) {
-    annual_files <- evi_managed_annual_composite_files(years, require_complete = require_complete)
+    annual_files <- evi_managed_annual_composite_files(
+      years,
+      require_complete = require_complete
+    )
     evi_values <- evi_extract_annual_values(x, annual_files, buffer = buffer)
     return(evi_summarize_annual_values(
       values = evi_values,
@@ -472,9 +476,18 @@ evi_annual_composite_files <- function(
     !vapply(
       seq_along(dests),
       function(i) {
-        group <- items[items$year == groups$year[[i]] & items$tile == groups$tile[[i]], , drop = FALSE]
-        evi_cache_valid(dests[[i]], groups$year[[i]], groups$tile[[i]],
-          items = group, require_complete = require_complete)
+        group <- items[
+          items$year == groups$year[[i]] & items$tile == groups$tile[[i]],
+          ,
+          drop = FALSE
+        ]
+        evi_cache_valid(
+          dests[[i]],
+          groups$year[[i]],
+          groups$tile[[i]],
+          items = group,
+          require_complete = require_complete
+        )
       },
       logical(1)
     )
@@ -485,17 +498,29 @@ evi_annual_composite_files <- function(
       drop = FALSE
     ]
     if (needs_build[[i]]) {
-      evi_source_items(group, groups$year[[i]], groups$tile[[i]], require_complete)
+      evi_source_items(
+        group,
+        groups$year[[i]],
+        groups$tile[[i]],
+        require_complete
+      )
     } else {
       group
     }
   })
   for (i in seq_along(dests)) {
     if (needs_build[[i]]) {
-      evi_warn_missing(groups$year[[i]], groups$tile[[i]],
-        evi_missing_observations(build_items[[i]], groups$year[[i]]))
+      evi_warn_missing(
+        groups$year[[i]],
+        groups$tile[[i]],
+        evi_missing_observations(build_items[[i]], groups$year[[i]])
+      )
     } else {
-      evi_warn_manifest(evi_read_manifest(dests[[i]], groups$year[[i]], groups$tile[[i]]))
+      evi_warn_manifest(evi_read_manifest(
+        dests[[i]],
+        groups$year[[i]],
+        groups$tile[[i]]
+      ))
     }
   }
   n_total <- length(dests)
@@ -574,7 +599,12 @@ evi_managed_annual_composite_files <- function(
   file_info <- evi_parse_annual_composite_filenames(basename(files))
   keep <- file_info$year %in% years
   for (i in which(keep)) {
-    record <- evi_read_manifest(files[[i]], file_info$year[[i]], file_info$tile[[i]], require_complete)
+    record <- evi_read_manifest(
+      files[[i]],
+      file_info$year[[i]],
+      file_info$tile[[i]],
+      require_complete
+    )
     evi_warn_manifest(record)
   }
   n_keep <- sum(keep)
@@ -688,7 +718,9 @@ evi_source_staging_dir <- function(dest, items = NULL) {
     tools::file_path_sans_ext(basename(dest)),
     evi_transformation
   )
-  if (!is.null(items)) path <- file.path(path, evi_source_signature(items))
+  if (!is.null(items)) {
+    path <- file.path(path, evi_source_signature(items))
+  }
   path
 }
 
@@ -697,7 +729,10 @@ evi_cleanup_source_staging_dir <- function(source_dir) {
     unlink(source_dir, recursive = TRUE, force = TRUE)
   }
   parent <- dirname(source_dir)
-  if (dir.exists(parent) && !length(list.files(parent, all.files = TRUE, no.. = TRUE))) {
+  if (
+    dir.exists(parent) &&
+      !length(list.files(parent, all.files = TRUE, no.. = TRUE))
+  ) {
     unlink(parent, recursive = TRUE)
   }
   invisible(source_dir)
@@ -1078,8 +1113,11 @@ install_evi_geomarker_fixture <- function(
   check_installed("terra", "to create EVI fixture data.")
   cell <- geomarker_fixture_cell(cell)
   buffer <- geomarker_fixture_buffer(buffer)
-  stopifnot("require_complete must be TRUE or FALSE" = is.logical(require_complete) &&
-    length(require_complete) == 1L && !is.na(require_complete))
+  stopifnot(
+    "require_complete must be TRUE or FALSE" = is.logical(require_complete) &&
+      length(require_complete) == 1L &&
+      !is.na(require_complete)
+  )
   dates <- geomarker_fixture_dates(dates)
   years <- evi_requested_years(list(dates))
   evi_require_complete_years(years)
@@ -1140,7 +1178,11 @@ install_evi_geomarker_fixture <- function(
           groups$tile[[i]],
           cell,
           buffer,
-          items = items[items$year == groups$year[[i]] & items$tile == groups$tile[[i]], , drop = FALSE],
+          items = items[
+            items$year == groups$year[[i]] & items$tile == groups$tile[[i]],
+            ,
+            drop = FALSE
+          ],
           require_complete = require_complete
         )
       },
@@ -1153,17 +1195,29 @@ install_evi_geomarker_fixture <- function(
       drop = FALSE
     ]
     if (needs_build[[i]]) {
-      evi_source_items(group, groups$year[[i]], groups$tile[[i]], require_complete)
+      evi_source_items(
+        group,
+        groups$year[[i]],
+        groups$tile[[i]],
+        require_complete
+      )
     } else {
       group
     }
   })
   for (i in seq_along(dests)) {
     if (needs_build[[i]]) {
-      evi_warn_missing(groups$year[[i]], groups$tile[[i]],
-        evi_missing_observations(build_items[[i]], groups$year[[i]]))
+      evi_warn_missing(
+        groups$year[[i]],
+        groups$tile[[i]],
+        evi_missing_observations(build_items[[i]], groups$year[[i]])
+      )
     } else {
-      evi_warn_manifest(evi_read_manifest(dests[[i]], groups$year[[i]], groups$tile[[i]]))
+      evi_warn_manifest(evi_read_manifest(
+        dests[[i]],
+        groups$year[[i]],
+        groups$tile[[i]]
+      ))
     }
   }
   if (!quiet) {

@@ -161,18 +161,22 @@ Rscript -e 'testthat::test_file("scripts/tests/test-release-data.R", stop_on_fai
 
 ### EVI annual composites
 
-`get_evi_summary()` supports completed calendar years. A new tile-year composite
-requires every expected Terra and Aqua acquisition, rather than treating a year
-as complete merely because December has passed. Missing source periods produce
-an error before an annual raster is written. For the instruments' first years,
-the expected schedule begins when the product became available.
+`get_evi_summary()` supports completed calendar years. By default it summarizes
+available Terra/Aqua observations and warns about missing acquisitions. Set
+`require_complete = TRUE` to reject gaps, including in offline cached data.
+For the instruments' first years, the expected schedule begins when the product
+became available. Ongoing and future calendar years remain unsupported.
 
 An adjacent DCF manifest records the selected source item IDs, dates, unsigned
-asset URLs, processing version, spatial scope, and raster SHA-256. If the catalog
+asset URLs, processing version, spatial scope, raster SHA-256, and missing
+acquisitions. Incomplete coverage is explicitly labeled `incomplete`. If the catalog
 lists multiple processing revisions of one acquisition, a new build selects the
-latest revision. Validated completed composites remain fixed until
+latest revision. On online use, incomplete composites rebuild when the source
+set, selected revisions, or asset URLs change; identical inputs reuse the cache.
+Offline use warns about recorded gaps and cannot check for new inputs.
+Composites with complete coverage remain fixed until
 `overwrite = TRUE`, which validates the latest source listing and downloads the
-source files again. No provisional annual composites are built.
+source files again.
 
 Older annual composites without valid manifests are rebuilt on online use.
 Offline use gives an error explaining that they must first be rebuilt online;

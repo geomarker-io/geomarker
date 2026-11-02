@@ -84,7 +84,7 @@ test_that("legacy EVI caches rebuild online and completed caches stay stable", {
   evi_annual_composite_files(items[-12, ], "2024", quiet = TRUE)
   expect_identical(builds, 1L)
   expect_identical(digest::digest(path, algo = "sha256", file = TRUE), original_hash)
-  expect_error(evi_annual_composite_files(items[-12, ], "2024", overwrite = TRUE, quiet = TRUE), "incomplete")
+  expect_error(evi_annual_composite_files(items[-12, ], "2024", overwrite = TRUE, quiet = TRUE, require_complete = TRUE), "incomplete")
   expect_identical(builds, 1L)
   evi_annual_composite_files(items, "2024", overwrite = TRUE, quiet = TRUE)
   expect_identical(builds, 2L)
@@ -102,7 +102,7 @@ test_that("annual builds publish their manifest only after successful processing
     paths <- file.path(dest_dir, paste0(seq_along(hrefs), ".tif"))
     r <- terra::rast(nrows = 2, ncols = 2, xmin = 0, xmax = 2, ymin = 0, ymax = 2)
     for (i in seq_along(paths)) {
-      terra::values(r) <- if (i <= 46) 2000 else 0
+      terra::values(r) <- if (i <= length(hrefs) / 2) 2000 else 0
       terra::writeRaster(r, paths[[i]])
     }
     paths
@@ -111,6 +111,11 @@ test_that("annual builds publish their manifest only after successful processing
   expect_true(evi_cache_valid(dest, "2024", "h11v05"))
   expect_false(dir.exists(evi_source_staging_dir(dest)))
   expect_equal(as.numeric(terra::values(terra::rast(dest))), rep(0.2, 4), tolerance = 1e-6)
+
+  evi_build_annual_composite(items[-12, ], dest, 1, 1, quiet = TRUE)
+  expect_identical(evi_read_manifest(dest, "2024", "h11v05")[["Coverage-Status"]], "incomplete")
+  expect_false(evi_cache_valid(dest, "2024", "h11v05", require_complete = TRUE))
+  expect_false(dir.exists(evi_source_staging_dir(dest)))
 
   hash <- digest::digest(dest, algo = "sha256", file = TRUE)
   local_mocked_bindings(evi_write_annual_composite = function(...) stop("processing failed"))

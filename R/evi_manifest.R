@@ -26,9 +26,9 @@ evi_expected_observations <- function(year) {
   )
 }
 
-evi_complete_source_items <- function(items, year, tile) {
+evi_source_items <- function(items, year, tile, require_complete = FALSE) {
   required <- c("id", "start_date", "end_date", "href", "quality_href")
-  if (!all(required %in% names(items)) || anyNA(items[required])) {
+  if (!all(required %in% names(items)) || anyNA(items[required]) || nrow(items) == 0L) {
     stop("EVI source metadata are incomplete.", call. = FALSE)
   }
   product <- substr(items$id, 1, 7)
@@ -58,7 +58,10 @@ evi_complete_source_items <- function(items, year, tile) {
   expected_keys <- paste(expected$platform, expected$start_date)
   keys <- paste(items$platform, items$start_date)
   missing <- setdiff(expected_keys, keys)
-  if (length(missing) || any(!keys %in% expected_keys)) {
+  if (any(!keys %in% expected_keys)) {
+    stop("EVI sources contain acquisitions outside the expected schedule.", call. = FALSE)
+  }
+  if (require_complete && length(missing)) {
     stop(
       "EVI source coverage is incomplete for ", year, " ", tile,
       if (length(missing)) paste0("; missing: ", paste(missing, collapse = ", ")) else "",
@@ -69,6 +72,43 @@ evi_complete_source_items <- function(items, year, tile) {
   items[order(items$start_date, items$platform), , drop = FALSE]
 }
 
+evi_complete_source_items <- function(items, year, tile) {
+  evi_source_items(items, year, tile, require_complete = TRUE)
+}
+
+evi_missing_observations <- function(items, year) {
+  expected <- evi_expected_observations(year)
+  setdiff(paste(expected$platform, expected$start_date), paste(items$platform, items$start_date))
+}
+
+evi_source_signature <- function(items) {
+  columns <- c("id", "start_date", "end_date", "href", "quality_href")
+  data <- lapply(items[order(items$id), columns, drop = FALSE], as.character)
+  digest::digest(serialize(data, NULL, version = 2), algo = "sha256", serialize = FALSE)
+}
+
+evi_warn_missing <- function(year, tile, missing) {
+  if (length(missing)) {
+    warning(
+      "EVI source coverage is incomplete for ", year, " ", tile,
+      "; missing: ", paste(missing, collapse = ", "),
+      ". Summarizing available observations. Use `require_complete = TRUE` ",
+      "to require every expected acquisition.", call. = FALSE
+    )
+  }
+  invisible(NULL)
+}
+
+evi_warn_manifest <- function(record) {
+  if (identical(record[["Coverage-Status"]], "incomplete")) {
+    evi_warn_missing(
+      record[["EVI-Year"]], record[["MODIS-Tile"]],
+      strsplit(record[["Missing-Acquisitions"]], "\n", fixed = TRUE)[[1]]
+    )
+  }
+  invisible(NULL)
+}
+
 evi_manifest_path <- function(path) sub("[.]tif$", ".dcf", path)
 
 evi_write_manifest <- function(path, items, scope = "full-tile", cell = NULL, buffer = NULL) {
@@ -76,14 +116,18 @@ evi_write_manifest <- function(path, items, scope = "full-tile", cell = NULL, bu
   tile <- unique(items$tile)
   stopifnot(length(year) == 1L, length(tile) == 1L)
   evi_require_complete_years(year)
-  items <- evi_complete_source_items(items, year, tile)
+  items <- evi_source_items(items, year, tile)
+  missing <- evi_missing_observations(items, year)
   record <- list(
     `Manifest-Version` = "1",
     `EVI-Year` = year,
     `MODIS-Tile` = tile,
     Collection = "modis-13Q1-061",
     Transformation = evi_transformation,
-    `Coverage-Status` = "complete",
+    `Coverage-Status` = if (length(missing)) "incomplete" else "complete",
+    `Missing-Count` = as.character(length(missing)),
+    `Expected-Count` = as.character(nrow(evi_expected_observations(year))),
+    `Source-Signature` = evi_source_signature(items),
     `Spatial-Scope` = scope,
     `Source-Count` = as.character(nrow(items)),
     `Source-IDs` = paste(items$id, collapse = "\n"),
@@ -95,6 +139,7 @@ evi_write_manifest <- function(path, items, scope = "full-tile", cell = NULL, bu
     `Asset-SHA256` = digest::digest(path, algo = "sha256", file = TRUE),
     `Created-UTC` = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
   )
+  if (length(missing)) record[["Missing-Acquisitions"]] <- paste(missing, collapse = "\n")
   if (!is.null(cell)) record[["Fixture-Cell"]] <- as.character(cell)
   if (!is.null(buffer)) record[["Fixture-Buffer-M"]] <- as.character(buffer)
   manifest <- evi_manifest_path(path)
@@ -107,10 +152,10 @@ evi_write_manifest <- function(path, items, scope = "full-tile", cell = NULL, bu
   invisible(manifest)
 }
 
-evi_read_manifest <- function(path, year, tile) {
+evi_read_manifest <- function(path, year, tile, require_complete = FALSE) {
   fail <- function() {
     stop(
-      "EVI composite has no valid complete-year manifest: ", path,
+      "EVI composite has no valid coverage manifest: ", path,
       ". Rebuild it online with get_evi_summary(); ",
       "offline operation cannot verify or migrate legacy composites.",
       call. = FALSE
@@ -142,6 +187,9 @@ evi_read_manifest <- function(path, year, tile) {
       !identical(record[["Transformation"]], "synthetic-evi-example-v1")) {
       fail()
     }
+    if (require_complete) {
+      stop("Synthetic EVI examples do not establish complete source coverage.", call. = FALSE)
+    }
     return(record)
   }
   source_fields <- c(
@@ -150,7 +198,7 @@ evi_read_manifest <- function(path, year, tile) {
   )
   if (!all(source_fields %in% names(record)) ||
     anyNA(unlist(record[source_fields])) ||
-    !identical(record[["Coverage-Status"]], "complete") ||
+    !record[["Coverage-Status"]] %in% c("complete", "incomplete") ||
     !identical(record[["Collection"]], "modis-13Q1-061") ||
     !identical(record[["Transformation"]], evi_transformation)) {
     fail()
@@ -169,20 +217,44 @@ evi_read_manifest <- function(path, year, tile) {
       sources <- as.data.frame(sources, stringsAsFactors = FALSE)
       sources$start_date <- as.Date(sources$start_date)
       sources$end_date <- as.Date(sources$end_date)
-      checked <- evi_complete_source_items(sources, year, tile)
-      nrow(checked) == nrow(sources)
+      checked <- evi_source_items(sources, year, tile)
+      missing <- evi_missing_observations(checked, year)
+      status <- if (length(missing)) "incomplete" else "complete"
+      valid <- nrow(checked) == nrow(sources) && identical(record[["Coverage-Status"]], status)
+      if (!is.null(record[["Missing-Count"]])) {
+        valid <- valid && identical(record[["Missing-Count"]], as.character(length(missing)))
+      }
+      if (length(missing)) {
+        valid <- valid && identical(record[["Missing-Count"]], as.character(length(missing))) &&
+          identical(record[["Missing-Acquisitions"]], paste(missing, collapse = "\n"))
+      }
+      signature <- evi_source_signature(checked)
+      if (!is.null(record[["Source-Signature"]])) {
+        valid <- valid && identical(record[["Source-Signature"]], signature)
+      }
+      if (!is.null(record[["Expected-Count"]])) {
+        valid <- valid && identical(record[["Expected-Count"]], as.character(nrow(evi_expected_observations(year))))
+      }
+      record[["Source-Signature"]] <- signature
+      valid
     },
     error = function(e) FALSE
   )
   if (!isTRUE(valid)) fail()
+  if (require_complete) evi_complete_source_items(sources, year, tile)
   record
 }
 
-evi_cache_valid <- function(path, year, tile, cell = NULL, buffer = NULL) {
+evi_cache_valid <- function(path, year, tile, cell = NULL, buffer = NULL,
+                           items = NULL, require_complete = FALSE) {
   tryCatch(
     {
-      record <- evi_read_manifest(path, year, tile)
-      valid <- identical(record[["Coverage-Status"]], "complete")
+      record <- evi_read_manifest(path, year, tile, require_complete = require_complete)
+      valid <- record[["Coverage-Status"]] %in% c("complete", "incomplete")
+      if (valid && identical(record[["Coverage-Status"]], "incomplete") && !is.null(items)) {
+        current <- evi_source_items(items, year, tile)
+        valid <- identical(record[["Source-Signature"]], evi_source_signature(current))
+      }
       if (!is.null(cell)) {
         valid <- valid && identical(record[["Spatial-Scope"]], "fixture") &&
           identical(record[["Fixture-Cell"]], as.character(cell)) &&

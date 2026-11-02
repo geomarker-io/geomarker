@@ -4,17 +4,27 @@
 \alias{get_evi_summary}
 \title{MODIS enhanced vegetation index summary}
 \usage{
-get_evi_summary(x, buffer = 400, overwrite = FALSE, quiet = FALSE)
+get_evi_summary(
+  x,
+  buffer = 400,
+  overwrite = FALSE,
+  quiet = FALSE,
+  require_complete = FALSE
+)
 }
 \arguments{
 \item{x}{a s2_cell_dates vector (see \code{?s2cd})}
 
 \item{buffer}{distance from s2 cell (in meters) to summarize data}
 
-\item{overwrite}{logical; rebuild existing annual EVI rasters from a complete
+\item{overwrite}{logical; rebuild existing annual EVI rasters from the
 current source listing, downloading the source assets again?}
 
 \item{quiet}{logical; show download progress messages?}
+
+\item{require_complete}{logical; if \code{TRUE}, require every expected acquisition
+for each tile-year, including when reading offline caches. Defaults to \code{FALSE}
+to summarize available observations with a warning about missing acquisitions.}
 }
 \value{
 a list of numeric vectors of annual EVI summaries.
@@ -27,8 +37,8 @@ Terra/Aqua EVI composite whose pixels are the median of all good or
 marginal-quality 16-day EVI observations in that year.
 Buffers that cross MODIS tile boundaries include pixels from all
 intersecting tiles in one mean.
-Only completed calendar years are supported. Before a new annual composite
-is built, every expected Terra/Aqua acquisition for its tile must be present.
+Only completed calendar years are supported. Missing Terra/Aqua acquisitions
+produce a warning by default; use \code{require_complete = TRUE} to reject gaps.
 }
 \details{
 Data are downloaded from the
@@ -45,9 +55,11 @@ contiguous United States. Planetary Computer assets are accessed with
 reusable container SAS tokens to reduce signing API calls.
 Annual composite rasters are retained there as durable managed local copies.
 Each composite has an adjacent DCF manifest with its exact source items,
-processing version, coverage status, and raster SHA-256. Validated completed
-composites remain unchanged until \code{overwrite = TRUE}, which queries and
-downloads the latest sources. Composites from older geomarker versions without
+processing version, missing acquisitions, coverage status, and raster SHA-256.
+Online use rebuilds incomplete composites when their source inputs change.
+Offline use warns about cached gaps and cannot check for new source inputs.
+Composites with complete coverage remain unchanged until \code{overwrite = TRUE},
+which queries and downloads the latest sources. Older composites without
 a valid manifest are rebuilt online; offline use produces an explanatory error.
 The bundled Cincinnati EVI fixture is deterministic synthetic example data.
 It must not be used for analysis.

@@ -7,8 +7,8 @@
 #' marginal-quality 16-day EVI observations in that year.
 #' Buffers that cross MODIS tile boundaries include pixels from all
 #' intersecting tiles in one mean.
-#' Only completed calendar years are supported. Before a new annual composite
-#' is built, every expected Terra/Aqua acquisition for its tile must be present.
+#' Only completed calendar years are supported. Missing Terra/Aqua acquisitions
+#' produce a warning by default; use `require_complete = TRUE` to reject gaps.
 #'
 #' Data are downloaded from the
 #' [Microsoft Planetary Computer](https://planetarycomputer.microsoft.com/)
@@ -24,9 +24,11 @@
 #' reusable container SAS tokens to reduce signing API calls.
 #' Annual composite rasters are retained there as durable managed local copies.
 #' Each composite has an adjacent DCF manifest with its exact source items,
-#' processing version, coverage status, and raster SHA-256. Validated completed
-#' composites remain unchanged until `overwrite = TRUE`, which queries and
-#' downloads the latest sources. Composites from older geomarker versions without
+#' processing version, missing acquisitions, coverage status, and raster SHA-256.
+#' Online use rebuilds incomplete composites when their source inputs change.
+#' Offline use warns about cached gaps and cannot check for new source inputs.
+#' Composites with complete coverage remain unchanged until `overwrite = TRUE`,
+#' which queries and downloads the latest sources. Older composites without
 #' a valid manifest are rebuilt online; offline use produces an explanatory error.
 #' The bundled Cincinnati EVI fixture is deterministic synthetic example data.
 #' It must not be used for analysis.
@@ -40,9 +42,12 @@
 #' water, snow, cloud, or other non-vegetated surfaces or artifacts.
 #' @param x a s2_cell_dates vector (see `?s2cd`)
 #' @param buffer distance from s2 cell (in meters) to summarize data
-#' @param overwrite logical; rebuild existing annual EVI rasters from a complete
+#' @param overwrite logical; rebuild existing annual EVI rasters from the
 #'   current source listing, downloading the source assets again?
 #' @param quiet logical; show download progress messages?
+#' @param require_complete logical; if `TRUE`, require every expected acquisition
+#'   for each tile-year, including when reading offline caches. Defaults to `FALSE`
+#'   to summarize available observations with a warning about missing acquisitions.
 #' @return a list of numeric vectors of annual EVI summaries.
 #' @export
 #' @examples
@@ -58,7 +63,8 @@ get_evi_summary <- function(
   x,
   buffer = 400,
   overwrite = FALSE,
-  quiet = FALSE
+  quiet = FALSE,
+  require_complete = FALSE
 ) {
   stopifnot(
     "x must be a s2_cell_dates vector" = is_s2cd(x),
@@ -75,7 +81,9 @@ get_evi_summary <- function(
     "overwrite must not be missing" = !is.na(overwrite),
     "quiet must be logical" = is.logical(quiet),
     "quiet must be length one" = length(quiet) == 1,
-    "quiet must not be missing" = !is.na(quiet)
+    "quiet must not be missing" = !is.na(quiet),
+    "require_complete must be TRUE or FALSE" = is.logical(require_complete) &&
+      length(require_complete) == 1L && !is.na(require_complete)
   )
   check_installed("terra", "to read EVI raster data.")
 
@@ -88,7 +96,7 @@ get_evi_summary <- function(
   years <- evi_requested_years(x_dates)
   evi_require_complete_years(years)
   if (geomarker_no_download()) {
-    annual_files <- evi_managed_annual_composite_files(years)
+    annual_files <- evi_managed_annual_composite_files(years, require_complete = require_complete)
     evi_values <- evi_extract_annual_values(x, annual_files, buffer = buffer)
     return(evi_summarize_annual_values(
       values = evi_values,
@@ -101,8 +109,10 @@ get_evi_summary <- function(
   date_range <- evi_search_date_range(x_dates)
   evi_items <- evi_planetary_computer_items(
     bbox = c(
-      min(buffer_bboxes$xmin), min(buffer_bboxes$ymin),
-      max(buffer_bboxes$xmax), max(buffer_bboxes$ymax)
+      min(buffer_bboxes$xmin),
+      min(buffer_bboxes$ymin),
+      max(buffer_bboxes$xmax),
+      max(buffer_bboxes$ymax)
     ),
     date_range = date_range
   )
@@ -129,7 +139,8 @@ get_evi_summary <- function(
     items = evi_items,
     years = years,
     overwrite = overwrite,
-    quiet = quiet
+    quiet = quiet,
+    require_complete = require_complete
   )
   evi_values <- evi_extract_annual_values(x, annual_files, buffer = buffer)
   evi_summarize_annual_values(
@@ -425,7 +436,8 @@ evi_annual_composite_files <- function(
   years,
   overwrite = FALSE,
   quiet = FALSE,
-  subdir = "get_evi_summary"
+  subdir = "get_evi_summary",
+  require_complete = FALSE
 ) {
   evi_require_complete_years(years)
   items$year <- format(items$start_date, "%Y")
@@ -440,7 +452,8 @@ evi_annual_composite_files <- function(
   if (length(missing_years)) {
     stop(
       "No EVI source observations are available for year(s): ",
-      paste(missing_years, collapse = ", "), ".",
+      paste(missing_years, collapse = ", "),
+      ".",
       call. = FALSE
     )
   }
@@ -455,20 +468,36 @@ evi_annual_composite_files <- function(
     geomarker_stow_path(subdir),
     evi_annual_composite_filename(groups$year, groups$tile)
   )
-  needs_build <- overwrite | !vapply(seq_along(dests), function(i) {
-    evi_cache_valid(dests[[i]], groups$year[[i]], groups$tile[[i]])
-  }, logical(1))
+  needs_build <- overwrite |
+    !vapply(
+      seq_along(dests),
+      function(i) {
+        group <- items[items$year == groups$year[[i]] & items$tile == groups$tile[[i]], , drop = FALSE]
+        evi_cache_valid(dests[[i]], groups$year[[i]], groups$tile[[i]],
+          items = group, require_complete = require_complete)
+      },
+      logical(1)
+    )
   build_items <- lapply(seq_len(nrow(groups)), function(i) {
     group <- items[
       items$year == groups$year[[i]] & items$tile == groups$tile[[i]],
-      , drop = FALSE
+      ,
+      drop = FALSE
     ]
     if (needs_build[[i]]) {
-      evi_complete_source_items(group, groups$year[[i]], groups$tile[[i]])
+      evi_source_items(group, groups$year[[i]], groups$tile[[i]], require_complete)
     } else {
       group
     }
   })
+  for (i in seq_along(dests)) {
+    if (needs_build[[i]]) {
+      evi_warn_missing(groups$year[[i]], groups$tile[[i]],
+        evi_missing_observations(build_items[[i]], groups$year[[i]]))
+    } else {
+      evi_warn_manifest(evi_read_manifest(dests[[i]], groups$year[[i]], groups$tile[[i]]))
+    }
+  }
   n_total <- length(dests)
   n_build <- sum(needs_build)
   if (!quiet) {
@@ -485,7 +514,7 @@ evi_annual_composite_files <- function(
   if (n_build > 0 && geomarker_no_download()) {
     stop(
       "The envvar R_GEOMARKER_NO_DOWNLOAD is set, but at least one annual ",
-      "EVI composite has no valid complete-year manifest: ",
+      "EVI composite has no valid coverage manifest: ",
       dests[which(needs_build)[[1]]],
       call. = FALSE
     )
@@ -533,7 +562,8 @@ evi_annual_composite_filename <- function(year, tile) {
 
 evi_managed_annual_composite_files <- function(
   years,
-  subdir = "get_evi_summary"
+  subdir = "get_evi_summary",
+  require_complete = FALSE
 ) {
   evi_dir <- geomarker_stow_path(subdir)
   files <- list.files(
@@ -544,7 +574,8 @@ evi_managed_annual_composite_files <- function(
   file_info <- evi_parse_annual_composite_filenames(basename(files))
   keep <- file_info$year %in% years
   for (i in which(keep)) {
-    evi_read_manifest(files[[i]], file_info$year[[i]], file_info$tile[[i]])
+    record <- evi_read_manifest(files[[i]], file_info$year[[i]], file_info$tile[[i]], require_complete)
+    evi_warn_manifest(record)
   }
   n_keep <- sum(keep)
   out <- data.frame(
@@ -600,7 +631,11 @@ evi_build_annual_composite <- function(
   overwrite_sources = FALSE
 ) {
   evi_require_complete_years(unique(items$year))
-  items <- evi_complete_source_items(items, unique(items$year), unique(items$tile))
+  items <- evi_source_items(
+    items,
+    unique(items$year),
+    unique(items$tile)
+  )
   if (!quiet) {
     message(sprintf(
       "Building annual EVI composite %s of %s: %s %s",
@@ -611,7 +646,7 @@ evi_build_annual_composite <- function(
     ))
   }
 
-  source_dir <- evi_source_staging_dir(dest)
+  source_dir <- evi_source_staging_dir(dest, items)
 
   source_files <- evi_download_assets(
     hrefs = c(items$href, items$quality_href),
@@ -624,7 +659,9 @@ evi_build_annual_composite <- function(
     quiet = quiet,
     dest_dir = source_dir
   )
-  if (overwrite_sources) unlink(file.path(source_dir, "filtered"), recursive = TRUE)
+  if (overwrite_sources) {
+    unlink(file.path(source_dir, "filtered"), recursive = TRUE)
+  }
   n_items <- nrow(items)
   staged <- tempfile(".evi-annual-", dirname(dest), fileext = ".tif")
   on.exit(unlink(c(staged, evi_manifest_path(staged))), add = TRUE)
@@ -644,18 +681,24 @@ evi_build_annual_composite <- function(
   evi_cleanup_source_staging_dir(source_dir)
 }
 
-evi_source_staging_dir <- function(dest) {
-  file.path(
+evi_source_staging_dir <- function(dest, items = NULL) {
+  path <- file.path(
     dirname(dest),
     "sources",
     tools::file_path_sans_ext(basename(dest)),
     evi_transformation
   )
+  if (!is.null(items)) path <- file.path(path, evi_source_signature(items))
+  path
 }
 
 evi_cleanup_source_staging_dir <- function(source_dir) {
   if (dir.exists(source_dir)) {
     unlink(source_dir, recursive = TRUE, force = TRUE)
+  }
+  parent <- dirname(source_dir)
+  if (dir.exists(parent) && !length(list.files(parent, all.files = TRUE, no.. = TRUE))) {
+    unlink(parent, recursive = TRUE)
   }
   invisible(source_dir)
 }
@@ -1029,11 +1072,14 @@ install_evi_geomarker_fixture <- function(
   overwrite = FALSE,
   quiet = FALSE,
   subdir = "get_evi_summary",
-  buffer = 400
+  buffer = 400,
+  require_complete = FALSE
 ) {
   check_installed("terra", "to create EVI fixture data.")
   cell <- geomarker_fixture_cell(cell)
   buffer <- geomarker_fixture_buffer(buffer)
+  stopifnot("require_complete must be TRUE or FALSE" = is.logical(require_complete) &&
+    length(require_complete) == 1L && !is.na(require_complete))
   dates <- geomarker_fixture_dates(dates)
   years <- evi_requested_years(list(dates))
   evi_require_complete_years(years)
@@ -1084,20 +1130,42 @@ install_evi_geomarker_fixture <- function(
     evi_dir,
     evi_annual_composite_filename(groups$year, groups$tile)
   )
-  needs_build <- overwrite | !vapply(seq_along(dests), function(i) {
-    evi_cache_valid(dests[[i]], groups$year[[i]], groups$tile[[i]], cell, buffer)
-  }, logical(1))
+  needs_build <- overwrite |
+    !vapply(
+      seq_along(dests),
+      function(i) {
+        evi_cache_valid(
+          dests[[i]],
+          groups$year[[i]],
+          groups$tile[[i]],
+          cell,
+          buffer,
+          items = items[items$year == groups$year[[i]] & items$tile == groups$tile[[i]], , drop = FALSE],
+          require_complete = require_complete
+        )
+      },
+      logical(1)
+    )
   build_items <- lapply(seq_len(nrow(groups)), function(i) {
     group <- items[
       items$year == groups$year[[i]] & items$tile == groups$tile[[i]],
-      , drop = FALSE
+      ,
+      drop = FALSE
     ]
     if (needs_build[[i]]) {
-      evi_complete_source_items(group, groups$year[[i]], groups$tile[[i]])
+      evi_source_items(group, groups$year[[i]], groups$tile[[i]], require_complete)
     } else {
       group
     }
   })
+  for (i in seq_along(dests)) {
+    if (needs_build[[i]]) {
+      evi_warn_missing(groups$year[[i]], groups$tile[[i]],
+        evi_missing_observations(build_items[[i]], groups$year[[i]]))
+    } else {
+      evi_warn_manifest(evi_read_manifest(dests[[i]], groups$year[[i]], groups$tile[[i]]))
+    }
+  }
   if (!quiet) {
     message(sprintf(
       "Annual EVI fixture composites: %s required, %s already present, %s to build.",
@@ -1147,7 +1215,11 @@ install_evi_geomarker_fixture <- function(
     on.exit(unlink(c(staged, evi_manifest_path(staged))), add = TRUE)
     evi_write_annual_layers(layers, staged)
     evi_write_manifest(
-      staged, group_items, scope = "fixture", cell = cell, buffer = buffer
+      staged,
+      group_items,
+      scope = "fixture",
+      cell = cell,
+      buffer = buffer
     )
     evi_publish_composite(staged, dests[[i]])
   }

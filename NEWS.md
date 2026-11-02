@@ -1,6 +1,8 @@
 # geomarker (development version)
 
-- EVI requires completed years and a complete source schedule for new builds.
+- EVI requires completed calendar years. Missing source acquisitions warn by
+  default; `require_complete = TRUE` rejects gaps. Incomplete composites record
+  their missing acquisitions and refresh online when their source inputs change.
   Annual composites carry coverage and checksum manifests; legacy composites
   rebuild online and cannot be used offline without verification. Validated
   completed composites remain fixed until explicitly overwritten.

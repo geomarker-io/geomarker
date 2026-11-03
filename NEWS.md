@@ -1,4 +1,4 @@
-# geomarker (development version)
+# geomarker 0.2.1
 
 - EVI requires completed calendar years. Missing source acquisitions warn by
   default; `require_complete = TRUE` rejects gaps. Incomplete composites record
